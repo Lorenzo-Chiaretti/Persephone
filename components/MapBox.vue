@@ -31,42 +31,97 @@ onMounted(() => {
 const setupMapLayers = () => {
 
   //Load GeoJSON data
+
   map.value.addSource('navigli_src', {
     type: 'geojson',
-    data: '/data/geoJSON_test.geojson'
+    data: '/data/navigli-overlay.geojson'
   });
 
-  //Visualize GeoJSON data
+
+  //Render navigli polygons and lines
+
   map.value.addLayer({
-    id: 'navigli-layer',
+    id: 'navigli-fill',
+    type: 'fill',
+    source: 'navigli_src',
+    filter: ['==', '$type', 'Polygon'],
+    paint: {
+      'fill-color': '#004080',
+      'fill-opacity': 1,
+    }
+  });
+
+  map.value.addLayer({
+    id: 'navigli-outline',
+    type: 'line',
+    source: 'navigli_src',
+    filter: ['==', '$type', 'Polygon'],
+    paint: {
+      'line-color': '#004080',
+      'line-width': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        8, 3,   // A zoom 8, il bordo è spesso 3px (molto visibile)
+        15, 1   // A zoom 15, il bordo è sottile 1px
+      ]
+    }
+  });
+
+    map.value.addLayer({
+    id: 'navigli-line',
     type: 'line',
     source: 'navigli_src',
     filter: ['==', '$type', 'LineString'],
     paint: {
-      'line-color': '#FF0000',
-      'line-opacity': 1,
-      'line-width': 2,
+      'line-color': '#004080',
+      'line-width': 3,
     }
   });
 
-  //TODO: maybe toglilo
+
+  // Handle hovering effect
+
   map.value.addLayer({
-    id: 'navigli-points',
-    type: 'circle',
+    id: 'polygons-highlight',
+    type: 'line',
     source: 'navigli_src',
-    filter: ['==', '$type', 'Point'],
+    filter: ['==', ['get', 'group'], ''], // Inizialmente non mostra nulla
     paint: {
-      'circle-color': '#FF0000',
-      'circle-opacity': 1,
+      'line-color': '#ffcc00', // Colore di illuminazione (es. Giallo)
+      'line-opacity': 0.6,
+      'line-width': 5,
     }
   });
+
+  map.value.on('mousemove', ['navigli-line', 'navigli-fill'], (e) => {
+    if (e.features.length > 0) {
+      const hoveredGroup = e.features[0].properties.group;
+
+      // Cambiamo il filtro del layer highlight per mostrare tutti i poligoni 
+      // che hanno lo stesso valore nella proprietà 'group'
+      map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], hoveredGroup]);
+      
+      map.value.getCanvas().style.cursor = 'pointer';
+  }
+  });
+
+  map.value.on('mouseleave', ['navigli-line', 'navigli-fill'], () => {
+    // Nascondiamo di nuovo il layer highlight
+    map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
+    map.value.getCanvas().style.cursor = '';
+  });
+
+
 };
+
+
 
 </script>
 
 <style scoped>
 .map-container {
-  width: 50%;
+  width: 100%;
   height: 500px;
 }
 </style>
