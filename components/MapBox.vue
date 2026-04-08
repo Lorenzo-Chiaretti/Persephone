@@ -7,6 +7,7 @@ import { onMounted, ref } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+// TODO: spostalo in file .env
 mapboxgl.accessToken = 'pk.eyJ1IjoibWFyY28tYWJiYWRlc3NhIiwiYSI6ImNtbm9ua3BvbjF5c2EycXI2Y29zeWZvNnIifQ.szLcHVfJyZppGQthIeR3rQ';
 
 const mapContainer = ref(null);
@@ -65,7 +66,7 @@ const setupMapLayers = () => {
 
 <style scoped>
 .map-container {
-  width: 100%;
+  width: 50%;
   height: 500px;
 }
 </style>
