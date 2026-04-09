@@ -7,5 +7,5 @@
 </template>
 
 <script setup>
-import MapBox from '../components/MapBox.vue';
+//import MapBox from '../components/MapBox.vue';
 </script>

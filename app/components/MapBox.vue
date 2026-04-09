@@ -19,7 +19,8 @@ onMounted(() => {
     container: mapContainer.value,
     style: 'mapbox://styles/mapbox/streets-v12', //Default style
     center: [9.1899, 45.4702], // Milan Coordinates [LNG, LAT]
-    zoom: 12
+    zoom: 12,
+    minZoom: 9
   });
 
   // Wait for map to load style to add data
@@ -28,6 +29,7 @@ onMounted(() => {
   });
 });
 
+// RENDER MAP LAYERS (Navigli overlay and pois)
 const setupMapLayers = () => {
 
   //Load GeoJSON data
@@ -114,8 +116,6 @@ const setupMapLayers = () => {
 
 
 };
-
-
 
 </script>
 
