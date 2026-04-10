@@ -11,7 +11,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 mapboxgl.accessToken = 'pk.eyJ1IjoibWFyY28tYWJiYWRlc3NhIiwiYSI6ImNtbm9ua3BvbjF5c2EycXI2Y29zeWZvNnIifQ.szLcHVfJyZppGQthIeR3rQ';
 
 const mapContainer = ref(null);
-const map = ref(null);
+const map = shallowRef(null);
 // TODO: attiva lo store
 //const store = useStore(); //usa il nome della funzione che sceglie scuro
 
