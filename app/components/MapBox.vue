@@ -96,13 +96,13 @@ const setupMapLayers = () => {
     type: 'circle',
     source: 'pois_src',
     paint: {
-      'circle-color': [
+      'circle-radius': [
         'case',
         ['boolean', ['feature-state', 'hover'], false],
-        '#ffcc00',
-        '#ff0000'
+        12, // Raggio grande se hover
+        8   // Raggio normale
       ],
-      'circle-radius': 10,
+      'circle-color': '#ff0000'
     }
   });
 
@@ -120,7 +120,6 @@ const setupMapLayers = () => {
 
 
   // Handle click event on pois
-
   map.value.on('click', 'pois-layer', async (e) => {
     const id = e.features[0].properties.id;
     console.log(`Clicked on POI with ID: ${id}`);
@@ -151,34 +150,73 @@ const setupMapLayers = () => {
 
   });
 
-  map.value.on('mousemove', 'pois-layer', (e) => {
-    map.value.getCanvas().style.cursor = 'pointer';
-  });
-
-  map.value.on('mouseleave', 'pois-layer', () => {
-    map.value.getCanvas().style.cursor = '';
-  });
-
-
   // Handle hovering effect
+  let hoveredPoiId = null;
+  map.value.on('mousemove', (e) => {
+    
+    // Create bounding box around the cursor for better UX
+    const offset = 8;
+    const bbox = [
+      [e.point.x - offset, e.point.y - offset],
+      [e.point.x + offset, e.point.y + offset]
+    ];
 
-  map.value.on('mousemove', ['navigli-line', 'navigli-fill'], (e) => {
-    if (e.features.length > 0) {
-      const hoveredGroup = e.features[0].properties.group;
+    const features = map.value.queryRenderedFeatures(bbox, {
+      layers: ['pois-layer', 'navigli-line', 'navigli-fill']
+    });
 
-      // Cambiamo il filtro del layer highlight per mostrare tutti i poligoni 
-      // che hanno lo stesso valore nella proprietà 'group'
-      map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], hoveredGroup]);
-      
+    if (features.length > 0) {
+      const hoveredFeature = features[0];
+      const layerId = hoveredFeature.layer.id;
+
       map.value.getCanvas().style.cursor = 'pointer';
-  }
+
+      if (layerId === 'navigli-line' || layerId === 'navigli-fill') {
+        const hoveredGroup = hoveredFeature.properties.group;
+
+        if (hoveredGroup) {
+          map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], hoveredGroup]);
+        }
+
+        if (hoveredPoiId !== null) {
+          map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
+          hoveredPoiId = null;
+        }
+
+      } else if (layerId === 'pois-layer') {
+        map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
+
+        if (hoveredFeature.id !== undefined) {
+          if (hoveredPoiId !== null) {
+            // Spegni il vecchio
+            map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
+          }
+          hoveredPoiId = hoveredFeature.id;
+          // Accendi il nuovo
+          map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: true });
+        }
+      }
+      
+    } else {
+      map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
+      map.value.getCanvas().style.cursor = '';
+
+      if (hoveredPoiId !== null) {
+        map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
+        hoveredPoiId = null;
+      }
+    }
   });
 
-  map.value.on('mouseleave', ['navigli-line', 'navigli-fill'], () => {
-    // Nascondiamo di nuovo il layer highlight
+  map.value.on('mouseout', () => {
     map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
     map.value.getCanvas().style.cursor = '';
-  });  
+
+    if (hoveredPoiId !== null) {
+      map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
+      hoveredPoiId = null;
+    }
+  }); 
 
 };
 
