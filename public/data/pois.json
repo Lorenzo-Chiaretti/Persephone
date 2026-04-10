@@ -1,0 +1,32 @@
+[
+  {
+    "id": "38636ca0-343f-11f1-9e14-4be61bdb697c",
+    "title": "Colosseo",
+    "description": "L'anfiteatro più grande del mondo, situato nel centro di Roma.",
+    "lat": 41.8902,
+    "lng": 12.4922,
+    "historicalImgUrl": "/images/historical/colosseum-1900.jpg",
+    "modernImgUrl": "/images/modern/colosseum-today.jpg",
+    "year": "80 d.C."
+  },
+  {
+    "id": "5687f250-343f-11f1-9e14-4be61bdb697c",
+    "title": "Pantheon",
+    "description": "Antico tempio romano ora basilica, famoso per la sua cupola con l'oculo.",
+    "lat": 41.8986,
+    "lng": 12.4769,
+    "historicalImgUrl": "/images/historical/pantheon-1850.jpg",
+    "modernImgUrl": "/images/modern/pantheon-today.jpg",
+    "year": "125 d.C."
+  },
+  {
+    "id": "60b821a0-343f-11f1-9e14-4be61bdb697c",
+    "title": "Castel Sant'Angelo",
+    "description": "Mausoleo di Adriano, trasformato in fortezza e residenza papale.",
+    "lat": 41.9031,
+    "lng": 12.4663,
+    "historicalImgUrl": "/images/historical/santangelo-1920.jpg",
+    "modernImgUrl": "/images/modern/santangelo-today.jpg",
+    "year": "135 d.C."
+  }
+]

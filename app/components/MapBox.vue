@@ -97,8 +97,8 @@ const setupMapLayers = () => {
       'circle-color': [
         'case',
         ['boolean', ['feature-state', 'hover'], false],
-        '#ff0000',
-        '#ffcc00'
+        '#ffcc00',
+        '#ff0000'
       ],
       'circle-radius': 10,
     }
@@ -119,11 +119,33 @@ const setupMapLayers = () => {
 
   // Handle click event
 
-  map.value.on('click', 'pois-layer', (e) => {
+  map.value.on('click', 'pois-layer', async (e) => {
     const id = e.features[0].properties.id;
-
     console.log(`Clicked on POI with ID: ${id}`);
-    // TODO: Aggiungere chiamata fetch
+
+    try {
+      // Calls fetch api
+      // TODO: quando Gab è pronto, aggiorna chiamata dal JSON alla sua api. Puoi togliere allPois e uncommentare selectedPoi
+      const allPois = await $fetch('/data/pois.json'); // TODO: cancella
+      
+      const selectedPoi = allPois.find((poi) => poi.id === id); // TODO: cancella
+      //const selectedPoi = await $fetch('/api/pois/${id}'); //If dynamic routes
+      //const selectedPoi = await $fetch('/api/pois', {
+      //  query : {id: id}
+      //}); //If static routes
+
+      if (selectedPoi) {
+        console.log('Selected POI: ', selectedPoi.title);
+        // Adds selectedPoi to Pinia store
+        // TODO: quando Scuro è pronto, aggiungere selectedPoi allo store Pinia
+      } else {
+        console.warn(`POI with ID ${id} not found.`);
+      }
+
+    } catch (error) {
+      console.error('Error during fetch from pois.json:', error);
+    }
+
   });
 
   map.value.on('mousemove', 'pois-layer', (e) => {
@@ -153,7 +175,7 @@ const setupMapLayers = () => {
     // Nascondiamo di nuovo il layer highlight
     map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
     map.value.getCanvas().style.cursor = '';
-  });
+  });  
 
 };
 
