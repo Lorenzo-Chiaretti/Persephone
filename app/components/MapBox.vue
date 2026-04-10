@@ -34,18 +34,69 @@ onMounted(() => {
 // RENDER MAP LAYERS (Navigli overlay and pois)
 const setupMapLayers = () => {
 
-  //Load GeoJSON data
+  renderNavigliOverlay();
+  renderPois();
 
+  // Handle hovering effect
+
+  const hoverPopup = new mapboxgl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    offset: 15 // Aggiunge 15px di distanza dal puntatore per non coprirlo
+  });
+
+  map.value.on('mousemove', (e) => {
+    
+    // Create bounding box around the cursor for better UX
+    const offset = 8;
+    const bbox = [
+      [e.point.x - offset, e.point.y - offset],
+      [e.point.x + offset, e.point.y + offset]
+    ];
+
+    const features = map.value.queryRenderedFeatures(bbox, {
+      layers: ['navigli-line', 'navigli-fill']
+    });
+
+    if (features.length > 0) {
+      const hoveredFeature = features[0];
+
+      map.value.getCanvas().style.cursor = 'pointer';
+
+      const hoveredGroup = hoveredFeature.properties.group;
+      const hoveredName = hoveredFeature.properties.name;
+
+      if (hoveredGroup) {
+        map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], hoveredGroup]);
+
+        hoverPopup
+          .setLngLat(e.lngLat)
+          .setHTML(`<div class="polygon-tooltip">${hoveredName}</div>`)
+          .addTo(map.value);
+      }
+      
+    } else {
+      map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
+      map.value.getCanvas().style.cursor = '';
+      hoverPopup.remove();
+    }
+  });
+
+  map.value.on('mouseout', () => {
+    map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
+    map.value.getCanvas().style.cursor = '';
+
+    hoverPopup.remove();
+  }); 
+};
+
+// RENDER NAVIGLI OVERLAY
+const renderNavigliOverlay = () => {
+  //Load GeoJSON data
   map.value.addSource('navigli_src', {
     type: 'geojson',
     data: '/data/navigli-overlay.geojson'
   });
-
-    map.value.addSource('pois_src', {
-      type: 'geojson',
-      data: '/data/pois-overlay.geojson'
-    });
-
 
   //Render navigli polygons and lines
 
@@ -88,24 +139,6 @@ const setupMapLayers = () => {
     }
   });
 
-
-  // Render pois
-
-  map.value.addLayer({
-    id: 'pois-layer',
-    type: 'circle',
-    source: 'pois_src',
-    paint: {
-      'circle-radius': [
-        'case',
-        ['boolean', ['feature-state', 'hover'], false],
-        12, // Raggio grande se hover
-        8   // Raggio normale
-      ],
-      'circle-color': '#ff0000'
-    }
-  });
-
     map.value.addLayer({
     id: 'polygons-highlight',
     type: 'line',
@@ -117,108 +150,64 @@ const setupMapLayers = () => {
       'line-width': 5,
     }
   });
+}
 
-
-  // Handle click event on pois
-  map.value.on('click', 'pois-layer', async (e) => {
-    const id = e.features[0].properties.id;
-    console.log(`Clicked on POI with ID: ${id}`);
+// RENDER POI MARKERS
+const renderPois = async () => {
 
     try {
-      // Calls fetch api
-      // TODO: quando Gab è pronto, aggiorna chiamata dal JSON alla sua api. Puoi togliere allPois e uncommentare selectedPoi
-      const allPois = await $fetch('/data/pois.json'); // TODO: cancella
-      
-      const selectedPoi = allPois.find((poi) => poi.id === id); // TODO: cancella
-      //const selectedPoi = await $fetch('/api/pois/${id}'); //If dynamic routes
-      //const selectedPoi = await $fetch('/api/pois', {
-      //  query : {id: id}
-      //}); //If static routes
+      const response = await fetch('/data/pois-overlay.geojson');
+      const poisData = await response.json();
 
-      if (selectedPoi) {
-        console.log('Data fetched for POI: ', selectedPoi.id);
-        // Adds selectedPoi to Pinia store
-        // TODO: quando Scuro è pronto, aggiungere selectedPoi allo store Pinia
-        //store.selectedPoi = selectedPoi;
-      } else {
-        console.warn(`POI with ID ${id} not found.`);
-      }
+      //Iteration on loaded data
+      poisData.features.forEach((feature) => {
 
-    } catch (error) {
-      console.error('Error during fetch from pois.json:', error);
-    }
+        const marker = new mapboxgl.Marker()
+            .setLngLat(feature.geometry.coordinates)
+            .addTo(map.value);
 
-  });
+        const el = marker.getElement();
 
-  // Handle hovering effect
-  let hoveredPoiId = null;
-  map.value.on('mousemove', (e) => {
-    
-    // Create bounding box around the cursor for better UX
-    const offset = 8;
-    const bbox = [
-      [e.point.x - offset, e.point.y - offset],
-      [e.point.x + offset, e.point.y + offset]
-    ];
+        el.style.cursor = 'pointer';
 
-    const features = map.value.queryRenderedFeatures(bbox, {
-      layers: ['pois-layer', 'navigli-line', 'navigli-fill']
-    });
+        el.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = feature.properties.id;
+          console.log(`Clicked on POI with ID: ${id}`);
 
-    if (features.length > 0) {
-      const hoveredFeature = features[0];
-      const layerId = hoveredFeature.layer.id;
+          try {
+            // Calls fetch api
+            // TODO: quando Gab è pronto, aggiorna chiamata dal JSON alla sua api. Puoi togliere allPois e uncommentare selectedPoi
+            const allPois = await $fetch('/data/pois.json'); // TODO: cancella
+            
+            const selectedPoi = allPois.find((poi) => poi.id === id); // TODO: cancella
+            //const selectedPoi = await $fetch('/api/pois/${id}'); //If dynamic routes
+            //const selectedPoi = await $fetch('/api/pois', {
+            //  query : {id: id}
+            //}); //If static routes
 
-      map.value.getCanvas().style.cursor = 'pointer';
+            if (selectedPoi) {
+              console.log('Data fetched for POI: ', selectedPoi.id);
+              // Adds selectedPoi to Pinia store
+              // TODO: quando Scuro è pronto, aggiungere selectedPoi allo store Pinia
+              //store.selectedPoi = selectedPoi;
+            } else {
+              console.warn(`POI with ID ${id} not found.`);
+            }
 
-      if (layerId === 'navigli-line' || layerId === 'navigli-fill') {
-        const hoveredGroup = hoveredFeature.properties.group;
-
-        if (hoveredGroup) {
-          map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], hoveredGroup]);
-        }
-
-        if (hoveredPoiId !== null) {
-          map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
-          hoveredPoiId = null;
-        }
-
-      } else if (layerId === 'pois-layer') {
-        map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
-
-        if (hoveredFeature.id !== undefined) {
-          if (hoveredPoiId !== null) {
-            // Spegni il vecchio
-            map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
+          } catch (error) {
+            console.error('Error during fetch from pois.json:', error);
           }
-          hoveredPoiId = hoveredFeature.id;
-          // Accendi il nuovo
-          map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: true });
-        }
-      }
-      
-    } else {
-      map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
-      map.value.getCanvas().style.cursor = '';
 
-      if (hoveredPoiId !== null) {
-        map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
-        hoveredPoiId = null;
-      }
-    }
-  });
+        });
 
-  map.value.on('mouseout', () => {
-    map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
-    map.value.getCanvas().style.cursor = '';
+      });
 
-    if (hoveredPoiId !== null) {
-      map.value.setFeatureState({ source: 'pois_src', id: hoveredPoiId }, { hover: false });
-      hoveredPoiId = null;
-    }
-  }); 
-
-};
+  } catch (error) {
+    console.error('Error during fetch from pois.json:', error);
+  }
+  
+}
 
 </script>
 

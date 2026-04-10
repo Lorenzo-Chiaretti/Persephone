@@ -1470,7 +1470,8 @@
             },
             "properties": {
                 "COD_AIPO": "AIPO0014",
-                "group": "lambro"
+                "group": "lambro",
+                "name": "Fiume Lambro"
             },
             "id": 30
         },
@@ -1863,7 +1864,8 @@
             },
             "properties": {
                 "COD_AIPO": "AIPO0016",
-                "group": "seveso"
+                "group": "seveso",
+                "name": "Fiume Seveso"
             },
             "id": 31
         },
@@ -2338,7 +2340,8 @@
             },
             "properties": {
                 "COD_AIPO": "AIPO0025",
-                "group": "olona"
+                "group": "olona",
+                "name": "Fiume Olona"
             },
             "id": 32
         },
@@ -2679,7 +2682,8 @@
             },
             "properties": {
                 "COD_AIPO": "AIPO0060",
-                "group": "lambro-meridionale"
+                "group": "lambro-meridionale",
+                "name": "Fiume Lambro Meridionale"
             },
             "id": 33
         },
@@ -2872,7 +2876,8 @@
             },
             "properties": {
                 "COD_RIB": "R04S23C45",
-                "group": "pavese"
+                "group": "pavese",
+                "name": "Naviglio Pavese"
             },
             "id": 34
         },
@@ -3337,7 +3342,8 @@
             },
             "properties": {
                 "COD_RIB": "R07S89C01",
-                "group": "grande"
+                "group": "grande",
+                "name": "Naviglio Grande"
             },
             "id": 35
         },
@@ -3950,7 +3956,8 @@
             },
             "properties": {
                 "COD_RIB": "R02S21C04",
-                "group": "martesana"
+                "group": "martesana",
+                "name": "Naviglio della Martesana"
             },
             "id": 36
         },
@@ -4079,7 +4086,8 @@
             },
             "properties": {
                 "COD_AIPO": "AIPO0066",
-                "group": "redefossi"
+                "group": "redefossi",
+                "name": "Cavo Redefossi"
             },
             "id": 29
         },
@@ -4383,7 +4391,8 @@
                 ]
             },
             "properties": {
-                "group": "vettabbia"
+                "group": "vettabbia",
+                "name": "Vettabbia"
             },
             "id": 37
         },
@@ -4443,7 +4452,8 @@
                 ]
             },
             "properties": {
-                "group": "ticinello"
+                "group": "ticinello",
+                "name": "Ticinello"
             },
             "id": 25
         },
@@ -4501,7 +4511,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 1
         },
@@ -4543,7 +4554,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 2
         },
@@ -4593,7 +4605,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 3
         },
@@ -4667,7 +4680,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 4
         },
@@ -4733,7 +4747,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 5
         },
@@ -4775,7 +4790,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 6
         },
@@ -4913,7 +4929,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 7
         },
@@ -5023,7 +5040,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 8
         },
@@ -5073,7 +5091,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 9
         },
@@ -5195,7 +5214,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 10
         },
@@ -5253,7 +5273,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 11
         },
@@ -5299,7 +5320,8 @@
                 ]
             },
             "properties": {
-                "group": "cerchia-interna"
+                "group": "cerchia-interna",
+                "name": "Cerchia Interna"
             },
             "id": 12
         },
@@ -5345,7 +5367,8 @@
                 ]
             },
             "properties": {
-                "group": "santo-stefano"
+                "group": "santo-stefano",
+                "name": "Laghetto di Santo Stefano"
             },
             "id": 28
         },
@@ -5487,7 +5510,8 @@
                 ]
             },
             "properties": {
-                "group": "conca-viarenna"
+                "group": "conca-viarenna",
+                "name": "Conca di Viarenna"
             },
             "id": 13
         },
@@ -5729,7 +5753,8 @@
                 ]
             },
             "properties": {
-                "group": "darsena"
+                "group": "darsena",
+                "name": "Darsena"
             },
             "id": 14
         },
@@ -5879,7 +5904,8 @@
                 ]
             },
             "properties": {
-                "group": "ticinello"
+                "group": "ticinello",
+                "name": "Ticinello"
             },
             "id": 15
         },
@@ -6041,7 +6067,8 @@
                 ]
             },
             "properties": {
-                "group": "vettabbia"
+                "group": "vettabbia",
+                "name": "Vettabbia"
             },
             "id": 16
         },
@@ -6139,7 +6166,8 @@
                 ]
             },
             "properties": {
-                "group": "vettabbia"
+                "group": "vettabbia",
+                "name": "Vettabbia"
             },
             "id": 17
         },
@@ -6261,7 +6289,8 @@
                 ]
             },
             "properties": {
-                "group": "san-marco"
+                "group": "san-marco",
+                "name": "Naviglio di San Marco"
             },
             "id": 18
         },
@@ -6351,7 +6380,8 @@
                 ]
             },
             "properties": {
-                "group": "conca-incoronata"
+                "group": "conca-incoronata",
+                "name": "Conca dell'Incoronata"
             },
             "id": 19
         },
@@ -6405,7 +6435,8 @@
                 ]
             },
             "properties": {
-                "group": "redefossi"
+                "group": "redefossi",
+                "name": "Cavo Redefossi"
             },
             "id": 20
         },
@@ -6483,7 +6514,8 @@
                 ]
             },
             "properties": {
-                "group": "redefossi"
+                "group": "redefossi",
+                "name": "Cavo Redefossi"
             },
             "id": 21
         },
@@ -6561,7 +6593,8 @@
                 ]
             },
             "properties": {
-                "group": "redefossi"
+                "group": "redefossi",
+                "name": "Cavo Redefossi"
             },
             "id": 22
         },
@@ -6671,7 +6704,8 @@
                 ]
             },
             "properties": {
-                "group": "redefossi"
+                "group": "redefossi",
+                "name": "Cavo Redefossi"
             },
             "id": 23
         },
@@ -6809,7 +6843,8 @@
                 ]
             },
             "properties": {
-                "group": "redefossi"
+                "group": "redefossi",
+                "name": "Cavo Redefossi"
             },
             "id": 24
         },
@@ -6855,7 +6890,8 @@
                 ]
             },
             "properties": {
-                "group": "grande"
+                "group": "grande",
+                "name": "Naviglio Grande"
             },
             "id": 26
         },
@@ -6889,7 +6925,8 @@
                 ]
             },
             "properties": {
-                "group": "pavese"
+                "group": "pavese",
+                "name": "Naviglio Pavese"
             },
             "id": 27
         }
