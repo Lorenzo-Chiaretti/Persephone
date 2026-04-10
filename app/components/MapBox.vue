@@ -39,6 +39,11 @@ const setupMapLayers = () => {
     data: '/data/navigli-overlay.geojson'
   });
 
+    map.value.addSource('pois_src', {
+      type: 'geojson',
+      data: '/data/pois-overlay.geojson'
+    });
+
 
   //Render navigli polygons and lines
 
@@ -82,9 +87,24 @@ const setupMapLayers = () => {
   });
 
 
-  // Handle hovering effect
+  // Render pois
 
   map.value.addLayer({
+    id: 'pois-layer',
+    type: 'circle',
+    source: 'pois_src',
+    paint: {
+      'circle-color': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        '#ff0000',
+        '#ffcc00'
+      ],
+      'circle-radius': 10,
+    }
+  });
+
+    map.value.addLayer({
     id: 'polygons-highlight',
     type: 'line',
     source: 'navigli_src',
@@ -95,6 +115,27 @@ const setupMapLayers = () => {
       'line-width': 5,
     }
   });
+
+
+  // Handle click event
+
+  map.value.on('click', 'pois-layer', (e) => {
+    const id = e.features[0].properties.id;
+
+    console.log(`Clicked on POI with ID: ${id}`);
+    // TODO: Aggiungere chiamata fetch
+  });
+
+  map.value.on('mousemove', 'pois-layer', (e) => {
+    map.value.getCanvas().style.cursor = 'pointer';
+  });
+
+  map.value.on('mouseleave', 'pois-layer', () => {
+    map.value.getCanvas().style.cursor = '';
+  });
+
+
+  // Handle hovering effect
 
   map.value.on('mousemove', ['navigli-line', 'navigli-fill'], (e) => {
     if (e.features.length > 0) {
@@ -113,7 +154,6 @@ const setupMapLayers = () => {
     map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
     map.value.getCanvas().style.cursor = '';
   });
-
 
 };
 
