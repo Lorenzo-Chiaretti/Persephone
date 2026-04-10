@@ -12,6 +12,8 @@ mapboxgl.accessToken = 'pk.eyJ1IjoibWFyY28tYWJiYWRlc3NhIiwiYSI6ImNtbm9ua3BvbjF5c
 
 const mapContainer = ref(null);
 const map = ref(null);
+// TODO: attiva lo store
+//const store = useStore(); //usa il nome della funzione che sceglie scuro
 
 onMounted(() => {
   // Initialize map on Milan
@@ -117,7 +119,7 @@ const setupMapLayers = () => {
   });
 
 
-  // Handle click event
+  // Handle click event on pois
 
   map.value.on('click', 'pois-layer', async (e) => {
     const id = e.features[0].properties.id;
@@ -135,9 +137,10 @@ const setupMapLayers = () => {
       //}); //If static routes
 
       if (selectedPoi) {
-        console.log('Selected POI: ', selectedPoi.title);
+        console.log('Data fetched for POI: ', selectedPoi.id);
         // Adds selectedPoi to Pinia store
         // TODO: quando Scuro è pronto, aggiungere selectedPoi allo store Pinia
+        //store.selectedPoi = selectedPoi;
       } else {
         console.warn(`POI with ID ${id} not found.`);
       }
