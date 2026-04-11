@@ -9,3 +9,6 @@
 <script setup>
 //import MapBox from '../components/MapBox.vue';
 </script>
+<style>
+@import '~/assets/main.css';
+</style>
