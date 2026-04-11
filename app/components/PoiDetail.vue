@@ -1,7 +1,7 @@
 <template>
   <Transition name="slide-up">
     <div
-      v-if="mapStore.isModalOpen && mapStore.selectedPoi"
+      v-if="store.isModelOpen && store.selectedPoi"
       style="position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;"
       @click.self="close"
     >
@@ -118,17 +118,18 @@
   </Transition>
 </template>
 
+
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useMapStore } from '~/stores/useMapStore'
+import { useAppStore } from '~/stores/appState'
 
-const mapStore = useMapStore()
+const store = useAppStore()
 const showModern = ref(false)
-
-const poi = computed(() => mapStore.selectedPoi!)
+const poi = computed(() => store.selectedPoi!)
 
 function close() {
-  mapStore.isModalOpen = false
+  store.isModelOpen = false
   showModern.value = false
 }
 

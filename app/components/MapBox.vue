@@ -6,14 +6,14 @@
 import { onMounted, ref } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import{ useAppStore } from '~/stores/appState'
+const store = useAppStore()
 
 // TODO: spostalo in file .env
 mapboxgl.accessToken = 'pk.eyJ1IjoibWFyY28tYWJiYWRlc3NhIiwiYSI6ImNtbm9ua3BvbjF5c2EycXI2Y29zeWZvNnIifQ.szLcHVfJyZppGQthIeR3rQ';
 
 const mapContainer = ref(null);
 const map = shallowRef(null);
-// TODO: attiva lo store
-//const store = useStore(); //usa il nome della funzione che sceglie scuro
 
 onMounted(() => {
   // Initialize map on Milan
@@ -190,7 +190,8 @@ const renderPois = async () => {
               console.log('Data fetched for POI: ', selectedPoi.id);
               // Adds selectedPoi to Pinia store
               // TODO: quando Scuro è pronto, aggiungere selectedPoi allo store Pinia
-              //store.selectedPoi = selectedPoi;
+              //Done(-Scuro)
+              store.selectedPoi = selectedPoi;
             } else {
               console.warn(`POI with ID ${id} not found.`);
             }
