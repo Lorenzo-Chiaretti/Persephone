@@ -1,5 +1,5 @@
 <template>
-  <div ref="mapContainer" class="w-full h-[500px]"></div>
+  <div ref="mapContainer" class="w-full h-[500px]" />
 </template>
 
 <script setup>
@@ -8,15 +8,13 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAppStore } from '~/stores/appState'
 const store = useAppStore()
-
-// TODO: spostalo in file .env
-mapboxgl.accessToken =
-  'pk.eyJ1IjoibWFyY28tYWJiYWRlc3NhIiwiYSI6ImNtbm9ua3BvbjF5c2EycXI2Y29zeWZvNnIifQ.szLcHVfJyZppGQthIeR3rQ'
-
+const config = useRuntimeConfig()
 const mapContainer = ref(null)
 const map = shallowRef(null)
 
 onMounted(() => {
+  mapboxgl.accessToken = config.public.mapboxKey
+
   // Initialize map on Milan
   map.value = new mapboxgl.Map({
     container: mapContainer.value,

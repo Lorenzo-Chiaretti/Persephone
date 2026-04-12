@@ -16,5 +16,11 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
     '@nuxt/eslint'
-  ]
+  ], 
+
+  runtimeConfig: {
+    public: {
+      mapboxKey: ''
+    }
+  }
 })
