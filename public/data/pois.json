@@ -1,32 +1,32 @@
 [
   {
-    "id": "38636ca0-343f-11f1-9e14-4be61bdb697c",
-    "title": "Colosseo",
-    "description": "L'anfiteatro più grande del mondo, situato nel centro di Roma.",
-    "lat": 41.8902,
-    "lng": 12.4922,
-    "historicalImgUrl": "/images/historical/colosseum-1900.jpg",
-    "modernImgUrl": "/images/modern/colosseum-today.jpg",
-    "year": "80 d.C."
+    "id": "via-senato",
+    "title": "Via Senato",
+    "description": "Ex alveo del Naviglio. Fino agli anni '30 qui l'acqua scorreva a cielo aperto sotto i palazzi nobiliari.",
+    "lat": 45.469651,  
+    "lng": 9.198286,
+    "historicalImgUrl": "/images/historical/Naviglio_Via_Senato_Vecchia.jpg",
+    "modernImgUrl": "/images/modern/Naviglio_Via_Senato_Nuova.jpg",
+    "year": "1390 - 1930 (copertura)"
   },
   {
-    "id": "5687f250-343f-11f1-9e14-4be61bdb697c",
-    "title": "Pantheon",
-    "description": "Antico tempio romano ora basilica, famoso per la sua cupola con l'oculo.",
-    "lat": 41.8986,
-    "lng": 12.4769,
-    "historicalImgUrl": "/images/historical/pantheon-1850.jpg",
-    "modernImgUrl": "/images/modern/pantheon-today.jpg",
-    "year": "125 d.C."
+    "id": "laghetto-san-marco",
+    "title": "Laghetto di San Marco",
+    "description": "Antico bacino portuale dove terminava il Naviglio Martesana. Era il cuore commerciale della zona, dove le imbarcazioni sostavano per scaricare merci e viveri destinati ai mercati cittadini.",
+    "lat": 45.474008,
+    "lng": 9.187881,
+    "historicalImgUrl": "/images/historical/Laghetto_di_San_Marco_Vecchia.jpg", 
+    "modernImgUrl": "/images/modern/Laghetto_di_San_Marco_Nuova.jpg",
+    "year": "1496 - 1930 (copertura)"
   },
   {
-    "id": "60b821a0-343f-11f1-9e14-4be61bdb697c",
-    "title": "Castel Sant'Angelo",
-    "description": "Mausoleo di Adriano, trasformato in fortezza e residenza papale.",
-    "lat": 41.9031,
-    "lng": 12.4663,
-    "historicalImgUrl": "/images/historical/santangelo-1920.jpg",
-    "modernImgUrl": "/images/modern/santangelo-today.jpg",
-    "year": "135 d.C."
+    "id": "laghetto-stefano",
+    "title": "Laghetto di Santo Stefano",
+    "description": "Il porto del marmo. Qui arrivavano i blocchi per la costruzione del Duomo di Milano.",
+    "lat": 45.461254,
+    "lng": 9.195854,
+    "historicalImgUrl": "/images/historical/laghetto-santo-stefano_vecchia.jpg",
+    "modernImgUrl": "/images/modern/laghetto-santo-stefano_nuova.jpg",
+    "year": "1388 - 1857 (interramento)"
   }
 ]
