@@ -1,118 +1,100 @@
 <template>
   <Transition name="slide-up">
     <div
-      v-if="mapStore.isModalOpen && mapStore.selectedPoi"
-      style="position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;"
+      v-if="store.isModelOpen && store.selectedPoi"
+      class="fixed inset-0 z-50 flex items-end justify-center"
       @click.self="close"
     >
       <div
-        style="position:absolute;inset:0;background:rgba(66,66,66,0.45);"
+        class="absolute inset-0 bg-[#424242]/45 cursor-pointer"
         @click="close"
       />
 
-      <div style="
-        position:relative;z-index:10;
-        background:#ffffff;
-        width:100%;max-width:480px;
-        border-radius:20px 20px 0 0;
-        overflow:hidden;
-      ">
-
-        <!-- Bottone X -->
+      <div
+        class="relative z-10 w-full max-w-[480px] overflow-hidden bg-white rounded-t-[20px]"
+      >
         <button
-          @click="close"
+          class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#d0d7dd]/85 cursor-pointer transition-colors hover:bg-[#b0b8c0]"
           aria-label="Close"
-          style="
-            position:absolute;top:12px;right:12px;z-index:20;
-            width:32px;height:32px;border-radius:50%;
-            background:rgba(208,215,221,0.85);
-            border:none;cursor:pointer;
-            display:flex;align-items:center;justify-content:center;
-          "
+          @click="close"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1 1l10 10M11 1L1 11" stroke="#424242" stroke-width="1.5" stroke-linecap="round"/>
+            <path
+              d="M1 1l10 10M11 1L1 11"
+              stroke="#424242"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
 
-        <!-- Immagine con toggle storico/moderno -->
-        <div style="position:relative;width:100%;height:220px;overflow:hidden;">
+        <div class="relative h-[220px] w-full overflow-hidden">
           <img
-            :src="showModern ? poi.imageModernUrl : poi.imageUrl"
+            :src="showModern ? poi.modernImgUrl : poi.historicalImgUrl"
             :alt="poi.title"
-            style="width:100%;height:100%;object-fit:cover;transition:opacity 0.4s ease;"
+            class="h-full w-full object-cover transition-opacity duration-[400ms] ease-in-out"
           />
 
-          <!-- Badge anno -->
-          <div style="
-            position:absolute;bottom:12px;left:12px;
-            background:rgba(66,66,66,0.7);color:#fff;
-            font-family:'Inter',sans-serif;font-size:11px;
-            padding:3px 10px;border-radius:20px;
-          ">{{ showModern ? 'Today' : poi.year }}</div>
+          <div
+            class="absolute bottom-3 left-3 rounded-full bg-[#424242]/70 px-2.5 py-[3px] font-['Inter'] text-[11px] text-white"
+          >
+            {{ showModern ? 'Today' : poi.year }}
+          </div>
 
-          <!-- Toggle -->
-          <div style="
-            position:absolute;bottom:12px;right:12px;
-            background:rgba(66,66,66,0.6);
-            border-radius:20px;padding:3px;
-            display:flex;gap:2px;
-          ">
+          <div
+            class="absolute bottom-3 right-3 flex gap-[2px] rounded-full bg-[#424242]/60 p-[3px]"
+          >
             <button
+              class="cursor-pointer rounded-full border-none px-3 py-1 font-['Inter'] text-[11px] transition-colors duration-200"
+              :class="
+                !showModern
+                  ? 'bg-white text-[#424242]'
+                  : 'bg-transparent text-white'
+              "
               @click="showModern = false"
-              :style="`
-                font-family:'Inter',sans-serif;font-size:11px;
-                padding:4px 12px;border-radius:20px;border:none;cursor:pointer;
-                background:${!showModern ? '#ffffff' : 'transparent'};
-                color:${!showModern ? '#424242' : '#ffffff'};
-                transition:background 0.2s;
-              `"
-            >Historical</button>
+            >
+              Historical
+            </button>
             <button
-              @click="showModern = true"
-              :style="`
-                font-family:'Inter',sans-serif;font-size:11px;
-                padding:4px 12px;border-radius:20px;border:none;cursor:pointer;
-                background:${showModern ? '#ffffff' : 'transparent'};
-                color:${showModern ? '#424242' : '#ffffff'};
-                transition:background 0.2s;
-              `"
-            >Today</button>
+              class="cursor-pointer rounded-full border-none px-3 py-1 font-['Inter'] text-[11px] transition-colors duration-200"
+              :class="
+                showModern
+                  ? 'bg-white text-[#424242]'
+                  : 'bg-transparent text-white'
+              "
+               @click="showModern = true"
+            >
+              Today
+            </button>
           </div>
         </div>
 
-        <!-- Testo -->
-        <div style="padding:20px 24px 28px;">
-          <p style="
-            font-family:'Inter',sans-serif;font-size:11px;
-            color:#2071c1;text-transform:uppercase;
-            letter-spacing:0.1em;margin:0 0 6px;
-          ">{{ poi.year }}</p>
+        <div class="px-6 pb-7 pt-5">
+          <p
+            class="mb-1.5 font-['Inter'] text-[11px] uppercase tracking-[0.1em] text-[#2071c1]"
+          >
+            {{ poi.year }}
+          </p>
 
-          <h2 style="
-            font-family:'Playfair Display',serif;
-            font-size:22px;font-weight:700;
-            color:#424242;margin:0 0 12px;line-height:1.3;
-          ">{{ poi.title }}</h2>
+          <h2
+            class="mb-3 font-['Playfair_Display'] text-[22px] font-bold leading-[1.3] text-[#424242]"
+          >
+            {{ poi.title }}
+          </h2>
 
-          <p style="
-            font-family:'Inter',sans-serif;font-size:14px;
-            color:#424242;line-height:1.7;margin:0 0 20px;
-            opacity:0.8;
-          ">{{ poi.description }}</p>
+          <p
+            class="mb-5 font-['Inter'] text-[14px] leading-[1.7] text-[#424242]/80"
+          >
+            {{ poi.description }}
+          </p>
 
-          <!-- Bottone navigazione con grounding fallback -->
           <button
+            class="w-full cursor-pointer rounded-[10px] border-none bg-[#2071c1] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c]"
             @click="navigate"
-            style="
-              width:100%;padding:12px;
-              background:#2071c1;color:#ffffff;
-              font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
-              border:none;border-radius:10px;cursor:pointer;
-            "
-          >Take me there</button>
+            >
+            Take me there
+          </button>
         </div>
-
       </div>
     </div>
   </Transition>
@@ -120,15 +102,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useMapStore } from '~/stores/useMapStore'
+import { useAppStore } from '~/stores/appState'
 
-const mapStore = useMapStore()
+const store = useAppStore()
 const showModern = ref(false)
-
-const poi = computed(() => mapStore.selectedPoi!)
+const poi = computed(() => store.selectedPoi!)
 
 function close() {
-  mapStore.isModalOpen = false
+  store.isModelOpen = false
   showModern.value = false
 }
 
@@ -139,7 +120,9 @@ function navigate() {
   const url = `https://maps.google.com/?q=${destination}`
   // Grounding challenge — handoff failure fallback
   if (!window.open(url, '_blank')) {
-    alert(`Could not open Maps automatically.\nDestination: ${poi.value.address ?? poi.value.title + ', Milan'}`)
+    alert(
+      `Could not open Maps automatically.\nDestination: ${poi.value.address ?? poi.value.title + ', Milan'}`
+    )
   }
 }
 

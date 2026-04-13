@@ -1,5 +1,7 @@
 <template>
-  <h1>Hi! We are the Persephone team: Lorenzo, Gabriele, Marco, Giuseppe</h1>
+  <h1 class="my-6 text-center text-3xl font-bold text-gray-800">
+    Hi! We are the Persephone team: Lorenzo, Gabriele, Marco, Giuseppe
+  </h1>
   <div>
     <NuxtRouteAnnouncer />
     <MapBox />
