@@ -114,14 +114,15 @@ function close() {
 }
 
 function navigate() {
-  const destination = encodeURIComponent(
-    poi.value.address ?? poi.value.title + ', Milan'
-  )
-  const url = `https://maps.google.com/?q=${destination}`
+  const lat = poi.value.lat
+  const lng = poi.value.lng
+  // Standard Google Maps URL for exact coordinates
+  const url = `https://www.google.com/maps?q=${lat},${lng}`
+
   // Grounding challenge — handoff failure fallback
   if (!window.open(url, '_blank')) {
     alert(
-      `Could not open Maps automatically.\nDestination: ${poi.value.address ?? poi.value.title + ', Milan'}`
+      `Could not open Maps automatically.\nDestination: ${poi.value.title} (${lat}, ${lng})`
     )
   }
 }
