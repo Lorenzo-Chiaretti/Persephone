@@ -14,7 +14,6 @@ const map = shallowRef(null)
 
 onMounted(() => {
   mapboxgl.accessToken = config.public.mapboxKey
-
   // Initialize map on Milan
   map.value = new mapboxgl.Map({
     container: mapContainer.value,
@@ -25,7 +24,7 @@ onMounted(() => {
   })
 
   // Wait for map to load style to add data
-  map.value.on('load', () => {
+  map.value.on('load', () => {      
     setupMapLayers()
   })
 })
@@ -175,16 +174,13 @@ const renderPois = async () => {
         const id = feature.properties.id
         console.log(`Clicked on POI with ID: ${id}`)
 
-          try {
-
-            const selectedPoi = await $fetch(`/api/pois/${id}`); //If dynamic routes
+        try {
+          const selectedPoi = await $fetch(`/api/pois/${id}`) //If dynamic routes
 
           if (selectedPoi) {
             console.log('Data fetched for POI: ', selectedPoi.id)
-            // Adds selectedPoi to Pinia store
-            // TODO: quando Scuro è pronto, aggiungere selectedPoi allo store Pinia
-            //Done(-Scuro)
             store.selectedPoi = selectedPoi
+            store.isModelOpen = true
           } else {
             console.warn(`POI with ID ${id} not found.`)
           }

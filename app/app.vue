@@ -5,6 +5,7 @@
   <div>
     <NuxtRouteAnnouncer />
     <MapBox />
+    <PoiDetail />
   </div>
 </template>
 
