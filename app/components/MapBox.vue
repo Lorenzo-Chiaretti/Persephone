@@ -175,16 +175,9 @@ const renderPois = async () => {
         const id = feature.properties.id
         console.log(`Clicked on POI with ID: ${id}`)
 
-        try {
-          // Calls fetch api
-          // TODO: quando Gab è pronto, aggiorna chiamata dal JSON alla sua api. Puoi togliere allPois e uncommentare selectedPoi
-          const allPois = await $fetch('/data/pois.json') // TODO: cancella
+          try {
 
-          const selectedPoi = allPois.find((poi) => poi.id === id) // TODO: cancella
-          //const selectedPoi = await $fetch('/api/pois/${id}'); //If dynamic routes
-          //const selectedPoi = await $fetch('/api/pois', {
-          //  query : {id: id}
-          //}); //If static routes
+            const selectedPoi = await $fetch(`/api/pois/${id}`); //If dynamic routes
 
           if (selectedPoi) {
             console.log('Data fetched for POI: ', selectedPoi.id)
