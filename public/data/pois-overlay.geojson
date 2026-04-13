@@ -5,13 +5,13 @@
             "type": "Feature",
             "id": 40,
             "properties": {
-                "id": "38636ca0-343f-11f1-9e14-4be61bdb697c"
+                "id": "laghetto-stefano"
             },
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    9.195922,
-                    45.461153
+                    9.195854,
+                    45.461254
                 ]
             }
         },
@@ -19,13 +19,13 @@
             "type": "Feature",
             "id": 41,
             "properties": {
-                "id": "5687f250-343f-11f1-9e14-4be61bdb697c"
+                "id": "via-senato"
             },
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    9.197691,
-                    45.470233
+                    9.198286,
+                    45.469651
                 ]
             }
         },
@@ -33,13 +33,13 @@
             "type": "Feature",
             "id": 42,
             "properties": {
-                "id": "60b821a0-343f-11f1-9e14-4be61bdb697c"
+                "id": "laghetto-san-marco"
             },
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    9.188074,
-                    45.474046
+                    9.187881,
+                    45.474008
                 ]
             }
         }
