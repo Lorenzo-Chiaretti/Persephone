@@ -14,9 +14,9 @@
         class="relative z-10 w-full max-w-[480px] overflow-hidden bg-white rounded-t-[20px]"
       >
         <button
-          @click="close"
-          aria-label="Close"
           class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#d0d7dd]/85 cursor-pointer transition-colors hover:bg-[#b0b8c0]"
+          aria-label="Close"
+          @click="close"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path
@@ -30,7 +30,7 @@
 
         <div class="relative h-[220px] w-full overflow-hidden">
           <img
-            :src="showModern ? poi.imageModernUrl : poi.imageUrl"
+            :src="showModern ? poi.modernImgUrl : poi.historicalImgUrl"
             :alt="poi.title"
             class="h-full w-full object-cover transition-opacity duration-[400ms] ease-in-out"
           />
@@ -45,24 +45,24 @@
             class="absolute bottom-3 right-3 flex gap-[2px] rounded-full bg-[#424242]/60 p-[3px]"
           >
             <button
-              @click="showModern = false"
               class="cursor-pointer rounded-full border-none px-3 py-1 font-['Inter'] text-[11px] transition-colors duration-200"
               :class="
                 !showModern
                   ? 'bg-white text-[#424242]'
                   : 'bg-transparent text-white'
               "
+              @click="showModern = false"
             >
               Historical
             </button>
             <button
-              @click="showModern = true"
               class="cursor-pointer rounded-full border-none px-3 py-1 font-['Inter'] text-[11px] transition-colors duration-200"
               :class="
                 showModern
                   ? 'bg-white text-[#424242]'
                   : 'bg-transparent text-white'
               "
+               @click="showModern = true"
             >
               Today
             </button>
@@ -89,9 +89,9 @@
           </p>
 
           <button
-            @click="navigate"
             class="w-full cursor-pointer rounded-[10px] border-none bg-[#2071c1] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c]"
-          >
+            @click="navigate"
+            >
             Take me there
           </button>
         </div>
