@@ -18,10 +18,11 @@ onMounted(() => {
   // Initialize map on Milan
   map.value = new mapboxgl.Map({
     container: mapContainer.value,
-    style: 'mapbox://styles/mapbox/streets-v12', //Default style
+    style: 'mapbox://styles/marco-abbadessa/cmnyf24zr000801sg1lsdfrnr',
     center: [9.1899, 45.4702], // Milan Coordinates [LNG, LAT]
     zoom: 12,
-    minZoom: 9
+    minZoom: 9,
+    pitch: 60,
   })
 
   // Wait for map to load style to add data
@@ -145,9 +146,10 @@ const renderNavigliOverlay = () => {
     source: 'navigli_src',
     filter: ['==', ['get', 'group'], ''], // Inizialmente non mostra nulla
     paint: {
-      'line-color': '#ffcc00', // Colore di illuminazione (es. Giallo)
-      'line-opacity': 0.6,
-      'line-width': 5
+      'line-color': '#0080ff', // Colore di illuminazione (es. Giallo)
+      'line-opacity': 0.9,
+      'line-width': 8,
+      'line-blur': 10
     }
   })
 }
