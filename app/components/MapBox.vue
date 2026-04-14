@@ -11,16 +11,18 @@ const store = useAppStore()
 const config = useRuntimeConfig()
 const mapContainer = ref(null)
 const map = shallowRef(null)
+let isHoveringMarker = false
 
 onMounted(() => {
   mapboxgl.accessToken = config.public.mapboxKey
   // Initialize map on Milan
   map.value = new mapboxgl.Map({
     container: mapContainer.value,
-    style: 'mapbox://styles/mapbox/streets-v12', //Default style
+    style: 'mapbox://styles/marco-abbadessa/cmnyf24zr000801sg1lsdfrnr',
     center: [9.1899, 45.4702], // Milan Coordinates [LNG, LAT]
     zoom: 12,
-    minZoom: 9
+    minZoom: 9,
+    pitch: 60,
   })
 
   // Wait for map to load style to add data
@@ -43,6 +45,7 @@ const setupMapLayers = () => {
   })
 
   map.value.on('mousemove', (e) => {
+    if (isHoveringMarker) return;
     // Create bounding box around the cursor for better UX
     const offset = 8
     const bbox = [
@@ -56,8 +59,6 @@ const setupMapLayers = () => {
 
     if (features.length > 0) {
       const hoveredFeature = features[0]
-
-      map.value.getCanvas().style.cursor = 'pointer'
 
       const hoveredGroup = hoveredFeature.properties.group
       const hoveredName = hoveredFeature.properties.name
@@ -83,7 +84,6 @@ const setupMapLayers = () => {
 
   map.value.on('mouseout', () => {
     map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], ''])
-    map.value.getCanvas().style.cursor = ''
 
     hoverPopup.remove()
   })
@@ -146,9 +146,10 @@ const renderNavigliOverlay = () => {
     source: 'navigli_src',
     filter: ['==', ['get', 'group'], ''], // Inizialmente non mostra nulla
     paint: {
-      'line-color': '#ffcc00', // Colore di illuminazione (es. Giallo)
-      'line-opacity': 0.6,
-      'line-width': 5
+      'line-color': '#0080ff', // Colore di illuminazione (es. Giallo)
+      'line-opacity': 0.9,
+      'line-width': 8,
+      'line-blur': 10
     }
   })
 }
@@ -166,8 +167,9 @@ const renderPois = async () => {
         .addTo(map.value)
 
       const el = marker.getElement()
-
       el.style.cursor = 'pointer'
+
+      el.classList.add('glow-marker');
 
       el.addEventListener('click', async (e) => {
         e.stopPropagation()
@@ -188,12 +190,48 @@ const renderPois = async () => {
           console.error('Error during fetch from pois.json:', error)
         }
       })
+
+      el.addEventListener('mouseenter', () => {
+        isHoveringMarker = true
+        map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
+        hoverPopup.remove();
+      })
+
+      el.addEventListener('mouseleave', () => {
+        isHoveringMarker = false; // Abbassiamo il semaforo
+      });
     })
   } catch (error) {
     console.error('Error during fetch from pois.json:', error)
   }
 }
 </script>
+
+<style>
+.polygon-tooltip {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333333;
+  text-transform: capitalize; /* Rende la prima lettera maiuscola */
+  padding: 4px 8px;
+}
+.mapboxgl-popup-content {
+  @apply bg-white/95 rounded-lg shadow-md p-1 !important;
+}
+.mapboxgl-popup-tip {
+  @apply hidden !important;
+}
+
+.glow-marker svg {
+  transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.2s ease;
+  transform-origin: bottom center; 
+}
+.glow-marker:hover svg {
+  transform: scale(1.2);
+  filter: drop-shadow(0px 0px 8px rgba(0, 128, 255, 0.9)); 
+}
+</style>
 
 <!-- <style scoped>
 .map-container {
