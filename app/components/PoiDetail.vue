@@ -2,7 +2,7 @@
   <Transition name="slide-up">
     <div
       v-if="store.isModelOpen && store.selectedPoi"
-      class="fixed inset-0 z-50 flex items-end justify-center"
+      class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
       @click.self="close"
     >
       <div
@@ -11,7 +11,7 @@
       />
 
       <div
-        class="relative z-10 w-full max-w-[480px] overflow-hidden bg-white rounded-t-[20px]"
+        class="relative z-10 w-full max-w-[480px] overflow-hidden bg-white rounded-t-[20px] sm:rounded-[20px]"
       >
         <button
           class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#d0d7dd]/85 cursor-pointer transition-colors hover:bg-[#b0b8c0]"
@@ -41,32 +41,31 @@
             {{ showModern ? 'Today' : poi.year }}
           </div>
 
-          <div
-            class="absolute bottom-3 right-3 flex gap-[2px] rounded-full bg-[#424242]/60 p-[3px]"
+          <button
+            type="button"
+            class="absolute bottom-3 right-3 flex cursor-pointer items-center rounded-full bg-[#424242]/60 p-1 outline-none"
+            @click="showModern = !showModern"
           >
-            <button
-              class="cursor-pointer rounded-full border-none px-3 py-1 font-['Inter'] text-[11px] transition-colors duration-200"
-              :class="
-                !showModern
-                  ? 'bg-white text-[#424242]'
-                  : 'bg-transparent text-white'
-              "
-              @click="showModern = false"
-            >
-              Historical
-            </button>
-            <button
-              class="cursor-pointer rounded-full border-none px-3 py-1 font-['Inter'] text-[11px] transition-colors duration-200"
-              :class="
-                showModern
-                  ? 'bg-white text-[#424242]'
-                  : 'bg-transparent text-white'
-              "
-               @click="showModern = true"
-            >
-              Today
-            </button>
-          </div>
+            <div class="relative flex items-center">
+              <div
+                class="absolute bottom-0 left-0 top-0 w-1/2 rounded-full bg-white transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                :class="showModern ? 'translate-x-full' : 'translate-x-0'"
+              ></div>
+
+              <div
+                class="relative z-10 w-[72px] py-1 text-center font-['Inter'] text-[11px] font-medium transition-colors duration-300"
+                :class="!showModern ? 'text-[#424242]' : 'text-white'"
+              >
+                Historical
+              </div>
+              <div
+                class="relative z-10 w-[72px] py-1 text-center font-['Inter'] text-[11px] font-medium transition-colors duration-300"
+                :class="showModern ? 'text-[#424242]' : 'text-white'"
+              >
+                Today
+              </div>
+            </div>
+          </button>
         </div>
 
         <div class="px-6 pb-7 pt-5">
@@ -91,7 +90,7 @@
           <button
             class="w-full cursor-pointer rounded-[10px] border-none bg-[#2071c1] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c]"
             @click="navigate"
-            >
+          >
             Take me there
           </button>
         </div>
@@ -119,7 +118,6 @@ function navigate() {
   // Standard Google Maps URL for exact coordinates
   const url = `https://www.google.com/maps?q=${lat},${lng}`
 
-  // Grounding challenge — handoff failure fallback
   if (!window.open(url, '_blank')) {
     alert(
       `Could not open Maps automatically.\nDestination: ${poi.value.title} (${lat}, ${lng})`
