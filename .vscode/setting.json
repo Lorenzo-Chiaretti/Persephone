@@ -12,5 +12,11 @@
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  
+  "todo-tree.filtering.excludeGlobs": [
+    "**/node_modules/**",
+    "**/.nuxt/**",
+    "**/.output/**"
+]
 }

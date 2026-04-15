@@ -1,0 +1,51 @@
+import { ref } from 'vue'
+
+export const useArPermissions = () => {
+    const cameraStatus = ref<'prompt' | 'granted' | 'denied'>('prompt')
+    const gpsStatus = ref<'prompt' | 'granted' | 'denied'>('prompt')
+    const errorMessage = ref('')
+
+    const requestAllPermissions = async () => {
+        errorMessage.value = ''
+
+        try{
+            const stream = await navigator.mediaDevices.getUserMedia({video : true})
+            cameraStatus.value = 'granted'
+            stream.getTracks().forEach(track => track.stop())
+
+        await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                return reject(new Error("Your browser does not support GPS sharing"))
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    gpsStatus.value = 'granted'
+                    resolve(pos)
+                },
+                (err) => {
+                    gpsStatus.value = 'denied'
+                    resolve(err)
+                },
+                {
+                    enableHighAccuracy: true, 
+                    timeout : 1000, 
+                    maximumAge : 0 
+                }
+            )
+        })
+        return true
+        //TODO: Marco- action in the store to set permissions to true and show button to activate WebXR
+        //Function call 
+       
+        }catch(err : any){
+            if(err.name === 'NotAllowedError'){
+                errorMessage.value = 'Access denied'
+            }else{
+                errorMessage.value = 'Error while activating sensors: ' + err.errorMessage
+            }
+            return false
+        }
+    }
+    return { cameraStatus, gpsStatus, errorMessage, requestAllPermissions }
+}   

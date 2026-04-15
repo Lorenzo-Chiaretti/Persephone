@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -15,12 +14,22 @@ export default defineNuxtConfig({
   modules :[
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
-    '@nuxt/eslint'
-  ], 
+    '@nuxt/eslint',
+    'nuxt-security'
+  ],  
+
+  security: {
+    rateLimiter:{
+      tokensPerInterval: 10, 
+      interval: 'minute'
+    }
+  },  
 
   runtimeConfig: {
+    //Public Keys
     public: {
-      mapboxKey: ''
+      mapboxKey: '',
+      googleGeospatialKey: '' //Needs to be here even if privatre
     }
   }
 })
