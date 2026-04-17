@@ -1,5 +1,5 @@
 export const createNaviglioAnchor = async (session: any) => {
-  const store = useAppStore(); // Usiamo lo store 
+  const store = useAppStore(); 
   const poi = store.selectedPoi;
 
   if (!poi) {
@@ -8,15 +8,18 @@ export const createNaviglioAnchor = async (session: any) => {
   }
 
   try {
-    // Usiamo i dati dinamici dello store (lat, lng del POI cliccato)
+    // CAMBIO QUI: Usiamo l'altitudine reale del piano strada comunicata da Gab (124m)
+    const altitude = 124.0; 
+    const quaternion = [0, 0, 0, 1];
+
     const anchor = await session.createGeospatialAnchor(
       poi.lat,
       poi.lng,
-      120.0, // Altitudine standard di Milano Via Senato
-      [0, 0, 0, 1]
+      altitude, 
+      quaternion
     );
 
-    console.log(`📍 Ancora creata con successo per: ${poi.title}`);
+    console.log(`📍 Ancora creata a quota ${altitude}m per: ${poi.title}`);
     return anchor;
   } catch (error) {
     console.error("❌ Errore creazione ancora dinamica:", error);
