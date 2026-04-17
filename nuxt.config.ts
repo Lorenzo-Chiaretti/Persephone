@@ -12,7 +12,7 @@ export default defineNuxtConfig({
       ]
     }
   }, 
-  modules :[
+  modules: [
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
     '@nuxt/eslint'
@@ -20,7 +20,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      mapboxKey: ''
+      mapboxKey: '',
+      googleArApiKey: process.env.GOOGLE_AR_API_KEY // Aggiungiamo solo la tua
     }
   }
 })
