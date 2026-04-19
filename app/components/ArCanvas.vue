@@ -60,7 +60,6 @@
       'geospatial-api', 
       'dom-overlay'
     ],
-    domOverlay: { root: null as HTMLElement | null } // Verrà popolato da Marco all'avvio
   }
 
   // Esponi la config a Marco
@@ -88,20 +87,26 @@
 
     // Checks if browser supports AR
     if (!navigator.xr) {
-      arStore.triggerError("La realtà aumentata non è supportata su questo browser.")
+      arStore.triggerError("AR is not supported on this browser.")
       return
     }
+
+    if (!overlayRef.value) {
+      console.error("Error: overlayRef still not mounted on DOM.")
+    return
+  }
 
     arStore.startLoading()
 
     try {
       // Connecting DOM overlay
-      if (overlayRef.value) {
-        geospatialConfig.domOverlay.root = overlayRef.value
+      const sessionConfig = {
+        ...geospatialConfig,
+        domOverlay: { root: overlayRef.value }
       }
 
       // Request session
-      const session = await navigator.xr.requestSession('immersive-ar', geospatialConfig)
+      const session = await navigator.xr.requestSession('immersive-ar', sessionConfig)
 
       // Mount 3D engine
       await renderer.xr.setSession(session)
@@ -186,7 +191,6 @@
 </script>
 
 <style scoped>
-  /* Assicuriamoci che il canvas sia perfettamente a tutto schermo */
   canvas {
     touch-action: none;
   }
