@@ -2,7 +2,7 @@
  */
 export const handleGeospatialTracking = (frame: any) => {
   // Richiamiamo lo store Pinia per aggiornare lo stato globale
-  const store = useAppStore();
+  const store = useArStore();
 
   // 1. Cerchiamo la "Pose Geospaziale" (il dato di Google)
   // Il metodo getGeospatialPose() è quello fornito dall'estensione Geospatial
@@ -10,7 +10,7 @@ export const handleGeospatialTracking = (frame: any) => {
 
   // 2. Se non c'è posizionamento (es. l'utente è al chiuso o sta muovendo il telefono)
   if (!geospatialPose) {
-    store.setArTracking('scanning'); // Stato: Scansione in corso...
+    store.startLoading(); // Stato: Scansione in corso...
     return null;
   }
 
@@ -21,11 +21,11 @@ export const handleGeospatialTracking = (frame: any) => {
 
   if (isAccurateEnough) {
     // Diciamo allo store che siamo pronti. Scuro (Dev 3) mostrerà la spunta verde.
-    store.setArTracking('localized');
+    store.setSessionActive();
     return geospatialPose;
   } else {
     // Siamo vicini, ma la precisione è ancora bassa
-    store.setArTracking('scanning');
+    store.startLoading();
     return null;
   }
 };
