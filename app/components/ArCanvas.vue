@@ -40,6 +40,7 @@
   import { useArStore } from '~/stores/arState'
   import { onMounted, onBeforeUnmount, ref } from 'vue';
   import { handleGeospatialTracking } from '~/utils/arTracking'
+  // TODO GAB: importare GLTFLoader
 
   const arStore = useArStore()
 
@@ -50,8 +51,6 @@
 
   const props = defineProps<{ active: boolean }>()
 
-  // TODO: da importare quando si fa:
-  // navigator.xr.requestSession('immersive-ar', geospatialConfig)
   const geospatialConfig = {
     requiredFeatures: ['local-floor'],
     optionalFeatures: [
@@ -152,6 +151,8 @@
     
     // Enable WebXR
     renderer.xr.enabled = true
+
+    // TODO GAB: Aggiungi Luci e Loader del modello
     
     // Render Loop
     renderer.setAnimationLoop(render)
@@ -159,7 +160,7 @@
   
   const render = (timestamp: number, frame?: any) => {
     
-    // TODO: Per team api geospaziale, aggiungere i calcoli di posizionamento
+    // TODO: Per team api geospaziale, basta questo per il posizionamento?
     if (frame) {
       const isLocalized = handleGeospatialTracking(frame)
       console.log('isLocalized', isLocalized)
@@ -192,6 +193,6 @@
 
 <style scoped>
   canvas {
-    touch-action: none;
+    touch-action: pan-y;
   }
 </style>
