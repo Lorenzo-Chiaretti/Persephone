@@ -10,7 +10,7 @@ export const handleGeospatialTracking = (frame: any) => {
 
   // 2. Se non c'è posizionamento (es. l'utente è al chiuso o sta muovendo il telefono)
   if (!geospatialPose) {
-    store.startLoading(); // Stato: Scansione in corso...
+    store.setLostTracking(); // Stato: Scansione in corso...
     return null;
   }
 
@@ -21,11 +21,11 @@ export const handleGeospatialTracking = (frame: any) => {
 
   if (isAccurateEnough) {
     // Diciamo allo store che siamo pronti. Scuro (Dev 3) mostrerà la spunta verde.
-    store.setSessionActive();
+    store.setLocalized;
     return geospatialPose;
   } else {
     // Siamo vicini, ma la precisione è ancora bassa
-    store.startLoading();
+    store.setLostTracking;
     return null;
   }
 };

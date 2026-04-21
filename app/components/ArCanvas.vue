@@ -21,6 +21,25 @@
         </button>
       </div>
 
+      <div
+        v-if="arStore.isLoading"
+        class="absolute inset-0 flex items-center justify-center bg-black/80"
+      >
+        <p class="text-white">Avvio fotocamera...</p>
+      </div>
+
+      <div
+        v-if="arStore.isScanning"
+        class="absolute inset-x-0 top-20 flex justify-center pointer-events-none"
+      >
+        <div
+          class="bg-black/60 text-white px-6 py-3 rounded-full backdrop-blur flex items-center gap-2"
+        >
+          <span class="animate-spin text-xl">⏳</span>
+          <p>Inquadra i palazzi attorno a te...</p>
+        </div>
+      </div>
+
       <div class="relative flex items-center justify-center">
         <svg
           width="40"
@@ -77,9 +96,19 @@ import * as THREE from 'three'
 import { useArStore } from '~/stores/arState'
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { handleGeospatialTracking } from '~/utils/arTracking'
+
 // TODO GAB: importare GLTFLoader
 
 const arStore = useArStore()
+const config = useRuntimeConfig()
+useHead({
+  meta: [
+    {
+      name: 'google-ar-core-geospatial-api-key',
+      content: config.public.googleGeospatialKey
+    }
+  ]
+})
 
 // ==============================================================
 // EXPOSING GEOSPATIAL CONFIG
@@ -90,7 +119,6 @@ const props = defineProps<{ active: boolean }>()
 const geospatialConfig = {
   requiredFeatures: ['local-floor'],
   optionalFeatures: [
-    'camera-access',
     'anchors',
     'geospatial-api',
     'dom-overlay'
@@ -140,10 +168,13 @@ const startArSession = async () => {
       sessionConfig
     )
 
+    //Initialize three.js
+    initThree()
+
     // Mount 3D engine
     await renderer.xr.setSession(session)
 
-    arStore.setSessionActive(session)
+    arStore.setCameraReady(session)
     session.addEventListener('end', () => {
       arStore.resetSession()
     })
@@ -199,14 +230,28 @@ const render = (timestamp: number, frame?: any) => {
   // TODO: Per team api geospaziale, basta questo per il posizionamento?
   if (frame) {
     const isLocalized = handleGeospatialTracking(frame)
-    console.log('isLocalized', isLocalized)
+    //console.log('isLocalized', isLocalized)
   }
 
   renderer.render(scene, camera)
 }
 
 // RESIZE HANDLING
+// const handleResize = () => {
+//   camera.aspect = window.innerWidth / window.innerHeight
+//   camera.updateProjectionMatrix()
+//   renderer.setSize(window.innerWidth, window.innerHeight)
+// }
+
+
 const handleResize = () => {
+  // 1. Se non abbiamo ancora premuto "Entra in AR", ignora il resize
+  if (!camera || !renderer) return
+
+  // 2. Se siamo in AR (WebXR sta presentando), NON forzare il resize, ci pensa lui
+  if (renderer.xr.isPresenting) return
+
+  // 3. Se siamo in una normale scena 3D sul web, aggiorna le proporzioni
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -214,7 +259,6 @@ const handleResize = () => {
 
 // MOUNTING
 onMounted(() => {
-  initThree()
   window.addEventListener('resize', handleResize)
 })
 
