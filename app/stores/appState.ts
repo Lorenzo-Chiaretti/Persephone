@@ -2,27 +2,6 @@
 import { defineStore } from "pinia"
 import { ref } from "vue" // Assicurati di importare ref
 
-//Only for test
-export const useStore = defineStore('app', {
-  state: () => ({
-    // Force this to true so the overlay shows up immediately when you load the page
-    isArActive: false, 
-    
-    // Change this manually in code, or use the buttons below to test the UI
-    arState: 'locating', // Try changing to: 'ready' or 'idle'
-    
-    // Set a string here to test the red error message
-    arError: '' 
-  }),
-  actions: {
-    // This is the function your Exit button calls
-    setArActive(status: boolean) {
-      this.isArActive = status
-    }
-  }
-})
-
-
 export const useAppStore = defineStore('appState', () => {
   interface Poi {
     id: string

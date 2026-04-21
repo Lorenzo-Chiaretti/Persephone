@@ -6,42 +6,13 @@ import PoiDetail from './components/PoiDetail.vue'
 import ArCanvas from './components/ArCanvas.vue'
 import { useArStore } from '~/stores/arState'
 
-
 const arStore = useArStore()
-const store = useStore()
 const errorMessage = ref('')
-const cameraFeed = ref<HTMLVideoElement | null>(null)
 const arCanvasBridge = ref<any>(null)
 
 const startArSessionButton = async () => {
   await arCanvasBridge.value?.startArSession()
 }
-
-// const testStartAr = async () => {
-//   errorMessage.value = ''
-//   try {
-//     // Richiesta permessi fotocamera
-//     const stream = await navigator.mediaDevices.getUserMedia({
-//       video: { facingMode: 'environment' } // Forza la fotocamera posteriore sui telefoni
-//     })
-
-//     // Passiamo il flusso video in diretta al nostro tag HTML
-//     if (cameraFeed.value) {
-//       cameraFeed.value.srcObject = stream
-//     }
-
-//     // Richiesta GPS
-//     await new Promise((resolve, reject) => {
-//       navigator.geolocation.getCurrentPosition(resolve, reject, {
-//         enableHighAccuracy: true
-//       })
-//     })
-
-//     store.isArActive = true
-//   } catch (err: any) {
-//     errorMessage.value = "Permessi necessari per l'AR."
-//   }
-// }
 </script>
 
 <template>
@@ -51,33 +22,20 @@ const startArSessionButton = async () => {
     </div>
 
     <ClientOnly>
-      <ArCanvas :active="arStore.isActive" ref="arCanvasBridge"/>
+      <ArCanvas :active="arStore.isActive" ref="arCanvasBridge" />
     </ClientOnly>
 
-    <video
-      v-show="store.isArActive"
-      ref="cameraFeed"
-      autoplay
-      playsinline
-      muted
-      class="absolute inset-0 w-full h-full object-cover z-20"
-    ></video>
-
     <div
-      v-if="!store.isArActive"
+      v-if="!arStore.isActive"
       class="absolute bottom-12 left-0 right-0 z-10 flex justify-center px-6"
     >
       <button
         @click="startArSessionButton"
-        class="w-full max-w-xs bg-blue-600 text-white py-4 rounded-2xl shadow-2xl font-bold text-lg active:scale-95 transition-transform">
+        class="w-full max-w-xs bg-blue-600 text-white py-4 rounded-2xl shadow-2xl font-bold text-lg active:scale-95 transition-transform"
+      >
         🚀 Inizia Naviglio AR
       </button>
     </div>
-
-    <ClientOnly>
-      <ArOverlay v-if="store.isArActive" />
-    </ClientOnly>
-
     <div
       v-if="errorMessage"
       class="absolute top-4 left-4 right-4 z-[100] bg-white p-3 rounded-lg shadow-lg border-l-4 border-red-500"

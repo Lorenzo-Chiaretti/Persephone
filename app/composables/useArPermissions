@@ -34,10 +34,7 @@ export const useArPermissions = () => {
                 }
             )
         })
-        return true
-        //TODO: Marco- action in the store to set permissions to true and show button to activate WebXR
-        //Function call 
-       
+        return true       
         }catch(err : any){
             if(err.name === 'NotAllowedError'){
                 errorMessage.value = 'Access denied'
