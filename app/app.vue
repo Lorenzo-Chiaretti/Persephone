@@ -3,52 +3,63 @@ import { ref } from 'vue'
 import { useAppStore } from '~/stores/appState'
 import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
+import ArCanvas from './components/ArCanvas.vue'
 import { useArStore } from '~/stores/arState'
- const arStore = useArStore()
+
+
+const arStore = useArStore()
 const store = useStore()
 const errorMessage = ref('')
 const cameraFeed = ref<HTMLVideoElement | null>(null)
+const arCanvasBridge = ref<any>(null)
 
-const testStartAr = async () => {
-  errorMessage.value = ''
-  try {
-    // Richiesta permessi fotocamera
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'environment' } // Forza la fotocamera posteriore sui telefoni
-    })
-    
-    // Passiamo il flusso video in diretta al nostro tag HTML
-    if (cameraFeed.value) {
-      cameraFeed.value.srcObject = stream
-    }
-
-    // Richiesta GPS
-    await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true
-      })
-    })
-
-    store.isArActive = true
-  } catch (err: any) {
-    errorMessage.value = "Permessi necessari per l'AR."
-  }
+const startArSessionButton = async () => {
+  await arCanvasBridge.value?.startArSession()
 }
+
+// const testStartAr = async () => {
+//   errorMessage.value = ''
+//   try {
+//     // Richiesta permessi fotocamera
+//     const stream = await navigator.mediaDevices.getUserMedia({
+//       video: { facingMode: 'environment' } // Forza la fotocamera posteriore sui telefoni
+//     })
+
+//     // Passiamo il flusso video in diretta al nostro tag HTML
+//     if (cameraFeed.value) {
+//       cameraFeed.value.srcObject = stream
+//     }
+
+//     // Richiesta GPS
+//     await new Promise((resolve, reject) => {
+//       navigator.geolocation.getCurrentPosition(resolve, reject, {
+//         enableHighAccuracy: true
+//       })
+//     })
+
+//     store.isArActive = true
+//   } catch (err: any) {
+//     errorMessage.value = "Permessi necessari per l'AR."
+//   }
+// }
 </script>
 
 <template>
-  <main class="relative w-full h-screen bg-gray-200">
-    
+  <main class="relative w-full h-full bg-gray-200">
     <div class="absolute inset-0 z-0">
       <Mapbox />
     </div>
 
-    <video 
+    <ClientOnly>
+      <ArCanvas :active="arStore.isActive" ref="arCanvasBridge"/>
+    </ClientOnly>
+
+    <video
       v-show="store.isArActive"
       ref="cameraFeed"
-      autoplay 
-      playsinline 
-      muted 
+      autoplay
+      playsinline
+      muted
       class="absolute inset-0 w-full h-full object-cover z-20"
     ></video>
 
@@ -57,9 +68,8 @@ const testStartAr = async () => {
       class="absolute bottom-12 left-0 right-0 z-10 flex justify-center px-6"
     >
       <button
-        @click="testStartAr"
-        class="w-full max-w-xs bg-blue-600 text-white py-4 rounded-2xl shadow-2xl font-bold text-lg active:scale-95 transition-transform"
-      >
+        @click="startArSessionButton"
+        class="w-full max-w-xs bg-blue-600 text-white py-4 rounded-2xl shadow-2xl font-bold text-lg active:scale-95 transition-transform">
         🚀 Inizia Naviglio AR
       </button>
     </div>
@@ -74,10 +84,8 @@ const testStartAr = async () => {
     >
       <p class="text-red-600 text-sm font-bold">{{ errorMessage }}</p>
     </div>
-
     <PoiDetail />
   </main>
-  <ArCanvas :active="arStore.isActive" />
 </template>
 
 <style>

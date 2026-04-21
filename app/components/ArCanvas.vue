@@ -1,18 +1,18 @@
 <template>
-  <div class="relative w-full h-screen overflow-hidden bg-black">
+  <div v-show = "!arStore.isIdle" class="relative w-full h-screen overflow-hidden bg-black">
 
     <canvas ref="canvasRef" class="block w-full h-full" />
 
     <div ref="overlayRef" class="absolute inset-0 pointer-events-none">
       
-      <div v-if="arStore.isIdle" class="absolute bottom-10 left-1/2 -translate-x-1/2 pointer-events-auto">
+      <!-- <div v-if="arStore.isIdle" class="absolute bottom-10 left-1/2 -translate-x-1/2 pointer-events-auto">
         <button 
           @click="startArSession"
           class="bg-white text-black px-8 py-4 rounded-full font-bold shadow-lg"
         >
           Start AR Experience
         </button>
-      </div>
+      </div> -->
 
       <div v-if="arStore.isLoading" class="absolute inset-0 flex items-center justify-center bg-black/80">
         <p class="text-white text-xl animate-pulse">Avvio fotocamera e sensori Google...</p>
@@ -61,9 +61,6 @@
     ],
   }
 
-  // Esponi la config a Marco
-  defineExpose({ geospatialConfig })
-
 
   // ==============================================================
   // REFS AND VARIABLES
@@ -83,7 +80,6 @@
   // ==============================================================
 
   const startArSession = async () => {
-
     // Checks if browser supports AR
     if (!navigator.xr) {
       arStore.triggerError("AR is not supported on this browser.")
@@ -120,6 +116,12 @@
       console.error(error)
     }
   }
+
+  //Expose session to app.vue
+  defineExpose({
+    startArSession,
+    geospatialConfig
+  })
 
 
   // ==============================================================
