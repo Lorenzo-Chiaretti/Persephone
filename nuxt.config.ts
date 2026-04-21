@@ -22,6 +22,12 @@ export default defineNuxtConfig({
     rateLimiter:{
       tokensPerInterval: 10, 
       interval: 'minute'
+    }, 
+    headers: {
+      permissionsPolicy: {
+        camera: ["'self'"],        // Sblocca la fotocamera per il tuo sito
+        geolocation: ["'self'"]    // Sblocca il GPS per il tuo sito
+      }
     }
   },  
 
@@ -29,7 +35,7 @@ export default defineNuxtConfig({
     //Public Keys
     public: {
       mapboxKey: '',
-      googleGeospatialKey: '' //Needs to be here even if privatre
+      googleGeospatialKey: '' 
     }
   }
 })
