@@ -5,6 +5,7 @@ import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
 import ArCanvas from './components/ArCanvas.vue'
 import { useArStore } from '~/stores/arState'
+import { onMounted } from 'vue'
 
 const arStore = useArStore()
 const errorMessage = ref('')
@@ -13,6 +14,28 @@ const arCanvasBridge = ref<any>(null)
 const startArSessionButton = async () => {
   await arCanvasBridge.value?.startArSession()
 }
+
+//TODO: just a test
+onMounted(() => {
+  // 1. Leggiamo l'indirizzo web attuale
+  const urlParams = new URLSearchParams(window.location.search)
+
+  // 2. Controlliamo se nel link c'è la parola d'ordine "?debug=true"
+  const isDebugMode = urlParams.has('debug')
+
+  // 3. Attiviamo Eruda SOLO in locale (process.dev) OPPURE se c'è la parola d'ordine
+  if (process.dev || isDebugMode) {
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda'
+    document.body.appendChild(script)
+
+    script.onload = () => {
+      // Ignoriamo l'errore TypeScript perché eruda viene caricato dall'esterno
+      // @ts-ignore
+      eruda.init()
+    }
+  }
+})
 </script>
 
 <template>
