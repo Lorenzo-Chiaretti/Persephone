@@ -11,7 +11,7 @@ export default defineNuxtConfig({
       ]
     }
   }, 
-  modules :[
+  modules: [
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
     '@nuxt/eslint',

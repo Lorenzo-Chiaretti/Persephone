@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import { useAppStore } from '~/stores/appState'
 import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
-
+import { useArStore } from '~/stores/arState'
+ const arStore = useArStore()
 const store = useStore()
 const errorMessage = ref('')
 const cameraFeed = ref<HTMLVideoElement | null>(null)
@@ -76,6 +77,7 @@ const testStartAr = async () => {
 
     <PoiDetail />
   </main>
+  <ArCanvas :active="arStore.isActive" />
 </template>
 
 <style>
