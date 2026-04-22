@@ -1,19 +1,19 @@
 import { defineStore } from "pinia"
 import { ref, computed } from "vue" 
 
-export type ArStatus = 'IDLE' | 'LOADING' | 'ACTIVE' | 'ERROR'
+export type ArStatus = 'IDLE' | 'LOADING' | 'SCANNING' | 'ACTIVE' | 'ERROR'
 
 export const useArStore = defineStore('ar', () => {
 
     //STATE
     const status = ref<ArStatus>('IDLE')
     const errorMessage = ref<string | null>(null)
-    //TODO: capisci se è utile o è meglio toglierla e se è meglio sostituire any con XRSession
-    const session = ref<any | null>(null)
+    const session = shallowRef<XRSession | null>(null)
 
     //GETTERS
     const isIdle = computed(() => status.value === 'IDLE')
     const isLoading = computed(() => status.value === 'LOADING')
+    const isScanning = computed(() => status.value === 'SCANNING')
     const isActive = computed(() => status.value === 'ACTIVE')
     const isError = computed(() => status.value === 'ERROR')
 
@@ -23,9 +23,21 @@ export const useArStore = defineStore('ar', () => {
         errorMessage.value = null
     }
 
-    function setSessionActive(xrSession: any = null) {
-        status.value = 'ACTIVE'
+    function setCameraReady(xrSession : XRSession){
+        status.value = 'SCANNING'
         session.value = xrSession
+    }
+
+    function setLocalized(){
+        if(status.value !== 'ACTIVE'){
+            status.value = 'ACTIVE'
+        }
+    }
+
+    function setLostTracking(){
+        if(status.value === 'ACTIVE'){
+            status.value = 'SCANNING'
+        }
     }
 
     function triggerError(message: string) {
@@ -58,9 +70,12 @@ export const useArStore = defineStore('ar', () => {
         isLoading,
         isActive,
         isError,
+        isScanning,
         // Actions
         startLoading,
-        setSessionActive,
+        setCameraReady,
+        setLocalized,
+        setLostTracking,
         triggerError,
         resetSession
     }
