@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full h-screen overflow-hidden bg-black">
+  <div class="relative w-full h-screen overflow-hidden bg-gradient-to-r from-red-500 to-blue-500">
 
     <canvas ref="canvasRef" class="block w-full h-full" />
 
@@ -37,10 +37,12 @@
 
 <script setup lang="ts">
   import * as THREE from 'three'
+  import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
   import { useArStore } from '~/stores/arState'
   import { onMounted, onBeforeUnmount, ref } from 'vue';
   import { handleGeospatialTracking } from '~/utils/arTracking'
-  // TODO GAB: importare GLTFLoader
+  import { Water } from 'three/examples/jsm/objects/Water.js'
 
   const arStore = useArStore()
 
@@ -76,6 +78,8 @@
   let scene: THREE.Scene
   let camera: THREE.PerspectiveCamera
   let renderer: THREE.WebGLRenderer
+  let controls: any
+  let water: any
 
 
   // ==============================================================
@@ -133,12 +137,8 @@
     scene = new THREE.Scene()
 
     // Camera creation (FOV, Aspect Ratio, Near, Far)
-    camera = new THREE.PerspectiveCamera(
-      70,
-      window.innerWidth / window.innerHeight,
-      0.01,
-      20
-    )
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 2000)
+    camera.position.set(0, 30, 40)
 
     // Renderer creation
     renderer = new THREE.WebGLRenderer({
@@ -147,12 +147,110 @@
       alpha: true
     })
     renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) // optimize performance
     
     // Enable WebXR
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.xr.enabled = true
 
-    // TODO GAB: Aggiungi Luci e Loader del modello
+    // --- SETUP LIGHT ---
+    
+    // Luce Ambientale (Luce di base, debole per non appiattire tutto)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6) 
+    scene.add(ambientLight)
+
+    // Luce Direzionale (Il Sole)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
+    directionalLight.position.set(5, 10, 5) // Posizionato in alto a destra
+    directionalLight.castShadow = true // per proiettare ombre
+    // Miglioriamo la qualità delle ombre
+    directionalLight.shadow.mapSize.width = 1024
+    directionalLight.shadow.mapSize.height = 1024
+    scene.add(directionalLight)
+
+
+    // --- CARICAMENTO DEL MODELLO GLB ---
+    
+    const loader = new GLTFLoader()
+    
+    loader.load(
+      '/models/Via_senato_v2.glb', 
+      (gltf) => {
+        const model = gltf.scene
+
+        // 3. APPLICAZIONE DELLA MAGIA HOLDOUT
+        // Scorriamo tutti gli oggetti dentro il modello
+        model.traverse((node) => {
+
+          const child = node as THREE.Mesh
+
+          if (child.isMesh) {
+            // Fagli ricevere e proiettare ombre
+            child.castShadow = true
+            child.receiveShadow = true
+
+            const material = child.material as THREE.Material
+
+            if (material && material.name === 'Mat_Holdout') {
+              // Rende l'oggetto invisibile, ma fa bucare lo sfondo
+              material.colorWrite = false
+              material.depthWrite = true
+              child.renderOrder = -1 // Assicuriamoci che venga renderizzato prima delle altre cose
+            }
+
+            // water texture
+            if (child.name === 'Acqua') {
+              
+              const waterGeometry = child.geometry
+
+              water = new Water(
+                waterGeometry,
+                {
+                  textureWidth: 512,
+                  textureHeight: 512,
+
+                  waterNormals: new THREE.TextureLoader().load('/textures/waternormals.jpg', function ( texture ) {
+                    texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+                  }),
+                  // Impostazioni estetiche
+                  sunDirection: directionalLight.position.clone().normalize(),
+                  sunColor: 0xffffff,
+                  waterColor: 0x497785, // Verde scuro 
+                  distortionScale: 1.5, // Grandezza delle onde
+                  alpha: 0.9 // Leggermente trasparente
+                }
+              )
+
+              // Mettiamo l'acqua esattaamente dove si trovava il piano di Blender
+              water.position.copy(child.position)
+              water.rotation.copy(child.rotation)
+              water.scale.copy(child.scale)
+              
+              // Aggiungiamo l'acqua vera alla scena e nascondiamo il piano "finto"
+              scene.add(water)
+              child.visible = false 
+            }
+          }
+        })
+
+        // Aggiungiamo il modello finalmente pronto alla scena
+        scene.add(model)
+        console.log("Naviglio caricato e Holdout applicato con successo!")
+      },
+      (xhr) => {
+        // Feedback sul progresso (opzionale)
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+      },
+      (error) => {
+        console.error('Si è verificato un errore durante il caricamento del GLB:', error)
+      }
+    )
+
+    // Aggiungiamo i controlli per ruotare col mouse su PC!
+    controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true // Aggiunge inerzia fisica al movimento
+    controls.dampingFactor = 0.05
     
     // Render Loop
     renderer.setAnimationLoop(render)
@@ -164,6 +262,11 @@
     if (frame) {
       const isLocalized = handleGeospatialTracking(frame)
       console.log('isLocalized', isLocalized)
+    }
+    if (controls) controls.update()
+
+    if (water) {
+      water.material.uniforms['time'].value += 0.20 / 60.0;
     }
 
     renderer.render(scene, camera)
