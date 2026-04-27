@@ -30,12 +30,12 @@ export default defineNuxtConfig({
       }
     }
   },  
-
   runtimeConfig: {
     //Public Keys
     public: {
       mapboxKey: '',
-      googleGeospatialKey: '' 
+      multisetClientId: process.env.MULTISET_CLIENT_ID,
+      multisetClientSecret: process.env.MULTISET_CLIENT_SECRET,
     }
   }
 })

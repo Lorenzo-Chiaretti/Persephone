@@ -1,4 +1,4 @@
-<template>
+<!--<template>
   <div
     v-show="!arStore.isIdle"
     class="relative w-full h-screen overflow-hidden bg-black"
@@ -274,3 +274,4 @@ canvas {
   touch-action: pan-y;
 }
 </style>
+-->
