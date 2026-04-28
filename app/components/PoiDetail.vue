@@ -35,11 +35,21 @@
             class="h-full w-full object-cover transition-opacity duration-[400ms] ease-in-out"
           />
 
-          <div
-            class="absolute bottom-3 left-3 rounded-full bg-[#424242]/70 px-2.5 py-[3px] font-['Inter'] text-[11px] text-white"
+          <button
+            class="absolute bottom-3 left-3 flex cursor-pointer items-center gap-1 rounded-full bg-[#424242]/70 px-2.5 py-[3px] font-['Inter'] text-[11px] text-white transition-colors hover:bg-[#424242]"
+            @click="compareOpen = true"
           >
-            {{ showModern ? 'Today' : poi.year }}
-          </div>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path
+                d="M1 4.5V1h3.5M7.5 1H11v3.5M11 7.5V11H7.5M4.5 11H1V7.5"
+                stroke="white"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Confronta
+          </button>
 
           <button
             type="button"
@@ -72,19 +82,19 @@
           <p
             class="mb-1.5 font-['Inter'] text-[11px] uppercase tracking-[0.1em] text-[#2071c1]"
           >
-            {{ poi.year }}
+            {{ poi?.year }}
           </p>
 
           <h2
             class="mb-3 font-['Playfair_Display'] text-[22px] font-bold leading-[1.3] text-[#424242]"
           >
-            {{ poi.title }}
+            {{ poi?.title }}
           </h2>
 
           <p
             class="mb-5 font-['Inter'] text-[14px] leading-[1.7] text-[#424242]/80"
           >
-            {{ poi.description }}
+            {{ poi?.description }}
           </p>
 
           <button
@@ -97,36 +107,49 @@
       </div>
     </div>
   </Transition>
+
+  <ImageCompareSlider
+    v-if="poi"
+    :open="compareOpen"
+    :title="poi.title"
+    :historical-src="poi.historicalImgUrl"
+    :modern-src="poi.modernImgUrl"
+    @close="compareOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '~/stores/appState'
+import ImageCompareSlider from '~/components/ImageCompareSlider.vue'
 
 const store = useAppStore()
 const showModern = ref(false)
-const poi = computed(() => store.selectedPoi!)
+const compareOpen = ref(false)
+const poi = computed(() => store.selectedPoi ?? null)
 
 function close() {
   store.isModelOpen = false
   showModern.value = false
+  compareOpen.value = false
 }
 
 function navigate() {
-  const lat = poi.value.lat
-  const lng = poi.value.lng
-  // Standard Google Maps URL for exact coordinates
+  if (!poi.value) return
+  const { lat, lng, title } = poi.value
   const url = `https://www.google.com/maps?q=${lat},${lng}`
-
   if (!window.open(url, '_blank')) {
     alert(
-      `Could not open Maps automatically.\nDestination: ${poi.value.title} (${lat}, ${lng})`
+      `Could not open Maps automatically.\nDestination: ${title} (${lat}, ${lng})`
     )
   }
 }
 
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape') close()
+  if (e.key === 'Escape') {
+    if (compareOpen.value) compareOpen.value = false
+    else close()
+  }
 }
 
 onMounted(() => window.addEventListener('keydown', onKey))
