@@ -33,16 +33,17 @@ onMounted(() => {
 
 // RENDER MAP LAYERS (Navigli overlay and pois)
 const setupMapLayers = () => {
-  renderNavigliOverlay()
-  renderPois()
-
-  // Handle hovering effect
 
   const hoverPopup = new mapboxgl.Popup({
     closeButton: false,
     closeOnClick: false,
     offset: 15 // Aggiunge 15px di distanza dal puntatore per non coprirlo
   })
+
+  renderNavigliOverlay()
+  renderPois(hoverPopup)
+
+  // Handle hovering effect
 
   map.value.on('mousemove', (e) => {
     if (isHoveringMarker) return;
@@ -155,7 +156,7 @@ const renderNavigliOverlay = () => {
 }
 
 // RENDER POI MARKERS
-const renderPois = async () => {
+const renderPois = async (hoverPopup) => {
   try {
     const response = await fetch('/data/pois-overlay.geojson')
     const poisData = await response.json()

@@ -1,6 +1,8 @@
 export const createNaviglioAnchor = async (session: any) => {
-  const store = useAppStore(); 
-  const poi = store.selectedPoi;
+  const mapStore = useAppStore();
+  const arStore = useArStore();
+
+  const poi = mapStore.selectedPoi;
 
   if (!poi) {
     console.warn("⚠️ Tentativo di creare un'ancora senza un POI selezionato.");
@@ -23,7 +25,7 @@ export const createNaviglioAnchor = async (session: any) => {
     return anchor;
   } catch (error) {
     console.error("❌ Errore creazione ancora dinamica:", error);
-    store.setArTracking('error');
+    arStore.triggerError("Error during anchor creation: " + error);
     return null;
   }
 };

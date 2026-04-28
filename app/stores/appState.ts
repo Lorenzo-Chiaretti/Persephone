@@ -20,24 +20,12 @@ export const useAppStore = defineStore('appState', () => {
   const isModelOpen = ref(false)
   const selectedPoi = ref<Poi | null>(null)
 
-  const arActive = ref(false)
-  const arTrackingStatus = ref<'idle' | 'scanning' | 'localized' | 'error'>('idle')
-
   function setLocation(locationName: string) {
     selectedLocation.value = locationName
   }
 
   function setMapReady() {
     isMapLoaded.value = true
-  }
-
-  function setArTracking(status: 'idle' | 'scanning' | 'localized' | 'error') {
-    arTrackingStatus.value = status
-  }
-
-  function toggleAr(value: boolean) {
-    arActive.value = value
-    if (!value) arTrackingStatus.value = 'idle'
   }
 
   return { 
@@ -47,10 +35,5 @@ export const useAppStore = defineStore('appState', () => {
     setMapReady,
     isModelOpen,
     selectedPoi,
-    // Export nuovi stati
-    arActive,
-    arTrackingStatus,
-    setArTracking,
-    toggleAr
   }
 })
