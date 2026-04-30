@@ -1,6 +1,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+
   app: {
     head: {
       link: [
@@ -10,32 +11,49 @@ export default defineNuxtConfig({
         }
       ]
     }
-  }, 
-  modules: [
-    '@pinia/nuxt',
-    '@nuxtjs/tailwindcss',
-    '@nuxt/eslint',
-    'nuxt-security'
-  ],  
+  },
 
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', 'nuxt-security'],
+
+  // --- CONFIGURAZIONE SICUREZZA ---
   security: {
-    rateLimiter:{
-      tokensPerInterval: 10, 
+    rateLimiter: {
+      tokensPerInterval: 50,
       interval: 'minute'
-    }, 
+    },
     headers: {
+      contentSecurityPolicy: {
+        'connect-src': [
+          "'self'",
+          'https://api.deepgram.com',
+          'wss://api.deepgram.com',
+          'https://api.groq.com',
+          'https://api.elevenlabs.io',
+          'https://*.mapbox.com', // Sblocca Mapbox
+          'https://cdn.jsdelivr.net' // Sblocca Eruda e altri script
+        ],
+        'img-src': ["'self'", 'data:', 'blob:', 'https://*.mapbox.com'], // Necessario per le mappe
+        'worker-src': ["'self'", 'blob:'], // Necessario per Mapbox
+        'upgrade-insecure-requests': true
+      },
       permissionsPolicy: {
-        camera: ["'self'"],        // Sblocca la fotocamera per il tuo sito
-        geolocation: ["'self'"]    // Sblocca il GPS per il tuo sito
-      }
+        camera: 'self',
+        geolocation: 'self',
+        microphone: 'self'
+      },
+      crossOriginEmbedderPolicy: 'unsafe-none'
     }
-  },  
+  },
 
+  // --- VARIABILI D'AMBIENTE ---
   runtimeConfig: {
-    //Public Keys
+    // Chiave privata (lato server)
+    deepgramApiKey: process.env.DEEPGRAM_API_KEY,
+
+    // Chiavi pubbliche (lato client)
     public: {
-      mapboxKey: '',
-      googleGeospatialKey: '' 
+      mapboxKey: process.env.MAPBOX_KEY || '',
+      googleGeospatialKey: process.env.GOOGLE_GEOSPATIAL_KEY || ''
     }
   }
 })

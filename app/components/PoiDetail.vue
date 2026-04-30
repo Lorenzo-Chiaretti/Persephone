@@ -30,8 +30,12 @@
 
         <div class="relative h-[220px] w-full overflow-hidden">
           <img
-            :src="showModern ? poi.modernImgUrl : poi.historicalImgUrl"
-            :alt="poi.title"
+            :src="
+              showModern
+                ? store.selectedPoi.modernImgUrl
+                : store.selectedPoi.historicalImgUrl
+            "
+            :alt="store.selectedPoi.title"
             class="h-full w-full object-cover transition-opacity duration-[400ms] ease-in-out"
           />
 
@@ -82,61 +86,100 @@
           <p
             class="mb-1.5 font-['Inter'] text-[11px] uppercase tracking-[0.1em] text-[#2071c1]"
           >
-            {{ poi?.year }}
+            {{ store.selectedPoi.year }}
           </p>
 
           <h2
             class="mb-3 font-['Playfair_Display'] text-[22px] font-bold leading-[1.3] text-[#424242]"
           >
-            {{ poi?.title }}
+            {{ store.selectedPoi.title }}
           </h2>
 
           <p
             class="mb-5 font-['Inter'] text-[14px] leading-[1.7] text-[#424242]/80"
           >
-            {{ poi?.description }}
+            {{ store.selectedPoi.description }}
           </p>
 
-          <button
-            class="w-full cursor-pointer rounded-[10px] border-none bg-[#2071c1] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c]"
-            @click="navigate"
-          >
-            Take me there
-          </button>
+          <!-- Action buttons -->
+          <div class="flex gap-3">
+            <button
+              class="flex-1 cursor-pointer rounded-[10px] border-none bg-[#2071c1] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c] flex items-center justify-center gap-2"
+              @click="navigate"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
+              </svg>
+              Take me there
+            </button>
+
+            <button
+              class="flex-1 cursor-pointer rounded-[10px] border-none bg-[#424242] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#2a2a2a] flex items-center justify-center gap-2"
+              @click="gameOpen = true"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Let's play
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </Transition>
 
-  <ImageCompareSlider
-    v-if="poi"
-    :open="compareOpen"
-    :title="poi.title"
-    :historical-src="poi.historicalImgUrl"
-    :modern-src="poi.modernImgUrl"
-    @close="compareOpen = false"
-  />
+  <template v-if="store.selectedPoi">
+    <ImageCompareSlider
+      :open="compareOpen"
+      :title="store.selectedPoi.title"
+      :historical-src="store.selectedPoi.historicalImgUrl"
+      :modern-src="store.selectedPoi.modernImgUrl"
+      @close="compareOpen = false"
+    />
+
+    <PhotoGame
+      v-if="gameOpen"
+      :poi="store.selectedPoi"
+      @close="gameOpen = false"
+    />
+  </template>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '~/stores/appState'
 import ImageCompareSlider from '~/components/ImageCompareSlider.vue'
+import PhotoGame from '~/components/PhotoGame.vue'
 
 const store = useAppStore()
 const showModern = ref(false)
 const compareOpen = ref(false)
-const poi = computed(() => store.selectedPoi ?? null)
+const gameOpen = ref(false)
 
 function close() {
   store.isModelOpen = false
   showModern.value = false
   compareOpen.value = false
+  gameOpen.value = false
 }
 
 function navigate() {
-  if (!poi.value) return
-  const { lat, lng, title } = poi.value
+  if (!store.selectedPoi) return
+  const { lat, lng, title } = store.selectedPoi
   const url = `https://www.google.com/maps?q=${lat},${lng}`
   if (!window.open(url, '_blank')) {
     alert(
@@ -147,7 +190,8 @@ function navigate() {
 
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') {
-    if (compareOpen.value) compareOpen.value = false
+    if (gameOpen.value) gameOpen.value = false
+    else if (compareOpen.value) compareOpen.value = false
     else close()
   }
 }

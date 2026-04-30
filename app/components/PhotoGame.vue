@@ -1,0 +1,651 @@
+<template>
+  <Teleport to="body">
+    <div
+      class="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4"
+      @click.self="emit('close')"
+    >
+      <div
+        class="absolute inset-0 bg-[#424242]/45 cursor-pointer"
+        @click="emit('close')"
+      />
+
+      <Transition name="slide-up" appear>
+        <div
+          class="relative z-10 w-full max-w-[480px] bg-[#0f0e1a] rounded-t-[20px] sm:rounded-[20px] overflow-hidden max-h-[92dvh] overflow-y-auto"
+        >
+          <!-- Close -->
+          <button
+            class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 cursor-pointer transition-colors hover:bg-white/20"
+            @click="emit('close')"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path
+                d="M1 1l10 10M11 1L1 11"
+                stroke="white"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+
+          <!-- ══════════════ RULES PHASE ══════════════ -->
+          <Transition name="fade">
+            <div
+              v-if="phase === 'rules'"
+              class="flex flex-col items-center px-6 pb-8 pt-8"
+            >
+              <div class="text-5xl mb-3">📸</div>
+              <h2
+                class="font-['Playfair_Display'] text-[26px] font-bold text-[#2071c1] mb-1"
+              >
+                Sei qui?
+              </h2>
+              <p class="font-['Inter'] text-[13px] text-white/50 italic mb-6">
+                Il gioco della foto storica
+              </p>
+
+              <!-- Come si gioca -->
+              <p
+                class="font-['Inter'] text-[11px] uppercase tracking-[0.12em] text-white/30 self-start mb-2"
+              >
+                Come si gioca
+              </p>
+              <div class="w-full flex flex-col gap-2 mb-5">
+                <div
+                  v-for="rule in rules"
+                  :key="rule.n"
+                  class="flex items-start gap-3 bg-white/5 rounded-[12px] px-4 py-3"
+                >
+                  <span
+                    class="flex-shrink-0 w-6 h-6 rounded-full bg-[#2071c1] text-white font-['Inter'] text-[11px] font-bold flex items-center justify-center mt-0.5"
+                  >
+                    {{ rule.n }}
+                  </span>
+                  <p
+                    class="font-['Inter'] text-[13px] text-white/70 leading-[1.55]"
+                    v-html="rule.text"
+                  />
+                </div>
+              </div>
+
+              <!-- Segnali multimodali -->
+              <p
+                class="font-['Inter'] text-[11px] uppercase tracking-[0.12em] text-white/30 self-start mb-2"
+              >
+                Mentre cammini, tre segnali ti guidano
+              </p>
+              <div class="w-full flex flex-col gap-2 mb-7">
+                <div
+                  class="flex items-center gap-3 bg-white/5 rounded-[12px] px-4 py-3"
+                >
+                  <span class="text-xl flex-shrink-0">🔊</span>
+                  <div>
+                    <p
+                      class="font-['Inter'] text-[13px] font-semibold text-white/90 leading-none mb-0.5"
+                    >
+                      Suono
+                    </p>
+                    <p
+                      class="font-['Inter'] text-[12px] text-white/50 leading-[1.45]"
+                    >
+                      Un tick si fa sempre più rapido e acuto man mano che ti
+                      avvicini al punto esatto.
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="flex items-center gap-3 bg-white/5 rounded-[12px] px-4 py-3"
+                >
+                  <span class="text-xl flex-shrink-0">🖼️</span>
+                  <div>
+                    <p
+                      class="font-['Inter'] text-[13px] font-semibold text-white/90 leading-none mb-0.5"
+                    >
+                      Visivo
+                    </p>
+                    <p
+                      class="font-['Inter'] text-[12px] text-white/50 leading-[1.45]"
+                    >
+                      Il bordo della foto cambia colore — dal blu al verde — e
+                      si illumina quando sei vicino.
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="flex items-center gap-3 bg-white/5 rounded-[12px] px-4 py-3"
+                >
+                  <span class="text-xl flex-shrink-0">📊</span>
+                  <div>
+                    <p
+                      class="font-['Inter'] text-[13px] font-semibold text-white/90 leading-none mb-0.5"
+                    >
+                      Testo
+                    </p>
+                    <p
+                      class="font-['Inter'] text-[12px] text-white/50 leading-[1.45]"
+                    >
+                      Una barra di prossimità ti dice in parole quanto sei
+                      lontano dal punto.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class="w-full rounded-[10px] bg-[#2071c1] hover:bg-[#1a5b9c] transition-colors p-3 font-['Inter'] text-[14px] font-medium text-white cursor-pointer"
+                @click="phase = 'game'"
+              >
+                Inizia la sfida →
+              </button>
+            </div>
+          </Transition>
+
+          <!-- ══════════════ GAME PHASE ══════════════ -->
+          <Transition name="fade">
+            <div v-if="phase === 'game'" class="flex flex-col px-6 pb-8 pt-6">
+              <span
+                class="font-['Inter'] text-[10px] uppercase tracking-[0.12em] text-[#2071c1] mb-1"
+                >📍 Trova il punto esatto</span
+              >
+              <h2
+                class="font-['Playfair_Display'] text-[20px] font-bold text-white mb-4"
+              >
+                {{ poi.title }}
+              </h2>
+
+              <!-- Historical photo con bordo animato -->
+              <div
+                class="relative rounded-[14px] overflow-hidden mb-4 transition-all duration-300"
+                :style="photoFrameStyle"
+              >
+                <img
+                  v-if="poi.historicalImgUrl"
+                  :src="poi.historicalImgUrl"
+                  :alt="`Foto storica: ${poi.title}`"
+                  class="w-full h-[210px] object-cover"
+                  style="filter: sepia(35%) contrast(1.08)"
+                />
+                <div
+                  v-else
+                  class="h-[180px] flex flex-col items-center justify-center gap-2 text-white/30"
+                >
+                  <span class="text-4xl">📷</span>
+                  <p class="font-['Inter'] text-[13px]">
+                    Foto storica non disponibile
+                  </p>
+                </div>
+                <span
+                  class="absolute bottom-2 left-2 bg-black/70 font-['Inter'] text-[10px] uppercase tracking-[0.07em] px-2 py-0.5 rounded transition-colors duration-300"
+                  :style="{ color: proximityColor }"
+                >
+                  Foto storica
+                </span>
+
+                <!-- Overlay pulsante quando vicino -->
+                <div
+                  v-if="proximity > 0.5"
+                  class="absolute inset-0 pointer-events-none rounded-[14px] transition-opacity duration-300"
+                  :style="{
+                    boxShadow: `inset 0 0 ${Math.round(proximity * 40)}px ${proximityColor}55`,
+                    opacity: proximity
+                  }"
+                />
+              </div>
+
+              <!-- Indicatore di prossimità -->
+              <div v-if="gpsReady && distance !== null" class="mb-3">
+                <div class="flex justify-between items-center mb-1.5">
+                  <span class="font-['Inter'] text-[11px] text-white/40"
+                    >Lontano</span
+                  >
+                  <span
+                    class="font-['Inter'] text-[12px] font-semibold transition-colors duration-300"
+                    :style="{ color: proximityColor }"
+                  >
+                    {{ proximityLabel }}
+                  </span>
+                  <span class="font-['Inter'] text-[11px] text-white/40"
+                    >Vicino</span
+                  >
+                </div>
+                <div
+                  class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :style="{
+                      width: `${proximity * 100}%`,
+                      backgroundColor: proximityColor
+                    }"
+                  />
+                </div>
+              </div>
+
+              <!-- GPS Status -->
+              <div
+                class="flex items-center gap-2 rounded-[8px] px-3 py-2 mb-4 font-['Inter'] text-[12px]"
+                :class="{
+                  'bg-green-500/10 text-green-400': gpsReady,
+                  'bg-red-500/10 text-red-400': !!gpsError,
+                  'bg-white/5 text-white/40': !gpsReady && !gpsError
+                }"
+              >
+                <span>{{ gpsReady ? '🛰️' : gpsError ? '⚠️' : '⏳' }}</span>
+                <span>{{ gpsStatusText }}</span>
+              </div>
+
+              <!-- Audio toggle -->
+              <div class="flex items-center justify-between mb-4">
+                <span class="font-['Inter'] text-[12px] text-white/40 italic">
+                  Cammina verso il punto della foto
+                </span>
+                <button
+                  class="flex items-center gap-1.5 font-['Inter'] text-[11px] text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+                  @click="toggleAudio"
+                >
+                  <span>{{ audioEnabled ? '🔊' : '🔇' }}</span>
+                  <span>{{ audioEnabled ? 'Audio on' : 'Audio off' }}</span>
+                </button>
+              </div>
+
+              <!-- CTA -->
+              <button
+                class="w-full rounded-[10px] p-3 font-['Inter'] text-[15px] font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                :class="
+                  gpsReady && !checking
+                    ? 'bg-[#2071c1] hover:bg-[#1a5b9c] text-white'
+                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                "
+                :disabled="!gpsReady || checking"
+                @click="checkLocation"
+              >
+                <span v-if="checking" class="animate-spin inline-block">⟳</span>
+                <span v-else>📍 Sono qui!</span>
+              </button>
+            </div>
+          </Transition>
+
+          <!-- ══════════════ RESULT PHASE ══════════════ -->
+          <Transition name="fade">
+            <div
+              v-if="phase === 'result'"
+              class="flex flex-col items-center px-6 pb-8 pt-6 text-center"
+            >
+              <!-- Win -->
+              <template v-if="won">
+                <div class="text-5xl mb-3">🎉</div>
+                <h2
+                  class="font-['Playfair_Display'] text-[24px] font-bold text-white mb-2"
+                >
+                  Hai trovato il posto!
+                </h2>
+                <p class="font-['Inter'] text-[13px] text-white/60 mb-5">
+                  Eri a soli
+                  <strong class="text-[#2071c1]">{{ distanceFound }}m</strong>
+                  dal punto esatto.
+                </p>
+
+                <!-- Photo compare -->
+                <div class="w-full flex items-center gap-2 mb-6">
+                  <div class="flex-1 text-center">
+                    <img
+                      v-if="poi.historicalImgUrl"
+                      :src="poi.historicalImgUrl"
+                      class="w-full h-[100px] object-cover rounded-[10px]"
+                      style="filter: sepia(35%)"
+                      alt="Storica"
+                    />
+                    <p
+                      class="font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-white/40 mt-1.5"
+                    >
+                      Allora
+                    </p>
+                  </div>
+                  <span class="text-[#2071c1] text-xl flex-shrink-0">↔</span>
+                  <div class="flex-1 text-center">
+                    <img
+                      v-if="poi.modernImgUrl"
+                      :src="poi.modernImgUrl"
+                      class="w-full h-[100px] object-cover rounded-[10px]"
+                      alt="Oggi"
+                    />
+                    <p
+                      class="font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-white/40 mt-1.5"
+                    >
+                      Oggi
+                    </p>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Lose -->
+              <template v-else>
+                <div class="text-5xl mb-3">😕</div>
+                <h2
+                  class="font-['Playfair_Display'] text-[24px] font-bold text-white mb-2"
+                >
+                  Non ci sei ancora!
+                </h2>
+                <p class="font-['Inter'] text-[13px] text-white/60 mb-6">
+                  Eri a
+                  <strong class="text-[#2071c1]">{{ distanceFound }}m</strong>
+                  dal punto. Riprova!
+                </p>
+              </template>
+
+              <div class="flex gap-3 w-full">
+                <button
+                  v-if="!won"
+                  class="flex-1 cursor-pointer rounded-[10px] bg-[#2071c1] hover:bg-[#1a5b9c] transition-colors p-3 font-['Inter'] text-[14px] font-medium text-white"
+                  @click="resetGame"
+                >
+                  Riprova
+                </button>
+                <button
+                  class="flex-1 cursor-pointer rounded-[10px] bg-white/8 hover:bg-white/15 transition-colors p-3 font-['Inter'] text-[14px] font-medium text-white"
+                  @click="emit('close')"
+                >
+                  Chiudi
+                </button>
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </div>
+  </Teleport>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+
+interface Poi {
+  title: string
+  lat: number
+  lng: number
+  historicalImgUrl?: string
+  modernImgUrl?: string
+}
+
+const props = defineProps<{ poi: Poi }>()
+const emit = defineEmits<{ (e: 'close'): void }>()
+
+// ─── Game state ───────────────────────────────────────────────────────────────
+type Phase = 'rules' | 'game' | 'result'
+const phase = ref<Phase>('rules')
+const won = ref(false)
+const distanceFound = ref(0)
+const checking = ref(false)
+
+const DELTA_METERS = 30
+const MAX_DISTANCE = 300 // distanza oltre la quale proximity = 0
+
+const rules = [
+  {
+    n: 1,
+    text: 'Osserva la <strong style="color:#f0eee8">foto storica</strong> del luogo che stai visitando.'
+  },
+  {
+    n: 2,
+    text: 'Vai fisicamente nel posto esatto dove è stata scattata la fotografia.'
+  },
+  {
+    n: 3,
+    text: 'Quando pensi di essere nel punto giusto, premi <strong style="color:#f0eee8">"Sono qui!"</strong>.'
+  },
+  {
+    n: 4,
+    text: `Il GPS verifica la tua posizione. Devi essere entro <strong style="color:#2071c1">${DELTA_METERS}m</strong> dal punto esatto!`
+  }
+]
+
+// ─── GPS ──────────────────────────────────────────────────────────────────────
+const userLat = ref<number | null>(null)
+const userLng = ref<number | null>(null)
+const userAccuracy = ref<number | null>(null)
+const gpsError = ref<string | null>(null)
+const distance = ref<number | null>(null)
+let watchId: number | null = null
+
+const gpsReady = computed(() => userLat.value !== null && !gpsError.value)
+const gpsStatusText = computed(() => {
+  if (gpsError.value) return `GPS non disponibile: ${gpsError.value}`
+  if (gpsReady.value)
+    return `Posizione rilevata (±${userAccuracy.value ? Math.round(userAccuracy.value) + 'm' : '…'})`
+  return 'Acquisizione GPS in corso…'
+})
+
+// ─── Proximity (0 = lontano, 1 = sul punto) ──────────────────────────────────
+const proximity = computed(() => {
+  if (distance.value === null) return 0
+  return Math.max(0, Math.min(1, 1 - distance.value / MAX_DISTANCE))
+})
+
+const proximityColor = computed(() => {
+  // Interpolazione: blu (#2071c1) → verde (#22c55e)
+  const p = proximity.value
+  const r = Math.round(0x20 + (0x22 - 0x20) * p)
+  const g = Math.round(0x71 + (0xc5 - 0x71) * p)
+  const b = Math.round(0xc1 + (0x5e - 0xc1) * p)
+  return `rgb(${r},${g},${b})`
+})
+
+const proximityLabel = computed(() => {
+  const p = proximity.value
+  if (p < 0.2) return 'Lontano'
+  if (p < 0.5) return 'Nella zona…'
+  if (p < 0.8) return 'Ci stai arrivando!'
+  if (p < 1.0) return 'Quasi!'
+  return 'Sei qui!'
+})
+
+const photoFrameStyle = computed(() => {
+  const p = proximity.value
+  const width = Math.round(1 + p * 3)
+  return {
+    border: `${width}px solid ${proximityColor.value}`,
+    boxShadow:
+      p > 0.3 ? `0 0 ${Math.round(p * 24)}px ${proximityColor.value}44` : 'none'
+  }
+})
+
+// ─── Audio (metal detector) ───────────────────────────────────────────────────
+const audioEnabled = ref(true)
+let audioCtx: AudioContext | null = null
+let tickInterval: ReturnType<typeof setInterval> | null = null
+
+function getOrCreateAudioCtx(): AudioContext {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+  }
+  // Safari richiede resume dopo interazione utente
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume()
+  }
+  return audioCtx
+}
+
+function playTick(proximity: number) {
+  if (!audioEnabled.value) return
+  try {
+    const ctx = getOrCreateAudioCtx()
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    // Frequenza: 220Hz (lontano) → 880Hz (vicino)
+    oscillator.frequency.value = 220 + proximity * 660
+    oscillator.type = 'sine'
+
+    // Volume: cresce con la prossimità
+    const volume = 0.05 + proximity * 0.2
+    gainNode.gain.setValueAtTime(volume, ctx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08)
+
+    oscillator.start(ctx.currentTime)
+    oscillator.stop(ctx.currentTime + 0.08)
+  } catch (e) {
+    // AudioContext non disponibile, silenzio
+  }
+}
+
+function playSuccessSound() {
+  if (!audioEnabled.value) return
+  try {
+    const ctx = getOrCreateAudioCtx()
+    const notes = [523, 659, 784, 1047] // Do Mi Sol Do
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      const t = ctx.currentTime + i * 0.12
+      gain.gain.setValueAtTime(0.15, t)
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3)
+      osc.start(t)
+      osc.stop(t + 0.3)
+    })
+  } catch (e) {}
+}
+
+function playFailSound() {
+  if (!audioEnabled.value) return
+  try {
+    const ctx = getOrCreateAudioCtx()
+    const notes = [300, 220]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sawtooth'
+      const t = ctx.currentTime + i * 0.2
+      gain.gain.setValueAtTime(0.1, t)
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25)
+      osc.start(t)
+      osc.stop(t + 0.25)
+    })
+  } catch (e) {}
+}
+
+function startTicking() {
+  stopTicking()
+  const updateTick = () => {
+    if (phase.value !== 'game') return
+    const p = proximity.value
+    playTick(p)
+    // Intervallo: 2000ms (lontano) → 200ms (vicino)
+    const interval = Math.round(2000 - p * 1800)
+    tickInterval = setTimeout(updateTick, interval)
+  }
+  tickInterval = setTimeout(updateTick, 1000)
+}
+
+function stopTicking() {
+  if (tickInterval !== null) {
+    clearTimeout(tickInterval)
+    tickInterval = null
+  }
+}
+
+function toggleAudio() {
+  audioEnabled.value = !audioEnabled.value
+  if (!audioEnabled.value) stopTicking()
+  else if (phase.value === 'game' && gpsReady.value) startTicking()
+}
+
+// ─── Haversine ────────────────────────────────────────────────────────────────
+function haversineMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) {
+  const R = 6371000,
+    r = (d: number) => (d * Math.PI) / 180
+  const dLat = r(lat2 - lat1),
+    dLon = r(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+// ─── GPS watching ─────────────────────────────────────────────────────────────
+function startGps() {
+  if (!navigator.geolocation) {
+    gpsError.value = 'GPS non supportato'
+    return
+  }
+  watchId = navigator.geolocation.watchPosition(
+    (p) => {
+      userLat.value = p.coords.latitude
+      userLng.value = p.coords.longitude
+      userAccuracy.value = p.coords.accuracy
+      gpsError.value = null
+      distance.value = haversineMeters(
+        p.coords.latitude,
+        p.coords.longitude,
+        props.poi.lat,
+        props.poi.lng
+      )
+    },
+    (e) => {
+      gpsError.value = e.message
+    },
+    { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+  )
+}
+
+function stopGps() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId)
+    watchId = null
+  }
+}
+
+// Avvia il ticking quando il gioco inizia e il GPS è pronto
+watch([() => phase.value, gpsReady], ([p, ready]) => {
+  if (p === 'game' && ready) startTicking()
+  else stopTicking()
+})
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+async function checkLocation() {
+  if (!gpsReady.value || distance.value === null) return
+  checking.value = true
+  stopTicking()
+  await new Promise((r) => setTimeout(r, 400))
+  distanceFound.value = Math.round(distance.value)
+  won.value = distance.value <= DELTA_METERS
+  checking.value = false
+  phase.value = 'result'
+  if (won.value) playSuccessSound()
+  else playFailSound()
+}
+
+function resetGame() {
+  phase.value = 'game'
+}
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────────
+function onKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') emit('close')
+}
+
+onMounted(() => {
+  startGps()
+  window.addEventListener('keydown', onKey)
+})
+onUnmounted(() => {
+  stopGps()
+  stopTicking()
+  audioCtx?.close()
+  window.removeEventListener('keydown', onKey)
+})
+</script>
