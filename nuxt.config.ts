@@ -13,7 +13,12 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', 'nuxt-security'],
+  modules: [
+    '@pinia/nuxt',
+    '@nuxtjs/tailwindcss',
+    'nuxt-security',
+    '@nuxtjs/i18n'
+  ],
 
   // --- CONFIGURAZIONE SICUREZZA ---
   security: {
@@ -55,5 +60,14 @@ export default defineNuxtConfig({
       mapboxKey: process.env.MAPBOX_KEY || '',
       googleGeospatialKey: process.env.GOOGLE_GEOSPATIAL_KEY || ''
     }
+  },
+  i18n: {
+    locales: [
+      { code: 'it', file: 'it.json', name: 'Italiano' },
+      { code: 'en', file: 'en.json', name: 'English' }
+    ],
+    langDir: 'locales/', // <-- AGGIUNTO "app/" QUI
+    defaultLocale: 'it',
+    strategy: 'no_prefix'
   }
 })

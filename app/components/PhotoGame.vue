@@ -13,7 +13,6 @@
         <div
           class="relative z-10 w-full max-w-[480px] bg-[#0f0e1a] rounded-t-[20px] sm:rounded-[20px] overflow-hidden max-h-[92dvh] overflow-y-auto"
         >
-          <!-- Close -->
           <button
             class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 cursor-pointer transition-colors hover:bg-white/20"
             @click="emit('close')"
@@ -28,7 +27,7 @@
             </svg>
           </button>
 
-          <!-- ══════════════ RULES PHASE ══════════════ -->
+          <!-- RULES PHASE -->
           <Transition name="fade">
             <div
               v-if="phase === 'rules'"
@@ -38,17 +37,16 @@
               <h2
                 class="font-['Playfair_Display'] text-[26px] font-bold text-[#2071c1] mb-1"
               >
-                Sei qui?
+                {{ $t('gameTitle1') }}
               </h2>
               <p class="font-['Inter'] text-[13px] text-white/50 italic mb-6">
-                Il gioco della foto storica
+                {{ $t('gameSub1') }}
               </p>
 
-              <!-- Come si gioca -->
               <p
                 class="font-['Inter'] text-[11px] uppercase tracking-[0.12em] text-white/30 self-start mb-2"
               >
-                Come si gioca
+                {{ $t('gameHowTo') }}
               </p>
               <div class="w-full flex flex-col gap-2 mb-5">
                 <div
@@ -58,9 +56,8 @@
                 >
                   <span
                     class="flex-shrink-0 w-6 h-6 rounded-full bg-[#2071c1] text-white font-['Inter'] text-[11px] font-bold flex items-center justify-center mt-0.5"
+                    >{{ rule.n }}</span
                   >
-                    {{ rule.n }}
-                  </span>
                   <p
                     class="font-['Inter'] text-[13px] text-white/70 leading-[1.55]"
                     v-html="rule.text"
@@ -68,11 +65,10 @@
                 </div>
               </div>
 
-              <!-- Segnali multimodali -->
               <p
                 class="font-['Inter'] text-[11px] uppercase tracking-[0.12em] text-white/30 self-start mb-2"
               >
-                Mentre cammini, tre segnali ti guidano
+                {{ $t('gameSignals') }}
               </p>
               <div class="w-full flex flex-col gap-2 mb-7">
                 <div
@@ -83,13 +79,12 @@
                     <p
                       class="font-['Inter'] text-[13px] font-semibold text-white/90 leading-none mb-0.5"
                     >
-                      Suono
+                      {{ $t('gameSound') }}
                     </p>
                     <p
                       class="font-['Inter'] text-[12px] text-white/50 leading-[1.45]"
                     >
-                      Un tick si fa sempre più rapido e acuto man mano che ti
-                      avvicini al punto esatto.
+                      {{ $t('gameSoundDesc') }}
                     </p>
                   </div>
                 </div>
@@ -101,13 +96,12 @@
                     <p
                       class="font-['Inter'] text-[13px] font-semibold text-white/90 leading-none mb-0.5"
                     >
-                      Visivo
+                      {{ $t('gameVis') }}
                     </p>
                     <p
                       class="font-['Inter'] text-[12px] text-white/50 leading-[1.45]"
                     >
-                      Il bordo della foto cambia colore — dal blu al verde — e
-                      si illumina quando sei vicino.
+                      {{ $t('gameVisDesc') }}
                     </p>
                   </div>
                 </div>
@@ -119,13 +113,12 @@
                     <p
                       class="font-['Inter'] text-[13px] font-semibold text-white/90 leading-none mb-0.5"
                     >
-                      Testo
+                      {{ $t('gameText') }}
                     </p>
                     <p
                       class="font-['Inter'] text-[12px] text-white/50 leading-[1.45]"
                     >
-                      Una barra di prossimità ti dice in parole quanto sei
-                      lontano dal punto.
+                      {{ $t('gameTextDesc') }}
                     </p>
                   </div>
                 </div>
@@ -135,25 +128,24 @@
                 class="w-full rounded-[10px] bg-[#2071c1] hover:bg-[#1a5b9c] transition-colors p-3 font-['Inter'] text-[14px] font-medium text-white cursor-pointer"
                 @click="phase = 'game'"
               >
-                Inizia la sfida →
+                {{ $t('gameStart') }}
               </button>
             </div>
           </Transition>
 
-          <!-- ══════════════ GAME PHASE ══════════════ -->
+          <!-- GAME PHASE -->
           <Transition name="fade">
             <div v-if="phase === 'game'" class="flex flex-col px-6 pb-8 pt-6">
               <span
                 class="font-['Inter'] text-[10px] uppercase tracking-[0.12em] text-[#2071c1] mb-1"
-                >📍 Trova il punto esatto</span
+                >📍 {{ $t('gameLoc') }}</span
               >
               <h2
                 class="font-['Playfair_Display'] text-[20px] font-bold text-white mb-4"
               >
-                {{ poi.title }}
+                {{ poiTitle }}
               </h2>
 
-              <!-- Historical photo con bordo animato -->
               <div
                 class="relative rounded-[14px] overflow-hidden mb-4 transition-all duration-300"
                 :style="photoFrameStyle"
@@ -161,7 +153,7 @@
                 <img
                   v-if="poi.historicalImgUrl"
                   :src="poi.historicalImgUrl"
-                  :alt="`Foto storica: ${poi.title}`"
+                  :alt="`${$t('gamePicLabel')}: ${poi.title}`"
                   class="w-full h-[210px] object-cover"
                   style="filter: sepia(35%) contrast(1.08)"
                 />
@@ -171,17 +163,15 @@
                 >
                   <span class="text-4xl">📷</span>
                   <p class="font-['Inter'] text-[13px]">
-                    Foto storica non disponibile
+                    {{ $t('gameNoPic') }}
                   </p>
                 </div>
                 <span
                   class="absolute bottom-2 left-2 bg-black/70 font-['Inter'] text-[10px] uppercase tracking-[0.07em] px-2 py-0.5 rounded transition-colors duration-300"
                   :style="{ color: proximityColor }"
+                  >{{ $t('gamePicLabel') }}</span
                 >
-                  Foto storica
-                </span>
 
-                <!-- Overlay pulsante quando vicino -->
                 <div
                   v-if="proximity > 0.5"
                   class="absolute inset-0 pointer-events-none rounded-[14px] transition-opacity duration-300"
@@ -192,21 +182,19 @@
                 />
               </div>
 
-              <!-- Indicatore di prossimità -->
               <div v-if="gpsReady && distance !== null" class="mb-3">
                 <div class="flex justify-between items-center mb-1.5">
-                  <span class="font-['Inter'] text-[11px] text-white/40"
-                    >Lontano</span
-                  >
+                  <span class="font-['Inter'] text-[11px] text-white/40">{{
+                    $t('gameFar')
+                  }}</span>
                   <span
                     class="font-['Inter'] text-[12px] font-semibold transition-colors duration-300"
                     :style="{ color: proximityColor }"
+                    >{{ proximityLabel }}</span
                   >
-                    {{ proximityLabel }}
-                  </span>
-                  <span class="font-['Inter'] text-[11px] text-white/40"
-                    >Vicino</span
-                  >
+                  <span class="font-['Inter'] text-[11px] text-white/40">{{
+                    $t('gameNear')
+                  }}</span>
                 </div>
                 <div
                   class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"
@@ -221,7 +209,6 @@
                 </div>
               </div>
 
-              <!-- GPS Status -->
               <div
                 class="flex items-center gap-2 rounded-[8px] px-3 py-2 mb-4 font-['Inter'] text-[12px]"
                 :class="{
@@ -234,21 +221,21 @@
                 <span>{{ gpsStatusText }}</span>
               </div>
 
-              <!-- Audio toggle -->
               <div class="flex items-center justify-between mb-4">
-                <span class="font-['Inter'] text-[12px] text-white/40 italic">
-                  Cammina verso il punto della foto
-                </span>
+                <span class="font-['Inter'] text-[12px] text-white/40 italic">{{
+                  $t('gameWalk')
+                }}</span>
                 <button
                   class="flex items-center gap-1.5 font-['Inter'] text-[11px] text-white/40 hover:text-white/70 transition-colors cursor-pointer"
                   @click="toggleAudio"
                 >
                   <span>{{ audioEnabled ? '🔊' : '🔇' }}</span>
-                  <span>{{ audioEnabled ? 'Audio on' : 'Audio off' }}</span>
+                  <span>{{
+                    audioEnabled ? $t('gameAudOn') : $t('gameAudOff')
+                  }}</span>
                 </button>
               </div>
 
-              <!-- CTA -->
               <button
                 class="w-full rounded-[10px] p-3 font-['Inter'] text-[15px] font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2"
                 :class="
@@ -260,32 +247,28 @@
                 @click="checkLocation"
               >
                 <span v-if="checking" class="animate-spin inline-block">⟳</span>
-                <span v-else>📍 Sono qui!</span>
+                <span v-else>{{ $t('gameImHere') }}</span>
               </button>
             </div>
           </Transition>
 
-          <!-- ══════════════ RESULT PHASE ══════════════ -->
+          <!-- RESULT PHASE -->
           <Transition name="fade">
             <div
               v-if="phase === 'result'"
               class="flex flex-col items-center px-6 pb-8 pt-6 text-center"
             >
-              <!-- Win -->
               <template v-if="won">
                 <div class="text-5xl mb-3">🎉</div>
                 <h2
                   class="font-['Playfair_Display'] text-[24px] font-bold text-white mb-2"
                 >
-                  Hai trovato il posto!
+                  {{ $t('gameWon') }}
                 </h2>
                 <p class="font-['Inter'] text-[13px] text-white/60 mb-5">
-                  Eri a soli
-                  <strong class="text-[#2071c1]">{{ distanceFound }}m</strong>
-                  dal punto esatto.
+                  {{ $t('gameDistance') }}
+                  <strong class="text-[#2071c1]">{{ distanceFound }}m</strong>.
                 </p>
-
-                <!-- Photo compare -->
                 <div class="w-full flex items-center gap-2 mb-6">
                   <div class="flex-1 text-center">
                     <img
@@ -298,7 +281,7 @@
                     <p
                       class="font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-white/40 mt-1.5"
                     >
-                      Allora
+                      {{ $t('gameThen') }}
                     </p>
                   </div>
                   <span class="text-[#2071c1] text-xl flex-shrink-0">↔</span>
@@ -312,40 +295,36 @@
                     <p
                       class="font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-white/40 mt-1.5"
                     >
-                      Oggi
+                      {{ $t('gameToday') }}
                     </p>
                   </div>
                 </div>
               </template>
-
-              <!-- Lose -->
               <template v-else>
                 <div class="text-5xl mb-3">😕</div>
                 <h2
                   class="font-['Playfair_Display'] text-[24px] font-bold text-white mb-2"
                 >
-                  Non ci sei ancora!
+                  {{ $t('gameLost') }}
                 </h2>
                 <p class="font-['Inter'] text-[13px] text-white/60 mb-6">
-                  Eri a
-                  <strong class="text-[#2071c1]">{{ distanceFound }}m</strong>
-                  dal punto. Riprova!
+                  {{ $t('gameDistance') }}
+                  <strong class="text-[#2071c1]">{{ distanceFound }}m</strong>.
                 </p>
               </template>
-
               <div class="flex gap-3 w-full">
                 <button
                   v-if="!won"
                   class="flex-1 cursor-pointer rounded-[10px] bg-[#2071c1] hover:bg-[#1a5b9c] transition-colors p-3 font-['Inter'] text-[14px] font-medium text-white"
                   @click="resetGame"
                 >
-                  Riprova
+                  {{ $t('gameRetry') }}
                 </button>
                 <button
                   class="flex-1 cursor-pointer rounded-[10px] bg-white/8 hover:bg-white/15 transition-colors p-3 font-['Inter'] text-[14px] font-medium text-white"
                   @click="emit('close')"
                 >
-                  Chiudi
+                  {{ $t('gameClose') }}
                 </button>
               </div>
             </div>
@@ -359,8 +338,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
+const { t, locale } = useI18n()
+
+// 🛠️ FIX: Interfaccia allineata con lo Store
 interface Poi {
-  title: string
+  title_it?: string
+  title_en?: string
+  title?: string
   lat: number
   lng: number
   historicalImgUrl?: string
@@ -370,7 +354,12 @@ interface Poi {
 const props = defineProps<{ poi: Poi }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
-// ─── Game state ───────────────────────────────────────────────────────────────
+// 🛠️ FIX: Computed per il titolo bilingue anche nel gioco
+const poiTitle = computed(() => {
+  const key = `title_${locale.value}` as 'title_it' | 'title_en'
+  return props.poi[key] || props.poi.title || ''
+})
+
 type Phase = 'rules' | 'game' | 'result'
 const phase = ref<Phase>('rules')
 const won = ref(false)
@@ -378,28 +367,16 @@ const distanceFound = ref(0)
 const checking = ref(false)
 
 const DELTA_METERS = 30
-const MAX_DISTANCE = 300 // distanza oltre la quale proximity = 0
+const MAX_DISTANCE = 300
 
-const rules = [
-  {
-    n: 1,
-    text: 'Osserva la <strong style="color:#f0eee8">foto storica</strong> del luogo che stai visitando.'
-  },
-  {
-    n: 2,
-    text: 'Vai fisicamente nel posto esatto dove è stata scattata la fotografia.'
-  },
-  {
-    n: 3,
-    text: 'Quando pensi di essere nel punto giusto, premi <strong style="color:#f0eee8">"Sono qui!"</strong>.'
-  },
-  {
-    n: 4,
-    text: `Il GPS verifica la tua posizione. Devi essere entro <strong style="color:#2071c1">${DELTA_METERS}m</strong> dal punto esatto!`
-  }
-]
+// Regole tradotte
+const rules = computed(() => [
+  { n: 1, text: t('gameRule1') },
+  { n: 2, text: t('gameRule2') },
+  { n: 3, text: t('gameRule3') },
+  { n: 4, text: t('gameRule4', { dist: DELTA_METERS }) }
+])
 
-// ─── GPS ──────────────────────────────────────────────────────────────────────
 const userLat = ref<number | null>(null)
 const userLng = ref<number | null>(null)
 const userAccuracy = ref<number | null>(null)
@@ -409,20 +386,18 @@ let watchId: number | null = null
 
 const gpsReady = computed(() => userLat.value !== null && !gpsError.value)
 const gpsStatusText = computed(() => {
-  if (gpsError.value) return `GPS non disponibile: ${gpsError.value}`
+  if (gpsError.value) return `${t('gpsNotAvail')}: ${gpsError.value}`
   if (gpsReady.value)
-    return `Posizione rilevata (±${userAccuracy.value ? Math.round(userAccuracy.value) + 'm' : '…'})`
-  return 'Acquisizione GPS in corso…'
+    return `GPS (±${userAccuracy.value ? Math.round(userAccuracy.value) + 'm' : '…'})`
+  return t('gpsSearching')
 })
 
-// ─── Proximity (0 = lontano, 1 = sul punto) ──────────────────────────────────
 const proximity = computed(() => {
   if (distance.value === null) return 0
   return Math.max(0, Math.min(1, 1 - distance.value / MAX_DISTANCE))
 })
 
 const proximityColor = computed(() => {
-  // Interpolazione: blu (#2071c1) → verde (#22c55e)
   const p = proximity.value
   const r = Math.round(0x20 + (0x22 - 0x20) * p)
   const g = Math.round(0x71 + (0xc5 - 0x71) * p)
@@ -432,11 +407,11 @@ const proximityColor = computed(() => {
 
 const proximityLabel = computed(() => {
   const p = proximity.value
-  if (p < 0.2) return 'Lontano'
-  if (p < 0.5) return 'Nella zona…'
-  if (p < 0.8) return 'Ci stai arrivando!'
-  if (p < 1.0) return 'Quasi!'
-  return 'Sei qui!'
+  if (p < 0.2) return t('prox1')
+  if (p < 0.5) return t('prox2')
+  if (p < 0.8) return t('prox3')
+  if (p < 1.0) return t('prox4')
+  return t('prox5')
 })
 
 const photoFrameStyle = computed(() => {
@@ -449,19 +424,14 @@ const photoFrameStyle = computed(() => {
   }
 })
 
-// ─── Audio (metal detector) ───────────────────────────────────────────────────
 const audioEnabled = ref(true)
 let audioCtx: AudioContext | null = null
 let tickInterval: ReturnType<typeof setInterval> | null = null
 
 function getOrCreateAudioCtx(): AudioContext {
-  if (!audioCtx) {
+  if (!audioCtx)
     audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-  }
-  // Safari richiede resume dopo interazione utente
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume()
-  }
+  if (audioCtx.state === 'suspended') audioCtx.resume()
   return audioCtx
 }
 
@@ -471,31 +441,23 @@ function playTick(proximity: number) {
     const ctx = getOrCreateAudioCtx()
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
-
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
-
-    // Frequenza: 220Hz (lontano) → 880Hz (vicino)
     oscillator.frequency.value = 220 + proximity * 660
     oscillator.type = 'sine'
-
-    // Volume: cresce con la prossimità
     const volume = 0.05 + proximity * 0.2
     gainNode.gain.setValueAtTime(volume, ctx.currentTime)
     gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08)
-
     oscillator.start(ctx.currentTime)
     oscillator.stop(ctx.currentTime + 0.08)
-  } catch (e) {
-    // AudioContext non disponibile, silenzio
-  }
+  } catch (e) {}
 }
 
 function playSuccessSound() {
   if (!audioEnabled.value) return
   try {
     const ctx = getOrCreateAudioCtx()
-    const notes = [523, 659, 784, 1047] // Do Mi Sol Do
+    const notes = [523, 659, 784, 1047]
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
@@ -539,7 +501,6 @@ function startTicking() {
     if (phase.value !== 'game') return
     const p = proximity.value
     playTick(p)
-    // Intervallo: 2000ms (lontano) → 200ms (vicino)
     const interval = Math.round(2000 - p * 1800)
     tickInterval = setTimeout(updateTick, interval)
   }
@@ -559,7 +520,6 @@ function toggleAudio() {
   else if (phase.value === 'game' && gpsReady.value) startTicking()
 }
 
-// ─── Haversine ────────────────────────────────────────────────────────────────
 function haversineMeters(
   lat1: number,
   lon1: number,
@@ -576,7 +536,6 @@ function haversineMeters(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-// ─── GPS watching ─────────────────────────────────────────────────────────────
 function startGps() {
   if (!navigator.geolocation) {
     gpsError.value = 'GPS non supportato'
@@ -609,13 +568,11 @@ function stopGps() {
   }
 }
 
-// Avvia il ticking quando il gioco inizia e il GPS è pronto
 watch([() => phase.value, gpsReady], ([p, ready]) => {
   if (p === 'game' && ready) startTicking()
   else stopTicking()
 })
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
 async function checkLocation() {
   if (!gpsReady.value || distance.value === null) return
   checking.value = true
@@ -632,8 +589,6 @@ async function checkLocation() {
 function resetGame() {
   phase.value = 'game'
 }
-
-// ─── Keyboard ─────────────────────────────────────────────────────────────────
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') emit('close')
 }

@@ -13,7 +13,6 @@
         <div
           class="relative z-10 w-full max-w-[480px] bg-white rounded-t-[20px] sm:rounded-[20px] overflow-hidden max-h-[92dvh] overflow-y-auto"
         >
-          <!-- Close -->
           <button
             class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#d0d7dd]/85 cursor-pointer transition-colors hover:bg-[#b0b8c0]"
             @click="emit('close')"
@@ -28,7 +27,6 @@
             </svg>
           </button>
 
-          <!-- Hero image / header -->
           <div
             class="relative h-[180px] w-full overflow-hidden bg-white flex items-center justify-center"
           >
@@ -41,27 +39,23 @@
               <p
                 class="font-['Inter'] text-[10px] uppercase tracking-[0.15em] text-[#2071c1] mb-1"
               >
-                Benvenuto su
+                {{ $t('welcSub') }}
               </p>
               <h1
                 class="font-['Playfair_Display'] text-[28px] font-bold text-[#2071c1] leading-none"
               >
-                Persephone
+                {{ $t('appName') }}
               </h1>
             </div>
           </div>
 
-          <!-- Content -->
           <div class="px-6 pt-5 pb-7">
             <p
               class="font-['Inter'] text-[14px] leading-[1.7] text-[#424242]/80 mb-6"
             >
-              Esplora Milano attraverso i secoli. Persephone ti permette di
-              scoprire i luoghi storici della città, rivivere il passato e
-              interagire con la storia in modo completamente nuovo.
+              {{ $t('welcP1') }}
             </p>
 
-            <!-- Feature cards -->
             <div class="flex flex-col gap-3 mb-7">
               <div
                 class="flex items-start gap-4 bg-[#f7f9fc] rounded-[14px] px-4 py-4"
@@ -88,13 +82,12 @@
                   <p
                     class="font-['Inter'] text-[13px] font-semibold text-[#424242] mb-0.5"
                   >
-                    Parla con la Nonna AI
+                    {{ $t('welcCard1Title') }}
                   </p>
                   <p
                     class="font-['Inter'] text-[12px] text-[#424242]/60 leading-[1.55]"
                   >
-                    Chiedi informazioni storiche sui Navigli, i quartieri e i
-                    personaggi di Milano. Una voce del passato, sempre con te.
+                    {{ $t('welcCard1Desc') }}
                   </p>
                 </div>
               </div>
@@ -123,13 +116,12 @@
                   <p
                     class="font-['Inter'] text-[13px] font-semibold text-[#424242] mb-0.5"
                   >
-                    Ricostruisci il Naviglio in 3D
+                    {{ $t('welcCard2Title') }}
                   </p>
                   <p
                     class="font-['Inter'] text-[12px] text-[#424242]/60 leading-[1.55]"
                   >
-                    Attiva la realtà aumentata e guarda il Naviglio rinascere
-                    davanti ai tuoi occhi, esattamente dove ti trovi.
+                    {{ $t('welcCard2Desc') }}
                   </p>
                 </div>
               </div>
@@ -157,13 +149,12 @@
                   <p
                     class="font-['Inter'] text-[13px] font-semibold text-[#424242] mb-0.5"
                   >
-                    Trova il punto della foto storica
+                    {{ $t('welcCard3Title') }}
                   </p>
                   <p
                     class="font-['Inter'] text-[12px] text-[#424242]/60 leading-[1.55]"
                   >
-                    Sfida te stesso: trova esattamente dove è stata scattata una
-                    fotografia dell'800. Il GPS ti giudicherà.
+                    {{ $t('welcCard3Desc') }}
                   </p>
                 </div>
               </div>
@@ -173,13 +164,12 @@
               class="w-full cursor-pointer rounded-[10px] border-none bg-[#2071c1] hover:bg-[#1a5b9c] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors"
               @click="emit('close')"
             >
-              Inizia l'esplorazione →
+              {{ $t('welcBtn') }}
             </button>
-
             <p
               class="font-['Inter'] text-[11px] text-[#424242]/40 text-center mt-3"
             >
-              Tocca la mappa per esplorare i luoghi storici
+              {{ $t('welcHint') }}
             </p>
           </div>
         </div>

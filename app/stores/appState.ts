@@ -1,18 +1,30 @@
 // app/stores/appState.ts
-import { defineStore } from "pinia"
-import { ref } from "vue" // Assicurati di importare ref
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 export const useAppStore = defineStore('appState', () => {
+  // 🛠️ FIX: Interfaccia Poi aggiornata per supportare il multilingua
   interface Poi {
     id: string
-    title: string
-    description: string
+
+    // Campi multilingua
+    title_it: string
+    title_en: string
+    description_it: string
+    description_en: string
+    year_it?: string
+    year_en?: string
+
+    // Fallback opzionali (se qualche json vecchio non è aggiornato)
+    title?: string
+    description?: string
+    year?: string
+
     lat: number
     lng: number
     historicalImgUrl: string
-    modernImgUrl: string 
-    year: string
-    altitude?: number // Aggiungiamo l'altitudine opzionale per l'AR
+    modernImgUrl: string
+    altitude?: number // Aggiunto per l'AR
   }
 
   const isMapLoaded = ref(false)
@@ -28,12 +40,12 @@ export const useAppStore = defineStore('appState', () => {
     isMapLoaded.value = true
   }
 
-  return { 
-    isMapLoaded, 
-    selectedLocation, 
-    setLocation, 
+  return {
+    isMapLoaded,
+    selectedLocation,
+    setLocation,
     setMapReady,
     isModelOpen,
-    selectedPoi,
+    selectedPoi
   }
 })

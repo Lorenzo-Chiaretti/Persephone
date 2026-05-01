@@ -35,7 +35,7 @@
                 ? store.selectedPoi.modernImgUrl
                 : store.selectedPoi.historicalImgUrl
             "
-            :alt="store.selectedPoi.title"
+            :alt="poiTitle"
             class="h-full w-full object-cover transition-opacity duration-[400ms] ease-in-out"
           />
 
@@ -52,7 +52,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            Confronta
+            {{ $t('compare') }}
           </button>
 
           <button
@@ -65,18 +65,17 @@
                 class="absolute bottom-0 left-0 top-0 w-1/2 rounded-full bg-white transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                 :class="showModern ? 'translate-x-full' : 'translate-x-0'"
               ></div>
-
               <div
                 class="relative z-10 w-[72px] py-1 text-center font-['Inter'] text-[11px] font-medium transition-colors duration-300"
                 :class="!showModern ? 'text-[#424242]' : 'text-white'"
               >
-                Historical
+                {{ $t('historical') }}
               </div>
               <div
                 class="relative z-10 w-[72px] py-1 text-center font-['Inter'] text-[11px] font-medium transition-colors duration-300"
                 :class="showModern ? 'text-[#424242]' : 'text-white'"
               >
-                Today
+                {{ $t('today') }}
               </div>
             </div>
           </button>
@@ -86,22 +85,19 @@
           <p
             class="mb-1.5 font-['Inter'] text-[11px] uppercase tracking-[0.1em] text-[#2071c1]"
           >
-            {{ store.selectedPoi.year }}
+            {{ poiYear }}
           </p>
-
           <h2
             class="mb-3 font-['Playfair_Display'] text-[22px] font-bold leading-[1.3] text-[#424242]"
           >
-            {{ store.selectedPoi.title }}
+            {{ poiTitle }}
           </h2>
-
           <p
             class="mb-5 font-['Inter'] text-[14px] leading-[1.7] text-[#424242]/80"
           >
-            {{ store.selectedPoi.description }}
+            {{ poiDescription }}
           </p>
 
-          <!-- Action buttons -->
           <div class="flex gap-3">
             <button
               class="flex-1 cursor-pointer rounded-[10px] border-none bg-[#2071c1] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c] flex items-center justify-center gap-2"
@@ -119,9 +115,8 @@
               >
                 <polygon points="3 11 22 2 13 21 11 13 3 11" />
               </svg>
-              Take me there
+              {{ $t('takeMeThere') }}
             </button>
-
             <button
               class="flex-1 cursor-pointer rounded-[10px] border-none bg-[#424242] p-3 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#2a2a2a] flex items-center justify-center gap-2"
               @click="gameOpen = true"
@@ -134,7 +129,7 @@
               >
                 <path d="M8 5v14l11-7z" />
               </svg>
-              Let's play
+              {{ $t('letsPlay') }}
             </button>
           </div>
         </div>
@@ -144,13 +139,13 @@
 
   <template v-if="store.selectedPoi">
     <ImageCompareSlider
+      v-if="compareOpen"
       :open="compareOpen"
-      :title="store.selectedPoi.title"
+      :title="poiTitle"
       :historical-src="store.selectedPoi.historicalImgUrl"
       :modern-src="store.selectedPoi.modernImgUrl"
       @close="compareOpen = false"
     />
-
     <PhotoGame
       v-if="gameOpen"
       :poi="store.selectedPoi"
@@ -160,15 +155,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '~/stores/appState'
 import ImageCompareSlider from '~/components/ImageCompareSlider.vue'
 import PhotoGame from '~/components/PhotoGame.vue'
 
+// Pesca il locale dinamico
+const { locale } = useI18n()
 const store = useAppStore()
 const showModern = ref(false)
 const compareOpen = ref(false)
 const gameOpen = ref(false)
+
+// Computed per gestire il titolo in base alla lingua (title_it o title_en)
+const poiTitle = computed(() => {
+  if (!store.selectedPoi) return ''
+  return (
+    store.selectedPoi[`title_${locale.value}`] || store.selectedPoi.title || ''
+  )
+})
+
+// Computed per gestire la descrizione in base alla lingua (description_it o description_en)
+const poiDescription = computed(() => {
+  if (!store.selectedPoi) return ''
+  return (
+    store.selectedPoi[`description_${locale.value}`] ||
+    store.selectedPoi.description ||
+    ''
+  )
+})
+
+// Computed per gestire l'anno in base alla lingua (year_it o year_en)
+const poiYear = computed(() => {
+  if (!store.selectedPoi) return ''
+  return (
+    store.selectedPoi[`year_${locale.value}`] || store.selectedPoi.year || ''
+  )
+})
 
 function close() {
   store.isModelOpen = false
@@ -179,13 +202,12 @@ function close() {
 
 function navigate() {
   if (!store.selectedPoi) return
-  const { lat, lng, title } = store.selectedPoi
+  const { lat, lng } = store.selectedPoi
   const url = `https://www.google.com/maps?q=${lat},${lng}`
-  if (!window.open(url, '_blank')) {
+  if (!window.open(url, '_blank'))
     alert(
-      `Could not open Maps automatically.\nDestination: ${title} (${lat}, ${lng})`
+      `Could not open Maps automatically.\nDestination: ${poiTitle.value} (${lat}, ${lng})`
     )
-  }
 }
 
 function onKey(e: KeyboardEvent) {

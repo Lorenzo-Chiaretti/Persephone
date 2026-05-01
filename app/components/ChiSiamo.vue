@@ -13,7 +13,6 @@
         <div
           class="relative z-10 w-full max-w-[480px] bg-white rounded-t-[20px] sm:rounded-[20px] overflow-hidden max-h-[92dvh] overflow-y-auto"
         >
-          <!-- Close -->
           <button
             class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#d0d7dd]/85 cursor-pointer transition-colors hover:bg-[#b0b8c0]"
             @click="emit('close')"
@@ -28,7 +27,6 @@
             </svg>
           </button>
 
-          <!-- Header -->
           <div
             class="relative h-[140px] w-full overflow-hidden bg-white flex items-center justify-center"
           >
@@ -41,45 +39,35 @@
               <p
                 class="font-['Inter'] text-[10px] uppercase tracking-[0.15em] text-[#2071c1] mb-1"
               >
-                Il progetto
+                {{ $t('projSubtitle') }}
               </p>
               <h2
                 class="font-['Playfair_Display'] text-[26px] font-bold text-[#2071c1] leading-none"
               >
-                Chi siamo
+                {{ $t('projTitle') }}
               </h2>
             </div>
           </div>
 
-          <!-- Content -->
           <div class="px-6 pt-5 pb-8">
             <p
               class="font-['Inter'] text-[14px] leading-[1.75] text-[#424242]/80 mb-5"
             >
-              Persephone nasce dalla volontà di restituire a Milano la memoria
-              dei suoi Navigli — un sistema idroviario che per secoli ha
-              definito l'identità della città, interrato progressivamente tra il
-              1929 e il 1930.
+              {{ $t('projP1') }}
             </p>
-
             <p
               class="font-['Inter'] text-[14px] leading-[1.75] text-[#424242]/80 mb-6"
             >
-              Attraverso realtà aumentata, intelligenza artificiale e fotografie
-              storiche, vogliamo permettere a chiunque di vedere Milano come era
-              — camminando esattamente dove camminava chi l'ha vissuta.
+              {{ $t('projP2') }}
             </p>
 
-            <!-- Divider -->
             <div class="w-full h-px bg-[#424242]/10 mb-6" />
 
-            <!-- Team -->
             <p
               class="font-['Inter'] text-[11px] uppercase tracking-[0.12em] text-[#2071c1] mb-4"
             >
-              Il team
+              {{ $t('projTeam') }}
             </p>
-
             <div class="flex flex-col gap-3 mb-7">
               <div
                 v-for="member in team"
@@ -91,9 +79,8 @@
                 >
                   <span
                     class="font-['Playfair_Display'] text-[14px] font-bold text-[#2071c1]"
+                    >{{ member.initials }}</span
                   >
-                    {{ member.initials }}
-                  </span>
                 </div>
                 <div>
                   <p
@@ -105,30 +92,27 @@
               </div>
             </div>
 
-            <!-- Divider -->
             <div class="w-full h-px bg-[#424242]/10 mb-6" />
 
-            <!-- Tecnologie -->
             <p
               class="font-['Inter'] text-[11px] uppercase tracking-[0.12em] text-[#2071c1] mb-4"
             >
-              Tecnologie
+              {{ $t('projTech') }}
             </p>
             <div class="flex flex-wrap gap-2 mb-7">
               <span
                 v-for="tech in techs"
                 :key="tech"
                 class="font-['Inter'] text-[12px] text-[#424242]/70 bg-[#f7f9fc] border border-[#424242]/10 rounded-full px-3 py-1"
+                >{{ tech }}</span
               >
-                {{ tech }}
-              </span>
             </div>
 
             <button
               class="w-full cursor-pointer rounded-[10px] border border-[#2071c1] bg-transparent hover:bg-[#2071c1]/5 p-3 font-['Inter'] text-[14px] font-medium text-[#2071c1] transition-colors"
               @click="emit('close')"
             >
-              Torna alla mappa
+              {{ $t('backToMap') }}
             </button>
           </div>
         </div>
@@ -144,7 +128,7 @@ const team = [
   { name: 'Marco Abbadessa', initials: 'MA' },
   { name: 'Gabriele Busacca', initials: 'GB' },
   { name: 'Lorenzo Chiaretti', initials: 'LC' },
-  { name: "Giuseppe D'Ambrosi",  initials: 'GD' }
+  { name: "Giuseppe D'Ambrosi", initials: 'GD' }
 ]
 
 const techs = [

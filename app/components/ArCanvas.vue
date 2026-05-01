@@ -16,9 +16,8 @@
             v-if="isListening && !isChatMode"
             class="bg-red-500 text-white px-4 py-2 rounded-full animate-pulse mb-2 shadow-lg"
           >
-            👵 La Nonna ti ascolta...
+            {{ $t('arListening') }}
           </div>
-
           <div
             v-if="chatHistory.length > 0"
             class="mt-4 bg-white/95 text-gray-800 p-4 rounded-2xl shadow-xl max-w-[90%] w-full max-h-[40vh] overflow-y-auto border-l-4 border-blue-500 pointer-events-auto"
@@ -29,6 +28,7 @@
           </div>
         </div>
 
+        <!-- Debug buttons -->
         <div
           class="absolute left-4 top-1/4 flex flex-col gap-2 pointer-events-auto"
         >
@@ -70,7 +70,7 @@
               v-model="manualText"
               @keyup.enter="handleSendText"
               type="text"
-              placeholder="Scrivi alla nonna..."
+              :placeholder="$t('arWrite')"
               class="flex-1 bg-white/20 border-none rounded-full px-4 py-2 text-white placeholder:text-white/50 outline-none"
             />
             <button
@@ -86,14 +86,13 @@
               @click="isChatMode = !isChatMode"
               class="bg-white/20 backdrop-blur px-5 py-2.5 rounded-full text-white text-[13px] border border-white/30"
             >
-              {{ isChatMode ? '🎤 Passa a Voce' : '⌨️ Non posso parlare' }}
+              {{ isChatMode ? $t('arSwitchVoice') : $t('arCantSpeak') }}
             </button>
-
             <button
               @click="arStore.resetSession"
               class="bg-[#424242]/80 text-white px-5 py-2.5 rounded-full font-medium text-[13px] backdrop-blur-sm"
             >
-              Exit AR
+              {{ $t('arExit') }}
             </button>
           </div>
         </div>
@@ -104,7 +103,7 @@
         class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 pointer-events-auto"
       >
         <div class="animate-spin text-3xl mb-4">⏳</div>
-        <p class="text-white font-['Inter']">Avvio fotocamera...</p>
+        <p class="text-white font-['Inter']">{{ $t('arLoading') }}</p>
       </div>
 
       <div
@@ -115,7 +114,7 @@
           class="bg-black/60 text-white px-6 py-3 rounded-full backdrop-blur flex items-center gap-2"
         >
           <span class="animate-pulse text-xl">🔍</span>
-          <p class="text-[14px]">Inquadra i palazzi attorno a te...</p>
+          <p class="text-[14px]">{{ $t('arScan') }}</p>
         </div>
       </div>
 
@@ -149,10 +148,10 @@
         v-if="arStore.isError"
         class="absolute bottom-10 left-1/2 -translate-x-1/2 pointer-events-auto bg-white/90 text-red-600 px-6 py-4 rounded-[16px] backdrop-blur-md shadow-lg text-center min-w-[280px]"
       >
-        <p class="font-bold">Oops!</p>
+        <p class="font-bold">{{ $t('arOops') }}</p>
         <p class="text-[14px]">{{ arStore.errorMessage }}</p>
         <button @click="arStore.resetSession" class="mt-2 text-xs underline">
-          Riprova
+          {{ $t('arRetry') }}
         </button>
       </div>
     </div>
@@ -166,14 +165,12 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { handleGeospatialTracking } from '~/utils/arTracking'
 import { useAiNonna } from '~/utils/aiNonna'
 
-// --- 1. CONFIG & STORES ---
 const arStore = useArStore()
 const config = useRuntimeConfig()
 
-// --- 2. LOGICA NONNA (Composable) ---
 const {
   startContinuousListening,
-  processMessage, // Aggiunto qui per usarlo in handleSendText
+  processMessage,
   isListening,
   isSpeaking,
   isChatMode,
@@ -181,10 +178,9 @@ const {
   isNearNonna
 } = useAiNonna()
 
-// --- 3. REFS & CHAT HANDLERS ---
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const overlayRef = ref<HTMLDivElement | null>(null)
-const manualText = ref('') // Spostato fuori (globale nello script)
+const manualText = ref('')
 
 const handleSendText = async () => {
   if (!manualText.value.trim()) return
@@ -200,7 +196,6 @@ const testPoi = (id: string) => {
   startContinuousListening()
 }
 
-// --- 4. CONFIGURAZIONE HEAD ---
 useHead({
   meta: [
     {
@@ -216,14 +211,11 @@ const geospatialConfig = {
   optionalFeatures: ['anchors', 'geospatial-api', 'dom-overlay']
 }
 
-// Core variables di Three.js
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
 
-// --- 5. SESSIONE AR ---
 const startArSession = async () => {
-  // LOGICA SIMULAZIONE PC
   if (!navigator.xr) {
     console.warn('AR non supportata: attivo modalità simulazione PC')
     arStore.setLocalized()
@@ -258,7 +250,7 @@ const startArSession = async () => {
       arStore.resetSession()
     })
   } catch (error) {
-    console.error('AR Session failed, falling back to simulation:', error)
+    console.error('AR Session failed:', error)
     arStore.setLocalized()
     initThree()
     const animateFallback = () => {
@@ -272,7 +264,6 @@ const startArSession = async () => {
 
 defineExpose({ startArSession, geospatialConfig })
 
-// --- 6. THREE.JS ENGINE ---
 const initThree = () => {
   if (!canvasRef.value) return
   scene = new THREE.Scene()
@@ -294,9 +285,7 @@ const initThree = () => {
 }
 
 const render = (timestamp: number, frame?: any) => {
-  if (frame) {
-    handleGeospatialTracking(frame)
-  }
+  if (frame) handleGeospatialTracking(frame)
   renderer.render(scene, camera)
 }
 
@@ -307,9 +296,7 @@ const handleResize = () => {
   renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
-onMounted(() => {
-  window.addEventListener('resize', handleResize)
-})
+onMounted(() => window.addEventListener('resize', handleResize))
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   if (renderer) renderer.dispose()
