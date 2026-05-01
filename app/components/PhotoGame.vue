@@ -54,14 +54,22 @@
                   :key="rule.n"
                   class="flex items-start gap-3 bg-white/5 rounded-[12px] px-4 py-3"
                 >
+                  <!-- Cerchietto numerato -->
                   <span
                     class="flex-shrink-0 w-6 h-6 rounded-full bg-[#2071c1] text-white font-['Inter'] text-[11px] font-bold flex items-center justify-center mt-0.5"
-                    >{{ rule.n }}</span
                   >
+                    {{ rule.n }}
+                  </span>
+
+                  <!-- Testo della regola -->
                   <p
                     class="font-['Inter'] text-[13px] text-white/70 leading-[1.55]"
-                    v-html="rule.text"
-                  />
+                  >
+                    <strong class="text-white/90 font-semibold"
+                      >{{ rule.title }}:</strong
+                    >
+                    {{ rule.desc }}
+                  </p>
                 </div>
               </div>
 
@@ -153,7 +161,7 @@
                 <img
                   v-if="poi.historicalImgUrl"
                   :src="poi.historicalImgUrl"
-                  :alt="`${$t('gamePicLabel')}: ${poi.title}`"
+                  :alt="`${$t('gamePicLabel')}: ${poiTitle}`"
                   class="w-full h-[210px] object-cover"
                   style="filter: sepia(35%) contrast(1.08)"
                 />
@@ -340,7 +348,6 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 const { t, locale } = useI18n()
 
-// 🛠️ FIX: Interfaccia allineata con lo Store
 interface Poi {
   title_it?: string
   title_en?: string
@@ -354,10 +361,10 @@ interface Poi {
 const props = defineProps<{ poi: Poi }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
-// 🛠️ FIX: Computed per il titolo bilingue anche nel gioco
 const poiTitle = computed(() => {
-  const key = `title_${locale.value}` as 'title_it' | 'title_en'
-  return props.poi[key] || props.poi.title || ''
+  return (
+    props.poi[`title_${locale.value}` as keyof Poi] || props.poi.title || ''
+  )
 })
 
 type Phase = 'rules' | 'game' | 'result'
@@ -369,12 +376,27 @@ const checking = ref(false)
 const DELTA_METERS = 30
 const MAX_DISTANCE = 300
 
-// Regole tradotte
 const rules = computed(() => [
-  { n: 1, text: t('gameRule1') },
-  { n: 2, text: t('gameRule2') },
-  { n: 3, text: t('gameRule3') },
-  { n: 4, text: t('gameRule4', { dist: DELTA_METERS }) }
+  {
+    n: 1,
+    title: t('gameRule1Title'),
+    desc: t('gameRule1Desc')
+  },
+  {
+    n: 2,
+    title: t('gameRule2Title'),
+    desc: t('gameRule2Desc')
+  },
+  {
+    n: 3,
+    title: t('gameRule3Title'),
+    desc: t('gameRule3Desc')
+  },
+  {
+    n: 4,
+    title: t('gameRule4Title'),
+    desc: t('gameRule4Desc', { dist: DELTA_METERS })
+  }
 ])
 
 const userLat = ref<number | null>(null)

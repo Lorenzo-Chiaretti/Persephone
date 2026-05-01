@@ -160,37 +160,34 @@ import { useAppStore } from '~/stores/appState'
 import ImageCompareSlider from '~/components/ImageCompareSlider.vue'
 import PhotoGame from '~/components/PhotoGame.vue'
 
-// Pesca il locale dinamico
 const { locale } = useI18n()
 const store = useAppStore()
 const showModern = ref(false)
 const compareOpen = ref(false)
 const gameOpen = ref(false)
 
-// Computed per gestire il titolo in base alla lingua (title_it o title_en)
 const poiTitle = computed(() => {
   if (!store.selectedPoi) return ''
-  return (
-    store.selectedPoi[`title_${locale.value}`] || store.selectedPoi.title || ''
-  )
+  // 🛠️ FIX: Casting esplicito a string per evitare l'errore TS2322
+  const val =
+    store.selectedPoi[`title_${locale.value}` as keyof typeof store.selectedPoi]
+  return String(val || store.selectedPoi.title || '')
 })
 
-// Computed per gestire la descrizione in base alla lingua (description_it o description_en)
 const poiDescription = computed(() => {
   if (!store.selectedPoi) return ''
-  return (
-    store.selectedPoi[`description_${locale.value}`] ||
-    store.selectedPoi.description ||
-    ''
-  )
+  const val =
+    store.selectedPoi[
+      `description_${locale.value}` as keyof typeof store.selectedPoi
+    ]
+  return String(val || store.selectedPoi.description || '')
 })
 
-// Computed per gestire l'anno in base alla lingua (year_it o year_en)
 const poiYear = computed(() => {
   if (!store.selectedPoi) return ''
-  return (
-    store.selectedPoi[`year_${locale.value}`] || store.selectedPoi.year || ''
-  )
+  const val =
+    store.selectedPoi[`year_${locale.value}` as keyof typeof store.selectedPoi]
+  return String(val || store.selectedPoi.year || '')
 })
 
 function close() {

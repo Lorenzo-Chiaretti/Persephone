@@ -7,7 +7,7 @@
     <div
       class="bg-white rounded-t-[28px] shadow-2xl flex flex-col flex-1 overflow-hidden"
       @touchstart.passive="onTouchStart"
-      @touchmove.prevent="onTouchMove"
+      @touchmove="onTouchMove"
       @touchend.passive="onTouchEnd"
       @mousedown="onMouseDown"
     >
@@ -54,9 +54,12 @@
 
       <!-- SNAP APERTO -->
       <div
+        ref="scrollEl"
         class="flex-1 overflow-y-auto overscroll-contain transition-opacity duration-200 px-5"
         :class="snapIndex > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'"
-        style="padding-bottom: max(env(safe-area-inset-bottom), 32px)"
+        style="
+          padding-bottom: max(env(safe-area-inset-bottom, 0px) + 80px, 80px);
+        "
       >
         <button
           class="w-full flex items-center justify-center gap-2 bg-[#2071c1] hover:bg-[#1a5b9c] active:scale-95 text-white py-4 rounded-2xl shadow-lg font-['Inter'] font-bold text-[15px] transition-all cursor-pointer mb-7"
@@ -272,23 +275,33 @@
     </div>
   </div>
 
-  <Transition name="fade">
+  <Transition name="exotic-pop">
     <div
       v-if="easterEggVisible"
-      class="fixed inset-0 z-[55] pointer-events-none flex items-center justify-center"
+      class="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center"
     >
       <div
-        class="bg-[#0f0e1a]/90 backdrop-blur-sm rounded-2xl px-6 py-5 mx-8 text-center shadow-2xl"
+        class="exotic-card bg-gradient-to-br from-[#00d2ff] via-[#3a7bd5] to-[#8e2de2] p-[2px] rounded-[30px] shadow-[0_0_50px_rgba(58,123,213,0.4)] mx-8"
       >
-        <div class="text-3xl mb-2">{{ easterEggEmoji }}</div>
-        <p
-          class="font-['Playfair_Display'] text-[17px] font-bold text-white mb-1"
+        <div
+          class="bg-white/90 backdrop-blur-xl rounded-[28px] px-8 py-10 text-center relative overflow-hidden"
         >
-          {{ easterEggTitle }}
-        </p>
-        <p class="font-['Inter'] text-[13px] text-white/60 leading-[1.5]">
-          {{ easterEggText }}
-        </p>
+          <div class="text-6xl mb-6 drop-shadow-sm animate-float">
+            {{ easterEggEmoji }}
+          </div>
+
+          <h3
+            class="font-['Playfair_Display'] text-[24px] italic font-bold text-[#2071c1] mb-3"
+          >
+            {{ easterEggTitle }}
+          </h3>
+
+          <p
+            class="font-['Inter'] text-[15px] text-[#424242]/80 leading-relaxed"
+          >
+            {{ easterEggText }}
+          </p>
+        </div>
       </div>
     </div>
   </Transition>
@@ -304,18 +317,25 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+// ─── Snap sheet ──────────────────────────────────────────────────────────────
+
 const snapIndex = ref(0)
 const currentY = ref(0)
 const dragging = ref(false)
+const scrollEl = ref<HTMLElement | null>(null)
+
 let startY = 0
 let startTranslateY = 0
 let windowH = 0
+let isDraggingSheet = false
+
 const SNAP_CONFIGS = [120, 0.5, 0.92]
 
 function snapHeightPx(idx: number) {
   const h = SNAP_CONFIGS[idx] ?? 0
   return h < 2 ? h * windowH : h
 }
+
 function translateForSnap(idx: number) {
   return windowH - snapHeightPx(idx)
 }
@@ -333,32 +353,56 @@ const sheetStyle = computed(() => ({
   height: `${windowH * 0.97}px`
 }))
 
+// ─── Touch handlers ───────────────────────────────────────────────────────────
+
 function onTouchStart(e: TouchEvent) {
   if (!e.touches?.[0]) return
   startY = e.touches[0].clientY
   startTranslateY = currentY.value
   dragging.value = true
+  isDraggingSheet = false
 }
 
 function onTouchMove(e: TouchEvent) {
   if (!dragging.value || !e.touches?.[0]) return
+
+  const dy = e.touches[0].clientY - startY
+
+  // Quando il pannello è aperto, decidiamo se muovere lo sheet o lasciare
+  // scorrere il contenuto interno.
+  if (snapIndex.value > 0 && scrollEl.value && !isDraggingSheet) {
+    const atTop = scrollEl.value.scrollTop <= 0
+    const draggingDown = dy > 0
+
+    // Se il contenuto non è in cima, o si sta trascinando verso l'alto
+    // → non interferire con lo scroll nativo del div interno.
+    if (!atTop || !draggingDown) return
+  }
+
+  // Siamo in modalità "muovi lo sheet": blocca il default per evitare
+  // bounce/scroll della pagina e aggiorna la posizione.
+  e.preventDefault()
+  isDraggingSheet = true
+
   const next = Math.max(
     translateForSnap(2),
-    Math.min(
-      translateForSnap(0),
-      startTranslateY + e.touches[0].clientY - startY
-    )
+    Math.min(translateForSnap(0), startTranslateY + dy)
   )
   currentY.value = next
 }
 
 function onTouchEnd() {
   dragging.value = false
+  isDraggingSheet = false
+
+  // Snappa allo snap point più vicino.
   const distances = SNAP_CONFIGS.map((_, i) =>
     Math.abs(currentY.value - translateForSnap(i))
   )
   applySnap(distances.indexOf(Math.min(...distances)))
 }
+
+// ─── Mouse handlers (desktop) ────────────────────────────────────────────────
 
 function onMouseDown(e: MouseEvent) {
   startY = e.clientY
@@ -385,6 +429,8 @@ function onMouseUp() {
   )
   applySnap(distances.indexOf(Math.min(...distances)))
 }
+
+// ─── Easter eggs ──────────────────────────────────────────────────────────────
 
 function eggSpan(key: string, label: string) {
   return `<span class="easter-word" data-egg="${key}">${label}</span>`
@@ -448,32 +494,36 @@ function getEgg(key: string) {
       textKey: 'easterPersefoneText'
     }
   }
-  return map[key]
+  return map[key] ?? null
 }
 
-function playWaterSound() {
+function playZenWaterSound() {
   try {
     const ctx = new (
       window.AudioContext || (window as any).webkitAudioContext
     )()
-    const bufferSize = ctx.sampleRate * 1.2
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-    const data = buffer.getChannelData(0)
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
-    const source = ctx.createBufferSource()
-    source.buffer = buffer
-    const filter = ctx.createBiquadFilter()
-    filter.type = 'bandpass'
-    filter.frequency.value = 800
-    filter.Q.value = 0.5
+    const osc = ctx.createOscillator()
     const gain = ctx.createGain()
-    gain.gain.setValueAtTime(0.3, ctx.currentTime)
+    const filter = ctx.createBiquadFilter()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(400, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.5)
+    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 1.2)
+
+    filter.type = 'lowpass'
+    filter.frequency.value = 800
+
+    gain.gain.setValueAtTime(0, ctx.currentTime)
+    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.1)
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2)
-    source.connect(filter)
+
+    osc.connect(filter)
     filter.connect(gain)
     gain.connect(ctx.destination)
-    source.start()
-    source.stop(ctx.currentTime + 1.2)
+
+    osc.start()
+    osc.stop(ctx.currentTime + 1.2)
     setTimeout(() => ctx.close(), 1500)
   } catch (_) {}
 }
@@ -481,11 +531,10 @@ function playWaterSound() {
 function triggerEgg(key: string) {
   const egg = getEgg(key)
   if (!egg) return
-  playWaterSound()
+  playZenWaterSound()
   easterEggEmoji.value = egg.emoji
   easterEggTitle.value = t(egg.titleKey)
   easterEggText.value = t(egg.textKey)
-
   easterEggVisible.value = true
   if (easterTimeout) clearTimeout(easterTimeout)
   easterTimeout = setTimeout(() => {
@@ -500,6 +549,8 @@ function onContentClick(e: MouseEvent) {
   if (el?.dataset.egg) triggerEgg(el.dataset.egg)
 }
 
+// ─── Team ─────────────────────────────────────────────────────────────────────
+
 const team = [
   { name: 'Marco Abbadessa', role: 'Design & sviluppo', initials: 'MA' },
   { name: 'Gabriele Busacca', role: 'Sviluppo & AR', initials: 'GB' },
@@ -507,16 +558,22 @@ const team = [
   { name: "Giuseppe D'Ambrosi", role: 'AI & backend', initials: 'GD' }
 ]
 
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
+
+function onResize() {
+  windowH = window.innerHeight
+  applySnap(snapIndex.value)
+}
+
 onMounted(() => {
   windowH = window.innerHeight
   applySnap(0)
-  window.addEventListener('resize', () => {
-    windowH = window.innerHeight
-    applySnap(snapIndex.value)
-  })
+  window.addEventListener('resize', onResize)
   document.addEventListener('click', onContentClick)
 })
+
 onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
   document.removeEventListener('click', onContentClick)
@@ -525,14 +582,68 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.easter-word {
-  border-bottom: 1.5px dotted #2071c1;
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.exotic-pop-enter-active {
+  animation: exotic-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.exotic-pop-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+.exotic-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+@keyframes exotic-in {
+  0% {
+    transform: scale(0.5) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.exotic-card {
+  max-width: 320px;
+}
+
+:deep(.easter-word) {
   color: #2071c1;
+  font-weight: 700;
+  background-color: rgba(32, 113, 193, 0.1);
+  border: 1.5px dashed rgba(32, 113, 193, 0.6);
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 0 2px;
   cursor: pointer;
+  display: inline-block;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 4px rgba(32, 113, 193, 0.05);
 }
-.easter-word:active {
-  opacity: 0.6;
+:deep(.easter-word:hover),
+:deep(.easter-word:active) {
+  background-color: #2071c1;
+  color: #ffffff;
+  border-style: solid;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 4px 8px rgba(32, 113, 193, 0.2);
 }
+
 .fade-enter-active,
 .fade-leave-active {
   transition:
