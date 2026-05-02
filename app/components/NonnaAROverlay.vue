@@ -89,8 +89,7 @@ If someone asks something you don't know, say honestly "I'm not sure, dear" — 
 }
 
 onMounted(() => {
-  // La nonna è subito pronta ad ascoltare, con il prompt nella lingua giusta
-  startContinuousListening(getNonnaSystemPrompt())
+  startContinuousListening(getNonnaSystemPrompt(), locale.value)
 })
 
 const enableChatMode = () => {
@@ -99,7 +98,7 @@ const enableChatMode = () => {
 
 const disableChatMode = () => {
   isChatMode.value = false
-  startContinuousListening(getNonnaSystemPrompt())
+  startContinuousListening(getNonnaSystemPrompt(), locale.value)
 }
 
 const sendText = async () => {

@@ -226,7 +226,7 @@ const testPoi = (id: string) => {
   console.log('Simulazione POI:', id)
   arStore.selectedPoi = { id: id }
   isNearNonna.value = true
-  startContinuousListening(getNonnaSystemPrompt())
+  startContinuousListening(getNonnaSystemPrompt(), locale.value)
 }
 
 useHead({

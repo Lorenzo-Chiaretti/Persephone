@@ -62,7 +62,11 @@ export const useAiNonna = () => {
   // --- ASCOLTO CONTINUO DEEPGRAM ---
   // NUOVO: Accettiamo il systemPrompt in modo che quando Deepgram ascolta, sa quale prompt usare
   // --- ASCOLTO CONTINUO DEEPGRAM ---
-  const startContinuousListening = async (systemPrompt?: string) => {
+  // DOPO
+  const startContinuousListening = async (
+    systemPrompt?: string,
+    lang: string = 'it'
+  ) => {
     if (systemPrompt) currentSystemPrompt.value = systemPrompt
 
     if (isSpeaking.value || isChatMode.value || isListening.value) return
@@ -71,7 +75,7 @@ export const useAiNonna = () => {
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
 
       socket = new WebSocket(
-        'wss://api.deepgram.com/v1/listen?model=nova-2&language=it&smart_format=true&endpointing=300&filler_words=true',
+        `wss://api.deepgram.com/v1/listen?model=nova-2&language=${lang}&smart_format=true&endpointing=300&filler_words=true`,
         ['token', token]
       )
 
