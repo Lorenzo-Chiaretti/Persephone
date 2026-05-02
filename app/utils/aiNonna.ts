@@ -9,27 +9,98 @@ export const useAiNonna = () => {
   const chatHistory = ref<{ role: string; content: string }[]>([])
   const isNearNonna = ref(false)
 
-  // NUOVO: Salviamo il prompt di sistema corrente
   const currentSystemPrompt = ref<string>('')
+  const currentLang = ref<string>('it')
 
   let socket: WebSocket | null = null
   let mediaRecorder: MediaRecorder | null = null
 
+  // --- PULIZIA HARDWARE E CONNESSIONI ---
+  const stopAll = () => {
+    if (mediaRecorder) {
+      if (mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop()
+      }
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop())
+      mediaRecorder = null
+    }
+
+    if (socket) {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.close()
+      }
+      socket = null
+    }
+
+    isListening.value = false
+    console.log('🔇 Tutte le risorse sono state liberate.')
+  }
+
   // --- FUNZIONE VOCE (ELEVENLABS) ---
   const speak = async (text: string) => {
-    // ... il tuo codice esistente per speak rimane invariato ...
+    if (isChatMode.value) return
+
+    try {
+      isSpeaking.value = true
+
+      const audioBlob = await $fetch<Blob>('/api/tts', {
+        method: 'POST',
+        body: { text }
+      })
+
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio(audioUrl)
+
+      return new Promise((resolve) => {
+        const cleanup = () => {
+          isSpeaking.value = false
+          URL.revokeObjectURL(audioUrl)
+          if (!isChatMode.value) {
+            // Piccolo delay per evitare che il mic senta l'eco della fine dell'audio
+            setTimeout(
+              () =>
+                startContinuousListening(
+                  currentSystemPrompt.value,
+                  currentLang.value
+                ),
+              300
+            )
+          }
+        }
+
+        audio.onended = () => {
+          cleanup()
+          resolve(true)
+        }
+
+        audio.onerror = (e) => {
+          console.error('Errore riproduzione audio:', e)
+          cleanup()
+          resolve(false)
+        }
+
+        audio.play().catch((err) => {
+          console.warn('Autoplay bloccato o errore play:', err)
+          cleanup()
+          resolve(false)
+        })
+      })
+    } catch (e) {
+      console.error('Errore recupero TTS:', e)
+      isSpeaking.value = false
+      if (!isChatMode.value) {
+        startContinuousListening(currentSystemPrompt.value, currentLang.value)
+      }
+    }
   }
 
   // --- LOGICA DI RISPOSTA (GROQ) ---
-  // NUOVO: Accettiamo il systemPrompt come secondo parametro opzionale
   const processMessage = async (text: string, systemPrompt?: string) => {
-    // Aggiorniamo il prompt salvato se ne viene passato uno nuovo
     if (systemPrompt) currentSystemPrompt.value = systemPrompt
 
     chatHistory.value.push({ role: 'user', content: text })
     const limitedHistory = chatHistory.value.slice(-10)
 
-    // NUOVO: Creiamo l'array di messaggi includendo il System Prompt all'inizio
     const messagesToSend = [
       {
         role: 'system',
@@ -42,7 +113,7 @@ export const useAiNonna = () => {
       const response = await $fetch<any>('/api/chat', {
         method: 'POST',
         body: {
-          messages: messagesToSend, // Invia i messaggi col system prompt
+          messages: messagesToSend,
           poiId: arStore.selectedPoi?.id || 'navigli-generale'
         }
       })
@@ -55,19 +126,13 @@ export const useAiNonna = () => {
     }
   }
 
-  const stopAll = () => {
-    // ... il tuo codice esistente per stopAll ...
-  }
-
   // --- ASCOLTO CONTINUO DEEPGRAM ---
-  // NUOVO: Accettiamo il systemPrompt in modo che quando Deepgram ascolta, sa quale prompt usare
-  // --- ASCOLTO CONTINUO DEEPGRAM ---
-  // DOPO
   const startContinuousListening = async (
     systemPrompt?: string,
     lang: string = 'it'
   ) => {
     if (systemPrompt) currentSystemPrompt.value = systemPrompt
+    currentLang.value = lang
 
     if (isSpeaking.value || isChatMode.value || isListening.value) return
 
@@ -99,7 +164,6 @@ export const useAiNonna = () => {
         mediaRecorder?.start(250)
       }
 
-      // ECCO LA RIGA MANCANTE: Dichiariamo il timer qui!
       let stabilityTimer: ReturnType<typeof setTimeout> | null = null
 
       socket.onmessage = async (message) => {
@@ -110,16 +174,15 @@ export const useAiNonna = () => {
 
         if (transcript && transcript.trim().length > 0) {
           if (data.is_final) {
-            // Ora TypeScript riconosce la variabile
             if (stabilityTimer) clearTimeout(stabilityTimer)
 
             if (data.speech_final) {
               stopAll()
-              await processMessage(transcript)
+              await processMessage(transcript, currentSystemPrompt.value)
             } else {
               stabilityTimer = setTimeout(async () => {
                 stopAll()
-                await processMessage(transcript)
+                await processMessage(transcript, currentSystemPrompt.value)
               }, 800)
             }
           }
