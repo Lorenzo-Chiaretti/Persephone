@@ -1,32 +1,41 @@
 [
   {
     "id": "via-senato",
-    "title": "Via Senato",
-    "description": "Ex alveo del Naviglio. Fino agli anni '30 qui l'acqua scorreva a cielo aperto sotto i palazzi nobiliari.",
-    "lat": 45.469651,  
+    "title_it": "Via Senato",
+    "title_en": "Via Senato",
+    "description_it": "Ex tratto del Naviglio. Fino agli anni '30, l'acqua scorreva qui a cielo aperto sotto i palazzi nobiliari.",
+    "description_en": "Former stretch of the Naviglio canal. Until the 1930s, water flowed here in the open beneath the noble palaces.",
+    "lat": 45.469651,
     "lng": 9.198286,
     "historicalImgUrl": "/images/historical/Naviglio_Via_Senato_Vecchia.jpg",
     "modernImgUrl": "/images/modern/Naviglio_Via_Senato_Nuova.jpg",
-    "year": "1390 - 1930 (copertura)"
+    "year_it": "1390 - 1930 (interrato)",
+    "year_en": "1390 - 1930 (covered)"
   },
   {
     "id": "laghetto-san-marco",
-    "title": "Laghetto di San Marco",
-    "description": "Antico bacino portuale dove terminava il Naviglio Martesana. Era il cuore commerciale della zona, dove le imbarcazioni sostavano per scaricare merci e viveri destinati ai mercati cittadini.",
+    "title_it": "Laghetto di San Marco",
+    "title_en": "Laghetto di San Marco",
+    "description_it": "Antico bacino portuale dove terminava il Naviglio Martesana. Era il cuore commerciale della zona, dove i barconi si fermavano per scaricare merci e rifornimenti alimentari per i mercati cittadini.",
+    "description_en": "Ancient port basin where the Naviglio Martesana ended. It was the commercial heart of the area, where boats stopped to unload goods and food supplies for the city markets.",
     "lat": 45.474008,
     "lng": 9.187881,
-    "historicalImgUrl": "/images/historical/Laghetto_di_San_Marco_Vecchia.jpg", 
+    "historicalImgUrl": "/images/historical/Laghetto_di_San_Marco_Vecchia.jpg",
     "modernImgUrl": "/images/modern/Laghetto_di_San_Marco_Nuova.jpg",
-    "year": "1496 - 1930 (copertura)"
+    "year_it": "1496 - 1930 (interrato)",
+    "year_en": "1496 - 1930 (covered)"
   },
   {
     "id": "laghetto-stefano",
-    "title": "Laghetto di Santo Stefano",
-    "description": "Il porto del marmo. Qui arrivavano i blocchi per la costruzione del Duomo di Milano.",
+    "title_it": "Laghetto di Santo Stefano",
+    "title_en": "Laghetto di Santo Stefano",
+    "description_it": "Il porto del marmo. Qui arrivavano i blocchi utilizzati per la costruzione del Duomo di Milano.",
+    "description_en": "The marble port. The blocks used to build Milan Cathedral arrived here.",
     "lat": 45.461254,
     "lng": 9.195854,
     "historicalImgUrl": "/images/historical/laghetto-santo-stefano_vecchia.jpg",
     "modernImgUrl": "/images/modern/laghetto-santo-stefano_nuova.jpg",
-    "year": "1388 - 1857 (interramento)"
+    "year_it": "1388 - 1857 (interrato)",
+    "year_en": "1388 - 1857 (covered)"
   }
 ]
