@@ -261,12 +261,9 @@
             </div>
             <div>
               <p
-                class="font-['Inter'] text-[13px] font-semibold text-[#424242] leading-none"
+                class="font-['Inter'] text-[16px] font-semibold text-[#424242] leading-none"
               >
                 {{ member.name }}
-              </p>
-              <p class="font-['Inter'] text-[11px] text-[#424242]/45">
-                {{ member.role }}
               </p>
             </div>
           </div>
@@ -552,10 +549,10 @@ function onContentClick(e: MouseEvent) {
 // ─── Team ─────────────────────────────────────────────────────────────────────
 
 const team = [
-  { name: 'Marco Abbadessa', role: 'Design & sviluppo', initials: 'MA' },
-  { name: 'Gabriele Busacca', role: 'Sviluppo & AR', initials: 'GB' },
-  { name: 'Lorenzo Chiaretti', role: 'Ricerca storica', initials: 'LC' },
-  { name: "Giuseppe D'Ambrosi", role: 'AI & backend', initials: 'GD' }
+  { name: 'Marco Abbadessa', initials: 'MA' },
+  { name: 'Gabriele Busacca',  initials: 'GB' },
+  { name: 'Lorenzo Chiaretti', initials: 'LC' },
+  { name: "Giuseppe D'Ambrosi", initials: 'GD' }
 ]
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
