@@ -32,6 +32,7 @@
           class="absolute inset-0 h-full w-full object-cover"
           draggable="false"
         />
+
         <div
           class="absolute inset-0 overflow-hidden"
           :style="{ width: position + '%' }"
@@ -43,10 +44,12 @@
             draggable="false"
           />
         </div>
+
         <div
           class="absolute top-0 bottom-0 w-[2px] bg-white shadow-[0_0_10px_rgba(0,0,0,0.8)] pointer-events-none"
           :style="{ left: position + '%' }"
         />
+
         <div
           class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-2xl pointer-events-none"
           :style="{ left: position + '%' }"
@@ -65,12 +68,12 @@
         <div
           class="absolute bottom-5 left-4 rounded-full bg-black/55 px-3 py-1 font-['Inter'] text-[11px] text-white pointer-events-none"
         >
-          {{ $t('historical') }}
+          Historical
         </div>
         <div
           class="absolute bottom-5 right-4 rounded-full bg-black/55 px-3 py-1 font-['Inter'] text-[11px] text-white pointer-events-none"
         >
-          {{ $t('today') }}
+          Today
         </div>
       </div>
     </div>
@@ -93,6 +96,7 @@ const sliderEl = ref<HTMLElement | null>(null)
 const position = ref(50)
 let dragging = false
 
+// Reset posizione a metà ogni volta che lo apri
 watch(
   () => props.open,
   (isOpen) => {
@@ -101,16 +105,12 @@ watch(
 )
 
 function getClientX(e: MouseEvent | TouchEvent): number {
-  if (e instanceof TouchEvent) {
-    // Il punto interrogativo (?.) ferma tutto se l'elemento [0] non esiste,
-    // mentre i punti interrogativi doppi (??) forniscono il piano B.
-    return e.touches[0]?.clientX ?? e.changedTouches[0]?.clientX ?? 0
-  }
-  return e.clientX
+  return e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
 }
 
 function move(e: MouseEvent | TouchEvent) {
   if (!dragging || !sliderEl.value) return
+
   const rect = sliderEl.value.getBoundingClientRect()
   const x = getClientX(e) - rect.left
   const percent = (x / rect.width) * 100
@@ -121,6 +121,7 @@ function startDrag(e: MouseEvent | TouchEvent) {
   dragging = true
   move(e)
 }
+
 function stopDrag() {
   dragging = false
 }

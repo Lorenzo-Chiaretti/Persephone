@@ -1,7 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-
   app: {
     head: {
       link: [
@@ -11,63 +10,32 @@ export default defineNuxtConfig({
         }
       ]
     }
-  },
-
+  }, 
   modules: [
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
-    'nuxt-security',
-    '@nuxtjs/i18n'
-  ],
+    '@nuxt/eslint',
+    'nuxt-security'
+  ],  
 
-  // --- CONFIGURAZIONE SICUREZZA ---
   security: {
-    rateLimiter: {
-      tokensPerInterval: 50,
+    rateLimiter:{
+      tokensPerInterval: 10, 
       interval: 'minute'
-    },
+    }, 
     headers: {
-      contentSecurityPolicy: {
-        'connect-src': [
-          "'self'",
-          'https://api.deepgram.com',
-          'wss://api.deepgram.com',
-          'https://api.groq.com',
-          'https://api.elevenlabs.io',
-          'https://*.mapbox.com', // Sblocca Mapbox
-          'https://cdn.jsdelivr.net' // Sblocca Eruda e altri script
-        ],
-        'img-src': ["'self'", 'data:', 'blob:', 'https://*.mapbox.com'], // Necessario per le mappe
-        'worker-src': ["'self'", 'blob:'], // Necessario per Mapbox
-        'upgrade-insecure-requests': true
-      },
       permissionsPolicy: {
-        camera: 'self',
-        geolocation: 'self',
-        microphone: 'self'
-      },
-      crossOriginEmbedderPolicy: 'unsafe-none'
+        camera: ["'self'"],        // Sblocca la fotocamera per il tuo sito
+        geolocation: ["'self'"]    // Sblocca il GPS per il tuo sito
+      }
     }
-  },
+  },  
 
-  // --- VARIABILI D'AMBIENTE ---
   runtimeConfig: {
-    // Chiave privata (lato server)
-    deepgramApiKey: process.env.DEEPGRAM_API_KEY,
-
-    // Chiavi pubbliche (lato client)
+    //Public Keys
     public: {
-      mapboxKey: process.env.MAPBOX_KEY || '',
-      googleGeospatialKey: process.env.GOOGLE_GEOSPATIAL_KEY || ''
+      mapboxKey: '',
+      googleGeospatialKey: '' 
     }
-  },
-  i18n: {
-    locales: [
-      { code: 'it', file: 'it.json', name: 'Italiano' },
-      { code: 'en', file: 'en.json', name: 'English' }
-    ],
-    langDir: 'locales/', // <-- AGGIUNTO "app/" QUI
-    defaultLocale: 'it',
-    strategy: 'no_prefix'
   }
 })
