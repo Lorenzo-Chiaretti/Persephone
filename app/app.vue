@@ -41,7 +41,7 @@ onMounted(() => {
   <main class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
     <!-- ── Mappa a tutto schermo ── -->
     <div class="absolute inset-0 z-0">
-      <Mapbox />
+      <Mapbox v-if="!arStore.isScanning && !arStore.isActive" />
     </div>
 
     <!-- ── Header sovrapposto ── -->
@@ -105,6 +105,7 @@ onMounted(() => {
 html,
 body,
 #__nuxt {
+  background: transparent !important;
   margin: 0;
   padding: 0;
   height: 100%;
