@@ -175,7 +175,7 @@
     const loader = new GLTFLoader()
     
     loader.load(
-      '/models/Via_senato_v2.glb', 
+      '/models/Via_senato_v2_reduced.glb', 
       (gltf) => {
         const model = gltf.scene
 
