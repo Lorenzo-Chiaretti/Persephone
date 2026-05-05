@@ -1,9 +1,10 @@
 <template>
-  <div ref="mapContainer" class="w-full h-[500px]" />
+  <!-- Sostituito h-[500px] con h-full -->
+  <div ref="mapContainer" class="w-full h-full" />
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, shallowRef } from 'vue' // Aggiunto shallowRef agli import
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAppStore } from '~/stores/appState'
@@ -22,18 +23,17 @@ onMounted(() => {
     center: [9.1899, 45.4702], // Milan Coordinates [LNG, LAT]
     zoom: 12,
     minZoom: 9,
-    pitch: 60,
+    pitch: 60
   })
 
   // Wait for map to load style to add data
-  map.value.on('load', () => {      
+  map.value.on('load', () => {
     setupMapLayers()
   })
 })
 
 // RENDER MAP LAYERS (Navigli overlay and pois)
 const setupMapLayers = () => {
-
   const hoverPopup = new mapboxgl.Popup({
     closeButton: false,
     closeOnClick: false,
@@ -46,7 +46,7 @@ const setupMapLayers = () => {
   // Handle hovering effect
 
   map.value.on('mousemove', (e) => {
-    if (isHoveringMarker) return;
+    if (isHoveringMarker) return
     // Create bounding box around the cursor for better UX
     const offset = 8
     const bbox = [
@@ -170,7 +170,7 @@ const renderPois = async (hoverPopup) => {
       const el = marker.getElement()
       el.style.cursor = 'pointer'
 
-      el.classList.add('glow-marker');
+      el.classList.add('glow-marker')
 
       el.addEventListener('click', async (e) => {
         e.stopPropagation()
@@ -194,13 +194,13 @@ const renderPois = async (hoverPopup) => {
 
       el.addEventListener('mouseenter', () => {
         isHoveringMarker = true
-        map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], '']);
-        hoverPopup.remove();
+        map.value.setFilter('polygons-highlight', ['==', ['get', 'group'], ''])
+        hoverPopup.remove()
       })
 
       el.addEventListener('mouseleave', () => {
-        isHoveringMarker = false; // Abbassiamo il semaforo
-      });
+        isHoveringMarker = false // Abbassiamo il semaforo
+      })
     })
   } catch (error) {
     console.error('Error during fetch from pois.json:', error)
@@ -225,12 +225,14 @@ const renderPois = async (hoverPopup) => {
 }
 
 .glow-marker svg {
-  transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.2s ease;
-  transform-origin: bottom center; 
+  transition:
+    transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+    filter 0.2s ease;
+  transform-origin: bottom center;
 }
 .glow-marker:hover svg {
   transform: scale(1.2);
-  filter: drop-shadow(0px 0px 8px rgba(0, 128, 255, 0.9)); 
+  filter: drop-shadow(0px 0px 8px rgba(0, 128, 255, 0.9));
 }
 </style>
 
