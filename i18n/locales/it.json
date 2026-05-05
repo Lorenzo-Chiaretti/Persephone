@@ -60,6 +60,7 @@
   "gameDistance": "Eri a soli",
   "gameLost": "Non ci sei ancora!",
   "gameClose": "Chiudi",
+  "gameRetry": "Riprova!",
   "gpsSearching": "Acquisizione GPS in corso…",
   "gpsNotAvail": "GPS non supportato",
 
@@ -103,7 +104,7 @@
   "prox5": "Sei qui!",
   "gameThen": "Allora",
   "gameToday": "Oggi",
-  "gameRule1Title": "Osserva la foto storica",
+  "Rule1Title": "Osserva la foto storica",
   "gameRule1Desc": "Guarda attentamente l'immagine d'epoca del luogo che stai visitando.",
   "gameRule2Title": "Trova il punto esatto",
   "gameRule2Desc": "Recati fisicamente nel posto preciso in cui è stata scattata la fotografia originale.",

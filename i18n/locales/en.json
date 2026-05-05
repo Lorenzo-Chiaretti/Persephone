@@ -60,6 +60,7 @@
   "gameDistance": "You were only",
   "gameLost": "Not quite there yet!",
   "gameClose": "Close",
+  "gameRetry": "Retry!",
   "gpsSearching": "Acquiring GPS signal…",
   "gpsNotAvail": "GPS not supported",
 
