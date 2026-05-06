@@ -28,8 +28,11 @@ export default defineNuxtConfig({
     },
     headers: {
       contentSecurityPolicy: {
+        'script-src': ["'self'", "'unsafe-eval'", "'unsafe-inline'", 'https:'],
         'connect-src': [
           "'self'",
+          'data:',
+          'blob:',
           'https://api.deepgram.com',
           'wss://api.deepgram.com',
           'https://api.groq.com',
@@ -69,5 +72,10 @@ export default defineNuxtConfig({
     langDir: 'locales/', // <-- AGGIUNTO "app/" QUI
     defaultLocale: 'it',
     strategy: 'no_prefix'
-  }
+  },
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => tag.startsWith('a-'),
+    },
+  },
 })
