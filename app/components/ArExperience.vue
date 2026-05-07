@@ -115,12 +115,33 @@
           newElement.setAttribute('visible', 'false')
           newElement.setAttribute('gltf-model', '#naviglioModel')
           newElement.setAttribute('shadow', { receive: false })
+          newElement.setAttribute('position', {
+            x: touchPoint.x,
+            y: touchPoint.y - 2, //2 meters under ground offset
+            z: touchPoint.z,
+          })
 
           this.el.sceneEl.appendChild(newElement)
 
           newElement.addEventListener('model-loaded', () => {
-            // Once the model is loaded, we are ready to show it popping in using an animation
+            const mesh = newElement.getObject3D('mesh')
+
+            //Adds holdout effect
+            mesh.traverse((node) => {
+              const child = node as any
+              if (child.isMesh) {
+                child.castShadow = true
+                child.receiveShadow = true
+                if (child.material?.name === 'Mat_Holdout') {
+                  child.material.colorWrite = false
+                  child.material.depthWrite = true
+                  child.renderOrder = -1
+                }
+              }
+            })
+
             newElement.setAttribute('visible', 'true')
+            //popup animation
             newElement.setAttribute('animation', {
               property: 'scale',
               to: '1 1 1',
