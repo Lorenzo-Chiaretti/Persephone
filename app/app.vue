@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
-import ArCanvas from './components/ArCanvas.vue'
 import OnboardingModal from './components/OnboardingModal.vue'
 import BottomSheet from './components/BottomSheet.vue'
 import { useArStore } from '~/stores/arState'
@@ -78,7 +77,7 @@ onMounted(() => {
 
     <!-- ── AR Canvas ── -->
     <ClientOnly>
-      <ArCanvas :active="arStore.isActive" ref="arCanvasBridge" />
+      <!ArCanvas :active="arStore.isActive" ref="arCanvasBridge" />
     </ClientOnly>
 
     <!-- ── Bottom Sheet ── -->

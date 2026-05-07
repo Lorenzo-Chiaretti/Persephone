@@ -1,25 +1,86 @@
 <template>
-  <ClientOnly>
-    <div v-if="xrReady">
-      <a-scene xrconfig xrweb>
-        <a-camera position="0 0 0" look-controls="enabled: false" />
-        <a-box position="0 0 -2" color="#4CC3D9" />
-      </a-scene>
+  <div class="fixed inset-0 z-50">
+
+    <button
+      class="absolute top-4 right-4 z-20 bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur"
+      @click="exitAR"
+    >
+      Exit AR
+    </button>
+
+    <div
+      v-if="sceneReady && !modelPlaced"
+      class="absolute bottom-12 left-0 right-0 z-20 flex justify-center"
+    >
+      <span class="bg-black/50 text-white px-6 py-3 rounded-full text-sm backdrop-blur">
+        Tap to place model
+      </span>
     </div>
-  </ClientOnly>
+
+
+    <!-- A-Frame Scene -->
+
+    <a-scene
+      v-if="sceneReady"
+      tap-place
+      xrextras-loading
+      xrextras-runtime-error
+      renderer="colorManagement: true"
+      xrweb="allowedDevices: any"
+      xrconfig
+    >
+      <a-assets>
+        <a-asset-item id="naviglioModel" src="/models/naviglio.glb" />
+      </a-assets>
+
+      <a-camera
+        id="camera"
+        position="0 8 8"
+        raycaster="objects: .cantap"
+        cursor="
+          fuse: false; 
+          rayOrigin: mouse;"/>
+
+      <a-entity
+        light="type: directional; intensity: 0.8; castShadow: true"
+        position="1 4.3 2.5"
+      />
+
+      <a-light type="ambient" intensity="0.5" />
+
+      <!-- uses cantap class to allow the ground to be clicked -->
+      <a-box
+        id="ground"
+        class="cantap"
+        scale="1000 2 1000"
+        position="0 -0.99 0"
+        material="shader: shadow; transparent: true; opacity: 0.4"
+        shadow
+      />
+
+    </a-scene>
+
+  </div>
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted } from 'vue'
+  import { onMounted, onUnmounted, nextTick, ref } from 'vue'
 
-  const xrReady = ref(false)
+  const emit = defineEmits(['exit'])
+
+  const modelPlaced = ref(false)
+  const sceneReady = ref(false)
 
   if (import.meta.client) {
     if (!window.AFRAME) {
       useHead({
         script: [
           {
-            src: './external/scripts/8frame-1.5.0.min.js',
+            src: '/external/scripts/8frame-1.5.0.min.js',
+          },
+          {
+            src: 'https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js',
+            crossorigin: 'anonymous',
           },
           {
             src: 'https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js',
@@ -27,34 +88,74 @@
             'data-preload-chunks': 'slam',
           },
         ],
-  })
-
+      })
     }
   }
-// Accesso a XR8 dopo che l'engine è pronto
-onMounted(() => {
-  console.log('component mounted')
 
-  window.addEventListener('xrloaded', () => {
-    console.log('xrloaded fired!')
-    xrReady.value = true
-  })
+  function registerTapPlaceComponent() {
+    if (!window.AFRAME || AFRAME.components['tap-place']) return
+    AFRAME.registerComponent('tap-place', {
+      init() {
+        const ground = document.getElementById('ground')
 
-  // Verifica se XR8 esiste già su window dopo un po'
-  setTimeout(() => {
-    // @ts-ignore
-    console.log('XR8 on window:', window.XR8)
-    // @ts-ignore
-    console.log('xr.js loaded?', typeof window.XR8 !== 'undefined')
-  }, 3000)
-})
+        ground.addEventListener('click', (event) => {
 
-onUnmounted(() => {
-  // Se navighi via dalla pagina AR, stoppa l'engine
-  // per liberare la fotocamera
-  if (typeof XR8 !== 'undefined') {
-    XR8.stop()
+          if (modelPlaced.value) return
+          modelPlaced.value = true
+
+          // Create new entity for the new object
+          const newElement = document.createElement('a-entity')
+
+          // The raycaster gives a location of the touch in the scene
+          const touchPoint = event.detail.intersection.point
+          newElement.setAttribute('position', touchPoint)
+
+          newElement.setAttribute('rotation', '0 0 0')
+          newElement.setAttribute('scale', '0.0001 0.0001 0.0001')
+          newElement.setAttribute('visible', 'false')
+          newElement.setAttribute('gltf-model', '#naviglioModel')
+          newElement.setAttribute('shadow', { receive: false })
+
+          this.el.sceneEl.appendChild(newElement)
+
+          newElement.addEventListener('model-loaded', () => {
+            // Once the model is loaded, we are ready to show it popping in using an animation
+            newElement.setAttribute('visible', 'true')
+            newElement.setAttribute('animation', {
+              property: 'scale',
+              to: '1 1 1',
+              easing: 'easeOutElastic',
+              dur: 800,
+            })
+          })
+        })
+      },
+    })
   }
+
+  function exitAR() {
+    if (typeof window.XR8 !== 'undefined') {
+    window.XR8.stop()
+    }
+    emit('exit')
+    window.location.reload()
+  }
+
+onMounted(() => {
+  registerTapPlaceComponent()
+
+  window.addEventListener('xrloaded', async () => {
+    registerTapPlaceComponent()
+    sceneReady.value = true
+    await nextTick()
+  }, { once: true })
 })
+
+  onUnmounted(() => {
+    if (typeof window.XR8 !== 'undefined') {
+      window.XR8.stop()
+    }
+    window.location.reload()
+  })
 
 </script>
