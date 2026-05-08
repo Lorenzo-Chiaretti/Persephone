@@ -8,6 +8,16 @@
       Exit AR
     </button>
 
+    <!-- "BRING THE WATER BACK!" -->
+    <div v-if="modelPlaced && !waterVisible">
+      <button 
+        class="absolute top-4 left-4 z-20 bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur"
+        @click="triggerWater"
+      >
+        Bring the Water Back!
+      </button>
+    </div>
+
     <div
       v-if="sceneReady && !modelPlaced"
       class="absolute bottom-12 left-0 right-0 z-20 flex justify-center"
@@ -22,7 +32,6 @@
 
     <a-scene
       v-if="sceneReady"
-      naviglio-water
       tap-place
       xrextras-loading
       xrextras-runtime-error
@@ -70,6 +79,7 @@
   const emit = defineEmits(['exit'])
 
   const modelPlaced = ref(false)
+  const waterVisible = ref(false)
   const sceneReady = ref(false)
 
   // ====================================================================================
@@ -188,6 +198,12 @@
 
       init: function () {
         this.water = null; // Water object
+
+        // Variables for water animation
+        this.targetY = null; // Final water height
+        this.currentY = null; // Initial water height
+        this.isFilling = false; // Animation state
+
         const el = this.el;
         const THREE = window.THREE;
 
@@ -229,12 +245,32 @@
               this.water.position.copy(child.position);
               this.water.rotation.copy(child.rotation);
               this.water.scale.copy(child.scale);
+
+              // ----------- Filling animation setup -----------
+              this.targetY = child.position.y
+              this.currentY = this.targetY - 5
+              this.water.position.y = this.currentY
+              this.water.visible = false
+              // -----------------------------------------------
               
               // Add water to the model
               child.parent.add(this.water); 
               
               // Hide original water mesh (a blue plane)
               child.visible = false; 
+
+              // ----------- Filling animation -----------
+              el.addEventListener('toggle-water', () => {
+                console.log("Starting Water animation")
+                if(!this.water) return;
+                this.isFilling = !this.isFilling;
+                
+                if(this.isFilling) {
+                    this.water.visible = true; // Show water (now it's underneath)
+                }
+              });
+              // -----------------------------------------
+
             }
           });
         });
@@ -242,12 +278,32 @@
 
       // tick is called for each frame
       tick: function (time, timeDelta) {
-        if (this.water && this.water.material.uniforms['time']) {
-          // timeDelta è in millisecondi, lo convertiamo in secondi
-          this.water.material.uniforms['time'].value += timeDelta / 1000.0; 
+        if(this.water) {
+          // 1. Waves animation
+          if (this.water.material.uniforms['time']) {
+            // timeDelta is in milliseconds, convert it to seconds
+            this.water.material.uniforms['time'].value += timeDelta / 1000.0; 
+          }
+
+          // 2. Filling animation
+          if (this.isFilling && this.currentY < this.targetY) {
+            this.currentY += timeDelta * 0.002; // Change this value to adjust speed
+            if (this.currentY >= this.targetY) {
+              this.currentY = this.targetY; // Stop water when we reach the target height
+            }
+            this.water.position.y = this.currentY;
+          }
         }
       }
     });
+  }
+
+  const triggerWater = () => {
+    const naviglioEntity = document.querySelector('[naviglio-water]');
+    if (naviglioEntity) {
+      // Inviamo l'evento custom che il componente sta ascoltando
+      naviglioEntity.emit('toggle-water');
+    }
   }
 
 
