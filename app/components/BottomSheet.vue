@@ -287,13 +287,11 @@
           <div class="text-6xl mb-6 drop-shadow-sm animate-float">
             {{ easterEggEmoji }}
           </div>
-
           <h3
             class="font-['Playfair_Display'] text-[24px] italic font-bold text-[#2071c1] mb-3"
           >
             {{ easterEggTitle }}
           </h3>
-
           <p
             class="font-['Inter'] text-[15px] text-[#424242]/80 leading-relaxed"
           >
@@ -315,30 +313,41 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// ─── Snap sheet ──────────────────────────────────────────────────────────────
+// ─── Snap sheet ───────────────────────────────────────────────────────────────
+
+type SnapConfig = { type: 'px' | 'vh'; value: number }
+
+const SNAP_CONFIGS: SnapConfig[] = [
+  { type: 'px', value: 120 },
+  { type: 'vh', value: 0.92 }
+]
+
+const VELOCITY_THRESHOLD = 0.25 // px/ms
+const DRAG_THRESHOLD = 10 // px
 
 const snapIndex = ref(0)
 const currentY = ref(0)
 const dragging = ref(false)
 const scrollEl = ref<HTMLElement | null>(null)
 
+// Guard SSR-safe
+const windowH = ref(typeof window !== 'undefined' ? window.innerHeight : 0)
+
 let startY = 0
 let startTranslateY = 0
-let windowH = 0
 let isDraggingSheet = false
 let dragFromHandle = false
 let lastY = 0
 let lastTime = 0
 
-const SNAP_CONFIGS = [120, 0.92]
-
-function snapHeightPx(idx: number) {
-  const h = SNAP_CONFIGS[idx] ?? 0
-  return h < 2 ? h * windowH : h
+function snapHeightPx(idx: number): number {
+  const cfg = SNAP_CONFIGS[idx]
+  if (!cfg) return 0
+  return cfg.type === 'px' ? cfg.value : cfg.value * windowH.value
 }
 
-function translateForSnap(idx: number) {
-  return windowH - snapHeightPx(idx)
+function translateForSnap(idx: number): number {
+  return windowH.value - snapHeightPx(idx)
 }
 
 function applySnap(idx: number) {
@@ -351,7 +360,7 @@ const sheetStyle = computed(() => ({
   transition: dragging.value
     ? 'none'
     : 'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
-  height: `${windowH * 0.97}px`
+  height: `${windowH.value * 0.97}px`
 }))
 
 // ─── Touch handlers ───────────────────────────────────────────────────────────
@@ -381,8 +390,6 @@ function onTouchMove(e: TouchEvent) {
 
   const dy = e.touches[0].clientY - startY
 
-  // Quando il pannello è aperto, decidiamo se muovere lo sheet o lasciare
-  // scorrere il contenuto interno.
   if (
     !dragFromHandle &&
     snapIndex.value > 0 &&
@@ -395,54 +402,31 @@ function onTouchMove(e: TouchEvent) {
       scrollEl.value.scrollHeight - 1
     const draggingDown = dy > 0
     const draggingUp = dy < 0
-
-    // Lascia scrollare il contenuto interno se:
-    // - si trascina verso il basso ma non si è in cima
-    // - si trascina verso l'alto ma non si è in fondo
     if ((!atTop && draggingDown) || (!atBottom && draggingUp)) return
   }
 
-  // Siamo in modalità "muovi lo sheet": blocca il default per evitare
-  // bounce/scroll della pagina e aggiorna la posizione.
   e.preventDefault()
   isDraggingSheet = true
 
   lastY = e.touches[0].clientY
   lastTime = Date.now()
 
-  const next = Math.max(
+  currentY.value = Math.max(
     translateForSnap(1),
     Math.min(translateForSnap(0), startTranslateY + dy)
   )
-  currentY.value = next
-}
-
-function snapFromGesture() {
-  const elapsed = Date.now() - lastTime
-  const velocity = elapsed > 0 ? (lastY - startY) / elapsed : 0 // px/ms, positivo = verso il basso
-
-  const VELOCITY_THRESHOLD = 0.3 // px/ms
-  if (velocity > VELOCITY_THRESHOLD) {
-    applySnap(0) // gesto rapido verso il basso → chiudi
-  } else if (velocity < -VELOCITY_THRESHOLD) {
-    applySnap(1) // gesto rapido verso l'alto → apri
-  } else {
-    // movimento lento: snappa al più vicino
-    const distances = SNAP_CONFIGS.map((_, i) =>
-      Math.abs(currentY.value - translateForSnap(i))
-    )
-    applySnap(distances.indexOf(Math.min(...distances)))
-  }
 }
 
 function onTouchEnd() {
+  // Aggiorna lastTime al momento del rilascio per una velocity accurata
+  lastTime = Date.now()
   dragging.value = false
   isDraggingSheet = false
   dragFromHandle = false
   snapFromGesture()
 }
 
-// ─── Mouse handlers (desktop) ────────────────────────────────────────────────
+// ─── Mouse handlers (desktop) ─────────────────────────────────────────────────
 
 function onMouseDown(e: MouseEvent) {
   startY = e.clientY
@@ -452,6 +436,7 @@ function onMouseDown(e: MouseEvent) {
   dragging.value = true
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('mouseleave', onMouseUp) // FIX: cursore fuori finestra
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -465,11 +450,40 @@ function onMouseMove(e: MouseEvent) {
 }
 
 function onMouseUp() {
+  if (!dragging.value) return
   dragging.value = false
   dragFromHandle = false
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('mouseleave', onMouseUp)
   snapFromGesture()
+}
+
+// ─── Snap gesture ─────────────────────────────────────────────────────────────
+
+function snapFromGesture() {
+  const elapsed = Date.now() - lastTime
+  const velocity = elapsed > 0 ? (lastY - startY) / elapsed : 0
+  const totalDrag = lastY - startY
+
+  if (velocity > VELOCITY_THRESHOLD) {
+    applySnap(0)
+    return
+  }
+  if (velocity < -VELOCITY_THRESHOLD) {
+    applySnap(1)
+    return
+  }
+
+  if (Math.abs(totalDrag) >= DRAG_THRESHOLD) {
+    applySnap(totalDrag > 0 ? 0 : 1)
+    return
+  }
+
+  const distances = SNAP_CONFIGS.map((_, i) =>
+    Math.abs(currentY.value - translateForSnap(i))
+  )
+  applySnap(distances.indexOf(Math.min(...distances)))
 }
 
 // ─── Easter eggs ──────────────────────────────────────────────────────────────
@@ -487,9 +501,7 @@ const navigliP1 = computed(() =>
 )
 
 const navigliP2 = computed(() =>
-  t('navigliP2', {
-    viadacqua: eggSpan('viadacqua', t('wordViadacqua'))
-  })
+  t('navigliP2', { viadacqua: eggSpan('viadacqua', t('wordViadacqua')) })
 )
 
 const persephoneP1 = computed(() =>
@@ -578,9 +590,13 @@ function triggerEgg(key: string) {
   easterEggTitle.value = t(egg.titleKey)
   easterEggText.value = t(egg.textKey)
   easterEggVisible.value = true
-  if (easterTimeout) clearTimeout(easterTimeout)
+  if (easterTimeout) {
+    clearTimeout(easterTimeout)
+    easterTimeout = null
+  } // FIX: azzera dopo clear
   easterTimeout = setTimeout(() => {
     easterEggVisible.value = false
+    easterTimeout = null
   }, 3500)
 }
 
@@ -603,12 +619,12 @@ const team = [
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
 function onResize() {
-  windowH = window.innerHeight
+  windowH.value = window.innerHeight
   applySnap(snapIndex.value)
 }
 
 onMounted(() => {
-  windowH = window.innerHeight
+  windowH.value = window.innerHeight
   applySnap(0)
   window.addEventListener('resize', onResize)
   document.addEventListener('click', onContentClick)
@@ -618,8 +634,12 @@ onUnmounted(() => {
   window.removeEventListener('resize', onResize)
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('mouseleave', onMouseUp)
   document.removeEventListener('click', onContentClick)
-  if (easterTimeout) clearTimeout(easterTimeout)
+  if (easterTimeout) {
+    clearTimeout(easterTimeout)
+    easterTimeout = null
+  }
 })
 </script>
 
@@ -684,17 +704,5 @@ onUnmounted(() => {
   border-style: solid;
   transform: scale(1.05) translateY(-2px);
   box-shadow: 0 4px 8px rgba(32, 113, 193, 0.2);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
 }
 </style>
