@@ -72,6 +72,10 @@
   const modelPlaced = ref(false)
   const sceneReady = ref(false)
 
+  // ====================================================================================
+  // IMPORT AR LIBRARIES
+  // ====================================================================================
+
   if (import.meta.client) {
     if (!window.AFRAME) {
       useHead({
@@ -92,6 +96,11 @@
       })
     }
   }
+
+
+  // ====================================================================================
+  // PLACE NAVIGLIO MODEL
+  // ====================================================================================
 
   function registerTapPlaceComponent() {
     if (!window.AFRAME || AFRAME.components['tap-place']) return
@@ -118,11 +127,11 @@
           newElement.setAttribute('shadow', { receive: false })
           newElement.setAttribute('position', {
             x: touchPoint.x,
-            y: touchPoint.y - 2, //2 meters under ground offset
+            y: touchPoint.y - 2, // under ground offset
             z: touchPoint.z,
           })
 
-          //Adds water shader
+          // Add water shader
           newElement.setAttribute('naviglio-water', '')
 
           this.el.sceneEl.appendChild(newElement)
@@ -130,7 +139,7 @@
           newElement.addEventListener('model-loaded', () => {
             const mesh = newElement.getObject3D('mesh')
 
-            //Adds holdout effect
+            // Add holdout effect
             mesh.traverse((node) => {
               const child = node as any
               if (child.isMesh) {
@@ -160,20 +169,17 @@
     })
   }
 
-  function exitAR() {
-    if (typeof window.XR8 !== 'undefined') {
-    window.XR8.stop()
-    }
-    emit('exit')
-    window.location.reload()
-  }
+
+  // ====================================================================================
+  // RENDER AND ANIMATE WATER
+  // ====================================================================================
 
   function registerWaterAnimation() {
     if (!window.AFRAME || AFRAME.components['naviglio-water']) return
 
     AFRAME.registerComponent('naviglio-water', {
       schema: {
-        // Permette di modificare i parametri direttamente dall'HTML
+        // Allows to modify params directly from HTML
         normalMap: { type: 'string', default: '/textures/waternormals.jpg' },
         waterColor: { type: 'color', default: '#497785' },
         distortionScale: { type: 'number', default: 1.5 },
@@ -181,36 +187,36 @@
       },
 
       init: function () {
-        this.water = null; // Salveremo qui l'oggetto acqua per poterlo animare
+        this.water = null; // Water object
         const el = this.el;
         const THREE = window.THREE;
 
-        // Dobbiamo aspettare che il file GLB abbia finito di caricarsi
+        // Wait until the model is loaded
         el.addEventListener('model-loaded', async () => {
           const mesh = el.getObject3D('mesh');
           if (!mesh) return;
           const { Water } = await import('~/utils/Water.js');
 
-          // Attraversiamo tutto il modello 3D alla ricerca della mesh "Acqua"
+          // Search for mesh "Acqua"
           mesh.traverse((child) => {
             if (child.isMesh && child.name === 'Acqua') {
               
               const waterGeometry = child.geometry;
 
-              // Carichiamo la texture delle normali
+              // Load normals texture
               const textureLoader = new THREE.TextureLoader();
               const normalTexture = textureLoader.load(this.data.normalMap, function (texture) {
                 texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
               });
 
-              // Ricreiamo l'oggetto Water del tuo collega
+              // Create water object
               this.water = new Water(
                 waterGeometry,
                 {
                   textureWidth: 512,
                   textureHeight: 512,
                   waterNormals: normalTexture,
-                  // Creiamo una direzione del sole fittizia verso il basso
+                  // Create a sun direction downwards
                   sunDirection: new THREE.Vector3(0, 1, 0).normalize(), 
                   sunColor: 0xffffff,
                   waterColor: new THREE.Color(this.data.waterColor),
@@ -219,23 +225,22 @@
                 }
               );
 
-              // Copiamo posizione, rotazione e scala esatte del piano di Blender
+              // Copy position, rotation and scale from blender plane
               this.water.position.copy(child.position);
               this.water.rotation.copy(child.rotation);
               this.water.scale.copy(child.scale);
               
-              // In A-Frame, è meglio aggiungere l'acqua al genitore del piano originale
-              // invece che alla scena globale, così segue l'ancoraggio AR del naviglio.
+              // Add water to the model
               child.parent.add(this.water); 
               
-              // Nascondiamo il piano "finto"
+              // Hide original water mesh (a blue plane)
               child.visible = false; 
             }
           });
         });
       },
 
-      // Il tick viene chiamato ad ogni frame. Serve per far muovere l'acqua!
+      // tick is called for each frame
       tick: function (time, timeDelta) {
         if (this.water && this.water.material.uniforms['time']) {
           // timeDelta è in millisecondi, lo convertiamo in secondi
@@ -245,17 +250,35 @@
     });
   }
 
-onMounted(() => {
-  registerTapPlaceComponent()
-  registerWaterAnimation()
 
-  window.addEventListener('xrloaded', async () => {
+  // ====================================================================================
+  // HANDLE END OF AR EXPERIENCE
+  // ====================================================================================
+
+  function exitAR() {
+    if (typeof window.XR8 !== 'undefined') {
+    window.XR8.stop()
+    }
+    emit('exit')
+    window.location.reload()
+  }
+
+
+  // ====================================================================================
+  // MOUNTING AND UNMOUNTING
+  // ====================================================================================
+
+  onMounted(() => {
     registerTapPlaceComponent()
     registerWaterAnimation()
-    sceneReady.value = true
-    await nextTick()
-  }, { once: true })
-})
+
+    window.addEventListener('xrloaded', async () => {
+      registerTapPlaceComponent()
+      registerWaterAnimation()
+      sceneReady.value = true
+      await nextTick()
+    }, { once: true })
+  })
 
   onUnmounted(() => {
     if (typeof window.XR8 !== 'undefined') {
