@@ -13,6 +13,8 @@
     >
       <div
         class="flex justify-center pt-3 pb-1 cursor-grab select-none shrink-0"
+        @touchstart.passive="onHandleTouchStart"
+        @mousedown.stop="onHandleMouseDown"
       >
         <div class="w-10 h-1 rounded-full bg-[#424242]/20" />
       </div>
@@ -208,8 +210,7 @@
           </div>
 
           <div
-            class="flex items-start gap-4 bg-[#f7f9fc] rounded-[16px] px-4 py-4 cursor-pointer active:bg-[#eef1f5] transition-colors"
-            @click="emit('open-onboarding')"
+            class="flex items-start gap-4 bg-[#f7f9fc] rounded-[16px] px-4 py-4"
           >
             <div
               class="w-10 h-10 rounded-[10px] bg-[#2071c1]/10 flex items-center justify-center shrink-0"
@@ -228,7 +229,7 @@
               <p
                 class="font-['Inter'] text-[13px] font-semibold text-[#424242] mb-0.5"
               >
-                {{ $t('howToPlay') }} <span class="text-[#2071c1]">→</span>
+                {{ $t('howToPlay') }}
               </p>
               <p
                 class="font-['Inter'] text-[12px] text-[#424242]/55 leading-[1.5]"
@@ -325,8 +326,11 @@ let startY = 0
 let startTranslateY = 0
 let windowH = 0
 let isDraggingSheet = false
+let dragFromHandle = false
+let lastY = 0
+let lastTime = 0
 
-const SNAP_CONFIGS = [120, 0.5, 0.92]
+const SNAP_CONFIGS = [120, 0.92]
 
 function snapHeightPx(idx: number) {
   const h = SNAP_CONFIGS[idx] ?? 0
@@ -352,9 +356,21 @@ const sheetStyle = computed(() => ({
 
 // ─── Touch handlers ───────────────────────────────────────────────────────────
 
+function onHandleTouchStart(e: TouchEvent) {
+  dragFromHandle = true
+  onTouchStart(e)
+}
+
+function onHandleMouseDown(e: MouseEvent) {
+  dragFromHandle = true
+  onMouseDown(e)
+}
+
 function onTouchStart(e: TouchEvent) {
   if (!e.touches?.[0]) return
   startY = e.touches[0].clientY
+  lastY = startY
+  lastTime = Date.now()
   startTranslateY = currentY.value
   dragging.value = true
   isDraggingSheet = false
@@ -367,13 +383,23 @@ function onTouchMove(e: TouchEvent) {
 
   // Quando il pannello è aperto, decidiamo se muovere lo sheet o lasciare
   // scorrere il contenuto interno.
-  if (snapIndex.value > 0 && scrollEl.value && !isDraggingSheet) {
+  if (
+    !dragFromHandle &&
+    snapIndex.value > 0 &&
+    scrollEl.value &&
+    !isDraggingSheet
+  ) {
     const atTop = scrollEl.value.scrollTop <= 0
+    const atBottom =
+      scrollEl.value.scrollTop + scrollEl.value.clientHeight >=
+      scrollEl.value.scrollHeight - 1
     const draggingDown = dy > 0
+    const draggingUp = dy < 0
 
-    // Se il contenuto non è in cima, o si sta trascinando verso l'alto
-    // → non interferire con lo scroll nativo del div interno.
-    if (!atTop || !draggingDown) return
+    // Lascia scrollare il contenuto interno se:
+    // - si trascina verso il basso ma non si è in cima
+    // - si trascina verso l'alto ma non si è in fondo
+    if ((!atTop && draggingDown) || (!atBottom && draggingUp)) return
   }
 
   // Siamo in modalità "muovi lo sheet": blocca il default per evitare
@@ -381,28 +407,47 @@ function onTouchMove(e: TouchEvent) {
   e.preventDefault()
   isDraggingSheet = true
 
+  lastY = e.touches[0].clientY
+  lastTime = Date.now()
+
   const next = Math.max(
-    translateForSnap(2),
+    translateForSnap(1),
     Math.min(translateForSnap(0), startTranslateY + dy)
   )
   currentY.value = next
 }
 
+function snapFromGesture() {
+  const elapsed = Date.now() - lastTime
+  const velocity = elapsed > 0 ? (lastY - startY) / elapsed : 0 // px/ms, positivo = verso il basso
+
+  const VELOCITY_THRESHOLD = 0.3 // px/ms
+  if (velocity > VELOCITY_THRESHOLD) {
+    applySnap(0) // gesto rapido verso il basso → chiudi
+  } else if (velocity < -VELOCITY_THRESHOLD) {
+    applySnap(1) // gesto rapido verso l'alto → apri
+  } else {
+    // movimento lento: snappa al più vicino
+    const distances = SNAP_CONFIGS.map((_, i) =>
+      Math.abs(currentY.value - translateForSnap(i))
+    )
+    applySnap(distances.indexOf(Math.min(...distances)))
+  }
+}
+
 function onTouchEnd() {
   dragging.value = false
   isDraggingSheet = false
-
-  // Snappa allo snap point più vicino.
-  const distances = SNAP_CONFIGS.map((_, i) =>
-    Math.abs(currentY.value - translateForSnap(i))
-  )
-  applySnap(distances.indexOf(Math.min(...distances)))
+  dragFromHandle = false
+  snapFromGesture()
 }
 
 // ─── Mouse handlers (desktop) ────────────────────────────────────────────────
 
 function onMouseDown(e: MouseEvent) {
   startY = e.clientY
+  lastY = startY
+  lastTime = Date.now()
   startTranslateY = currentY.value
   dragging.value = true
   window.addEventListener('mousemove', onMouseMove)
@@ -411,20 +456,20 @@ function onMouseDown(e: MouseEvent) {
 
 function onMouseMove(e: MouseEvent) {
   if (!dragging.value) return
+  lastY = e.clientY
+  lastTime = Date.now()
   currentY.value = Math.max(
-    translateForSnap(2),
+    translateForSnap(1),
     Math.min(translateForSnap(0), startTranslateY + e.clientY - startY)
   )
 }
 
 function onMouseUp() {
   dragging.value = false
+  dragFromHandle = false
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
-  const distances = SNAP_CONFIGS.map((_, i) =>
-    Math.abs(currentY.value - translateForSnap(i))
-  )
-  applySnap(distances.indexOf(Math.min(...distances)))
+  snapFromGesture()
 }
 
 // ─── Easter eggs ──────────────────────────────────────────────────────────────
@@ -550,7 +595,7 @@ function onContentClick(e: MouseEvent) {
 
 const team = [
   { name: 'Marco Abbadessa', initials: 'MA' },
-  { name: 'Gabriele Busacca',  initials: 'GB' },
+  { name: 'Gabriele Busacca', initials: 'GB' },
   { name: 'Lorenzo Chiaretti', initials: 'LC' },
   { name: "Giuseppe D'Ambrosi", initials: 'GD' }
 ]
