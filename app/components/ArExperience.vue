@@ -22,6 +22,7 @@
 
     <a-scene
       v-if="sceneReady"
+      naviglio-water
       tap-place
       xrextras-loading
       xrextras-runtime-error
@@ -110,7 +111,7 @@
           const touchPoint = event.detail.intersection.point
           newElement.setAttribute('position', touchPoint)
 
-          newElement.setAttribute('rotation', '0 0 0')
+          newElement.setAttribute('rotation', '0 60 0')
           newElement.setAttribute('scale', '0.0001 0.0001 0.0001')
           newElement.setAttribute('visible', 'false')
           newElement.setAttribute('gltf-model', '#naviglioModel')
@@ -121,6 +122,9 @@
             z: touchPoint.z,
           })
 
+          //Adds water shader
+          newElement.setAttribute('naviglio-water', '')
+
           this.el.sceneEl.appendChild(newElement)
 
           newElement.addEventListener('model-loaded', () => {
@@ -130,6 +134,7 @@
             mesh.traverse((node) => {
               const child = node as any
               if (child.isMesh) {
+                console.log('mesh:', node.name, '| material:', node.material?.name)
                 child.castShadow = true
                 child.receiveShadow = true
                 if (child.material?.name === 'Mat_Holdout') {
@@ -148,6 +153,7 @@
               easing: 'easeOutElastic',
               dur: 800,
             })
+
           })
         })
       },
@@ -162,11 +168,90 @@
     window.location.reload()
   }
 
+  function registerWaterAnimation() {
+    if (!window.AFRAME || AFRAME.components['naviglio-water']) return
+
+    AFRAME.registerComponent('naviglio-water', {
+      schema: {
+        // Permette di modificare i parametri direttamente dall'HTML
+        normalMap: { type: 'string', default: '/textures/waternormals.jpg' },
+        waterColor: { type: 'color', default: '#497785' },
+        distortionScale: { type: 'number', default: 1.5 },
+        alpha: { type: 'number', default: 0.9 }
+      },
+
+      init: function () {
+        this.water = null; // Salveremo qui l'oggetto acqua per poterlo animare
+        const el = this.el;
+        const THREE = window.THREE;
+
+        // Dobbiamo aspettare che il file GLB abbia finito di caricarsi
+        el.addEventListener('model-loaded', async () => {
+          const mesh = el.getObject3D('mesh');
+          if (!mesh) return;
+          const { Water } = await import('~/utils/Water.js');
+
+          // Attraversiamo tutto il modello 3D alla ricerca della mesh "Acqua"
+          mesh.traverse((child) => {
+            if (child.isMesh && child.name === 'Acqua') {
+              
+              const waterGeometry = child.geometry;
+
+              // Carichiamo la texture delle normali
+              const textureLoader = new THREE.TextureLoader();
+              const normalTexture = textureLoader.load(this.data.normalMap, function (texture) {
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+              });
+
+              // Ricreiamo l'oggetto Water del tuo collega
+              this.water = new Water(
+                waterGeometry,
+                {
+                  textureWidth: 512,
+                  textureHeight: 512,
+                  waterNormals: normalTexture,
+                  // Creiamo una direzione del sole fittizia verso il basso
+                  sunDirection: new THREE.Vector3(0, 1, 0).normalize(), 
+                  sunColor: 0xffffff,
+                  waterColor: new THREE.Color(this.data.waterColor),
+                  distortionScale: this.data.distortionScale,
+                  alpha: this.data.alpha
+                }
+              );
+
+              // Copiamo posizione, rotazione e scala esatte del piano di Blender
+              this.water.position.copy(child.position);
+              this.water.rotation.copy(child.rotation);
+              this.water.scale.copy(child.scale);
+              
+              // In A-Frame, è meglio aggiungere l'acqua al genitore del piano originale
+              // invece che alla scena globale, così segue l'ancoraggio AR del naviglio.
+              child.parent.add(this.water); 
+              
+              // Nascondiamo il piano "finto"
+              child.visible = false; 
+            }
+          });
+        });
+      },
+
+      // Il tick viene chiamato ad ogni frame. Serve per far muovere l'acqua!
+      tick: function (time, timeDelta) {
+        if (this.water && this.water.material.uniforms['time']) {
+          // timeDelta è in millisecondi, lo convertiamo in secondi
+          this.water.material.uniforms['time'].value += timeDelta / 1000.0; 
+        }
+      }
+    });
+  }
+
 onMounted(() => {
   registerTapPlaceComponent()
+  registerWaterAnimation()
 
   window.addEventListener('xrloaded', async () => {
     registerTapPlaceComponent()
+    registerWaterAnimation()
     sceneReady.value = true
     await nextTick()
   }, { once: true })
