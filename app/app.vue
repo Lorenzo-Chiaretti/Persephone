@@ -63,15 +63,80 @@ onMounted(() => {
           </span>
         </div>
 
-        <!-- Language toggle -->
-        <button
-          class="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-white transition-colors"
-          @click="toggleLang"
-        >
-          <span class="text-[13px] font-['Inter'] font-semibold text-[#424242]">
-            {{ locale === 'it' ? '🇮🇹 IT' : '🇬🇧 EN' }}
-          </span>
-        </button>
+        <!-- Language toggle + Onboarding button -->
+        <div class="flex items-center gap-2">
+          <button
+            class="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-white transition-colors"
+            @click="toggleLang"
+          >
+            <!-- IT flag SVG -->
+            <svg
+              v-if="locale === 'it'"
+              width="20"
+              height="14"
+              viewBox="0 0 20 14"
+              xmlns="http://www.w3.org/2000/svg"
+              class="rounded-sm"
+            >
+              <rect width="20" height="14" fill="#CE2B37" />
+              <rect width="6.67" height="14" fill="#009246" />
+              <rect x="6.67" width="6.67" height="14" fill="#FFFFFF" />
+            </svg>
+            <!-- EN flag SVG -->
+            <svg
+              v-else
+              width="20"
+              height="14"
+              viewBox="0 0 20 14"
+              xmlns="http://www.w3.org/2000/svg"
+              class="rounded-sm"
+            >
+              <rect width="20" height="14" fill="#012169" />
+              <path
+                d="M0 0 L20 14 M20 0 L0 14"
+                stroke="white"
+                stroke-width="2.8"
+              />
+              <path
+                d="M0 0 L20 14 M20 0 L0 14"
+                stroke="#C8102E"
+                stroke-width="1.6"
+              />
+              <path d="M10 0 V14 M0 7 H20" stroke="white" stroke-width="4" />
+              <path
+                d="M10 0 V14 M0 7 H20"
+                stroke="#C8102E"
+                stroke-width="2.4"
+              />
+            </svg>
+            <span
+              class="text-[13px] font-['Inter'] font-semibold text-[#424242]"
+            >
+              {{ locale === 'it' ? 'IT' : 'EN' }}
+            </span>
+          </button>
+
+          <!-- Onboarding button -->
+          <button
+            class="bg-white/90 backdrop-blur-md rounded-2xl w-10 h-10 shadow-lg flex items-center justify-center cursor-pointer hover:bg-white transition-colors"
+            @click="showOnboarding = true"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#424242"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <circle cx="12" cy="17" r="0.5" fill="#424242" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 

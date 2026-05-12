@@ -13,6 +13,8 @@
     >
       <div
         class="flex justify-center pt-3 pb-1 cursor-grab select-none shrink-0"
+        @touchstart.passive="onHandleTouchStart"
+        @mousedown.stop="onHandleMouseDown"
       >
         <div class="w-10 h-1 rounded-full bg-[#424242]/20" />
       </div>
@@ -208,8 +210,7 @@
           </div>
 
           <div
-            class="flex items-start gap-4 bg-[#f7f9fc] rounded-[16px] px-4 py-4 cursor-pointer active:bg-[#eef1f5] transition-colors"
-            @click="emit('open-onboarding')"
+            class="flex items-start gap-4 bg-[#f7f9fc] rounded-[16px] px-4 py-4"
           >
             <div
               class="w-10 h-10 rounded-[10px] bg-[#2071c1]/10 flex items-center justify-center shrink-0"
@@ -228,7 +229,7 @@
               <p
                 class="font-['Inter'] text-[13px] font-semibold text-[#424242] mb-0.5"
               >
-                {{ $t('howToPlay') }} <span class="text-[#2071c1]">→</span>
+                {{ $t('howToPlay') }}
               </p>
               <p
                 class="font-['Inter'] text-[12px] text-[#424242]/55 leading-[1.5]"
@@ -286,13 +287,11 @@
           <div class="text-6xl mb-6 drop-shadow-sm animate-float">
             {{ easterEggEmoji }}
           </div>
-
           <h3
             class="font-['Playfair_Display'] text-[24px] italic font-bold text-[#2071c1] mb-3"
           >
             {{ easterEggTitle }}
           </h3>
-
           <p
             class="font-['Inter'] text-[15px] text-[#424242]/80 leading-relaxed"
           >
@@ -314,27 +313,41 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// ─── Snap sheet ──────────────────────────────────────────────────────────────
+// ─── Snap sheet ───────────────────────────────────────────────────────────────
+
+type SnapConfig = { type: 'px' | 'vh'; value: number }
+
+const SNAP_CONFIGS: SnapConfig[] = [
+  { type: 'px', value: 120 },
+  { type: 'vh', value: 0.92 }
+]
+
+const VELOCITY_THRESHOLD = 0.25 // px/ms
+const DRAG_THRESHOLD = 10 // px
 
 const snapIndex = ref(0)
 const currentY = ref(0)
 const dragging = ref(false)
 const scrollEl = ref<HTMLElement | null>(null)
 
+// Guard SSR-safe
+const windowH = ref(typeof window !== 'undefined' ? window.innerHeight : 0)
+
 let startY = 0
 let startTranslateY = 0
-let windowH = 0
 let isDraggingSheet = false
+let dragFromHandle = false
+let lastY = 0
+let lastTime = 0
 
-const SNAP_CONFIGS = [120, 0.5, 0.92]
-
-function snapHeightPx(idx: number) {
-  const h = SNAP_CONFIGS[idx] ?? 0
-  return h < 2 ? h * windowH : h
+function snapHeightPx(idx: number): number {
+  const cfg = SNAP_CONFIGS[idx]
+  if (!cfg) return 0
+  return cfg.type === 'px' ? cfg.value : cfg.value * windowH.value
 }
 
-function translateForSnap(idx: number) {
-  return windowH - snapHeightPx(idx)
+function translateForSnap(idx: number): number {
+  return windowH.value - snapHeightPx(idx)
 }
 
 function applySnap(idx: number) {
@@ -347,14 +360,26 @@ const sheetStyle = computed(() => ({
   transition: dragging.value
     ? 'none'
     : 'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
-  height: `${windowH * 0.97}px`
+  height: `${windowH.value * 0.97}px`
 }))
 
 // ─── Touch handlers ───────────────────────────────────────────────────────────
 
+function onHandleTouchStart(e: TouchEvent) {
+  dragFromHandle = true
+  onTouchStart(e)
+}
+
+function onHandleMouseDown(e: MouseEvent) {
+  dragFromHandle = true
+  onMouseDown(e)
+}
+
 function onTouchStart(e: TouchEvent) {
   if (!e.touches?.[0]) return
   startY = e.touches[0].clientY
+  lastY = startY
+  lastTime = Date.now()
   startTranslateY = currentY.value
   dragging.value = true
   isDraggingSheet = false
@@ -365,62 +390,96 @@ function onTouchMove(e: TouchEvent) {
 
   const dy = e.touches[0].clientY - startY
 
-  // Quando il pannello è aperto, decidiamo se muovere lo sheet o lasciare
-  // scorrere il contenuto interno.
-  if (snapIndex.value > 0 && scrollEl.value && !isDraggingSheet) {
+  if (
+    !dragFromHandle &&
+    snapIndex.value > 0 &&
+    scrollEl.value &&
+    !isDraggingSheet
+  ) {
     const atTop = scrollEl.value.scrollTop <= 0
+    const atBottom =
+      scrollEl.value.scrollTop + scrollEl.value.clientHeight >=
+      scrollEl.value.scrollHeight - 1
     const draggingDown = dy > 0
-
-    // Se il contenuto non è in cima, o si sta trascinando verso l'alto
-    // → non interferire con lo scroll nativo del div interno.
-    if (!atTop || !draggingDown) return
+    const draggingUp = dy < 0
+    if ((!atTop && draggingDown) || (!atBottom && draggingUp)) return
   }
 
-  // Siamo in modalità "muovi lo sheet": blocca il default per evitare
-  // bounce/scroll della pagina e aggiorna la posizione.
   e.preventDefault()
   isDraggingSheet = true
 
-  const next = Math.max(
-    translateForSnap(2),
+  lastY = e.touches[0].clientY
+  lastTime = Date.now()
+
+  currentY.value = Math.max(
+    translateForSnap(1),
     Math.min(translateForSnap(0), startTranslateY + dy)
   )
-  currentY.value = next
 }
 
 function onTouchEnd() {
+  // Aggiorna lastTime al momento del rilascio per una velocity accurata
+  lastTime = Date.now()
   dragging.value = false
   isDraggingSheet = false
-
-  // Snappa allo snap point più vicino.
-  const distances = SNAP_CONFIGS.map((_, i) =>
-    Math.abs(currentY.value - translateForSnap(i))
-  )
-  applySnap(distances.indexOf(Math.min(...distances)))
+  dragFromHandle = false
+  snapFromGesture()
 }
 
-// ─── Mouse handlers (desktop) ────────────────────────────────────────────────
+// ─── Mouse handlers (desktop) ─────────────────────────────────────────────────
 
 function onMouseDown(e: MouseEvent) {
   startY = e.clientY
+  lastY = startY
+  lastTime = Date.now()
   startTranslateY = currentY.value
   dragging.value = true
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('mouseleave', onMouseUp) // FIX: cursore fuori finestra
 }
 
 function onMouseMove(e: MouseEvent) {
   if (!dragging.value) return
+  lastY = e.clientY
+  lastTime = Date.now()
   currentY.value = Math.max(
-    translateForSnap(2),
+    translateForSnap(1),
     Math.min(translateForSnap(0), startTranslateY + e.clientY - startY)
   )
 }
 
 function onMouseUp() {
+  if (!dragging.value) return
   dragging.value = false
+  dragFromHandle = false
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('mouseleave', onMouseUp)
+  snapFromGesture()
+}
+
+// ─── Snap gesture ─────────────────────────────────────────────────────────────
+
+function snapFromGesture() {
+  const elapsed = Date.now() - lastTime
+  const velocity = elapsed > 0 ? (lastY - startY) / elapsed : 0
+  const totalDrag = lastY - startY
+
+  if (velocity > VELOCITY_THRESHOLD) {
+    applySnap(0)
+    return
+  }
+  if (velocity < -VELOCITY_THRESHOLD) {
+    applySnap(1)
+    return
+  }
+
+  if (Math.abs(totalDrag) >= DRAG_THRESHOLD) {
+    applySnap(totalDrag > 0 ? 0 : 1)
+    return
+  }
+
   const distances = SNAP_CONFIGS.map((_, i) =>
     Math.abs(currentY.value - translateForSnap(i))
   )
@@ -442,9 +501,7 @@ const navigliP1 = computed(() =>
 )
 
 const navigliP2 = computed(() =>
-  t('navigliP2', {
-    viadacqua: eggSpan('viadacqua', t('wordViadacqua'))
-  })
+  t('navigliP2', { viadacqua: eggSpan('viadacqua', t('wordViadacqua')) })
 )
 
 const persephoneP1 = computed(() =>
@@ -533,9 +590,13 @@ function triggerEgg(key: string) {
   easterEggTitle.value = t(egg.titleKey)
   easterEggText.value = t(egg.textKey)
   easterEggVisible.value = true
-  if (easterTimeout) clearTimeout(easterTimeout)
+  if (easterTimeout) {
+    clearTimeout(easterTimeout)
+    easterTimeout = null
+  } // FIX: azzera dopo clear
   easterTimeout = setTimeout(() => {
     easterEggVisible.value = false
+    easterTimeout = null
   }, 3500)
 }
 
@@ -550,7 +611,7 @@ function onContentClick(e: MouseEvent) {
 
 const team = [
   { name: 'Marco Abbadessa', initials: 'MA' },
-  { name: 'Gabriele Busacca',  initials: 'GB' },
+  { name: 'Gabriele Busacca', initials: 'GB' },
   { name: 'Lorenzo Chiaretti', initials: 'LC' },
   { name: "Giuseppe D'Ambrosi", initials: 'GD' }
 ]
@@ -558,12 +619,12 @@ const team = [
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
 function onResize() {
-  windowH = window.innerHeight
+  windowH.value = window.innerHeight
   applySnap(snapIndex.value)
 }
 
 onMounted(() => {
-  windowH = window.innerHeight
+  windowH.value = window.innerHeight
   applySnap(0)
   window.addEventListener('resize', onResize)
   document.addEventListener('click', onContentClick)
@@ -573,8 +634,12 @@ onUnmounted(() => {
   window.removeEventListener('resize', onResize)
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('mouseleave', onMouseUp)
   document.removeEventListener('click', onContentClick)
-  if (easterTimeout) clearTimeout(easterTimeout)
+  if (easterTimeout) {
+    clearTimeout(easterTimeout)
+    easterTimeout = null
+  }
 })
 </script>
 
@@ -639,17 +704,5 @@ onUnmounted(() => {
   border-style: solid;
   transform: scale(1.05) translateY(-2px);
   box-shadow: 0 4px 8px rgba(32, 113, 193, 0.2);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
 }
 </style>
