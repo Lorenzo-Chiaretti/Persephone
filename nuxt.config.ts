@@ -28,8 +28,11 @@ export default defineNuxtConfig({
     },
     headers: {
       contentSecurityPolicy: {
+        'script-src': ["'self'", "'unsafe-eval'", "'unsafe-inline'", 'https:'],
         'connect-src': [
           "'self'",
+          'data:',
+          'blob:',
           'https://api.deepgram.com',
           'wss://api.deepgram.com',
           'https://api.groq.com',
@@ -37,7 +40,7 @@ export default defineNuxtConfig({
           'https://*.mapbox.com', // Sblocca Mapbox
           'https://cdn.jsdelivr.net' // Sblocca Eruda e altri script
         ],
-        'img-src': ["'self'", 'data:', 'blob:', 'https://*.mapbox.com'], // Necessario per le mappe
+        'img-src': ["'self'", 'data:', 'blob:', 'https://*.mapbox.com', 'https://cdn.jsdelivr.net'], // Necessario per le mappe
         'worker-src': ["'self'", 'blob:'], // Necessario per Mapbox
         'upgrade-insecure-requests': true
       },
@@ -69,5 +72,15 @@ export default defineNuxtConfig({
     langDir: 'locales/', // <-- AGGIUNTO "app/" QUI
     defaultLocale: 'it',
     strategy: 'no_prefix'
-  }
+  },
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => tag.startsWith('a-'),
+    },
+  },
+  vite: {
+    server: {
+      allowedHosts: process.env.ALLOWED_VITE_HOST ? [process.env.ALLOWED_VITE_HOST] : []
+    }
+  },
 })
