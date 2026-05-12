@@ -4,6 +4,7 @@ import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
 import OnboardingModal from './components/OnboardingModal.vue'
 import BottomSheet from './components/BottomSheet.vue'
+import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
 
 const arStore = useArStore()
@@ -142,14 +143,16 @@ onMounted(() => {
 
     <!-- ── AR Canvas ── -->
     <ClientOnly>
-      <!ArCanvas :active="arStore.isActive" ref="arCanvasBridge" />
+      <NonnaAROverlay :active="arStore.isActive" ref="arCanvasBridge" />
     </ClientOnly>
 
     <!-- ── Bottom Sheet ── -->
-    <BottomSheet
-      @start-ar="startArSessionButton"
-      @open-onboarding="showOnboarding = true"
-    />
+     <div v-if="!arStore.isActive">
+        <BottomSheet
+          @start-ar="startArSessionButton"
+          @open-onboarding="showOnboarding = true"
+        />
+      </div>
 
     <!-- ── Errori ── -->
     <div
