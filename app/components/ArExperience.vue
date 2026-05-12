@@ -191,7 +191,7 @@
       schema: {
         // Allows to modify params directly from HTML
         normalMap: { type: 'string', default: '/textures/waternormals.jpg' },
-        waterColor: { type: 'color', default: '#497785' },
+        waterColor: { type: 'color', default: '#109fe6' },
         distortionScale: { type: 'number', default: 1.5 },
         alpha: { type: 'number', default: 0.9 }
       },
@@ -282,7 +282,7 @@
           // 1. Waves animation
           if (this.water.material.uniforms['time']) {
             // timeDelta is in milliseconds, convert it to seconds
-            this.water.material.uniforms['time'].value += timeDelta / 1000.0; 
+            this.water.material.uniforms['time'].value += timeDelta * 0.3 / 1000.0; 
           }
 
           // 2. Filling animation
