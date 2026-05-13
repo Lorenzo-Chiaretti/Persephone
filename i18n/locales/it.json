@@ -111,5 +111,9 @@
   "gameRule3Title": "Conferma la posizione",
   "gameRule3Desc": "Quando ritieni di essere nel punto giusto, premi il tasto \"Sono qui!\".",
   "gameRule4Title": "Verifica del GPS",
-  "gameRule4Desc": "Il sistema controllerà la tua posizione tramite GPS. Per vincere la sfida, devi trovarti entro un raggio di {dist} metri dal punto esatto."
+  "gameRule4Desc": "Il sistema controllerà la tua posizione tramite GPS. Per vincere la sfida, devi trovarti entro un raggio di {dist} metri dal punto esatto.",
+  "arProcessing" : "Elaboro…",
+  "arSpeaking"   : "Risposta in corso…" ,
+  "arDebugTitle" :  "Debug Localizzazione" ,
+  "arDebugHint"  : "Simula la posizione dell'utente"
 }
