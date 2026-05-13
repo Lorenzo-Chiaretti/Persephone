@@ -1,3 +1,7 @@
+// aiNonna.ts
+// Il composable gestisce voce, ascolto e cronologia della chat.
+// NON conosce il system prompt — è responsabilità esclusiva del server (chat.post.ts).
+
 import { ref, onUnmounted } from 'vue'
 import { useArStore } from '~/stores/arState'
 
@@ -9,13 +13,14 @@ export const useAiNonna = () => {
   const chatHistory = ref<{ role: string; content: string }[]>([])
   const isNearNonna = ref(false)
 
-  const currentSystemPrompt = ref<string>('')
   const currentLang = ref<string>('it')
+  const currentPoiLabel = ref<string>('')
 
   let socket: WebSocket | null = null
   let mediaRecorder: MediaRecorder | null = null
 
-  // --- PULIZIA HARDWARE E CONNESSIONI ---
+  // ─── Pulizia hardware e connessioni ────────────────────────────────────────
+
   const stopAll = () => {
     if (mediaRecorder) {
       if (mediaRecorder.state !== 'inactive') {
@@ -36,10 +41,9 @@ export const useAiNonna = () => {
     console.log('🔇 Tutte le risorse sono state liberate.')
   }
 
-  // --- FUNZIONE VOCE (ELEVENLABS) ---
-  const speak = async (text: string) => {
-    if (isChatMode.value) return
+  // ─── Voce (ElevenLabs) ─────────────────────────────────────────────────────
 
+  const speak = async (text: string) => {
     try {
       isSpeaking.value = true
 
@@ -56,15 +60,7 @@ export const useAiNonna = () => {
           isSpeaking.value = false
           URL.revokeObjectURL(audioUrl)
           if (!isChatMode.value) {
-            // Piccolo delay per evitare che il mic senta l'eco della fine dell'audio
-            setTimeout(
-              () =>
-                startContinuousListening(
-                  currentSystemPrompt.value,
-                  currentLang.value
-                ),
-              300
-            )
+            setTimeout(() => startContinuousListening(currentLang.value), 300)
           }
         }
 
@@ -72,13 +68,11 @@ export const useAiNonna = () => {
           cleanup()
           resolve(true)
         }
-
         audio.onerror = (e) => {
           console.error('Errore riproduzione audio:', e)
           cleanup()
           resolve(false)
         }
-
         audio.play().catch((err) => {
           console.warn('Autoplay bloccato o errore play:', err)
           cleanup()
@@ -89,32 +83,25 @@ export const useAiNonna = () => {
       console.error('Errore recupero TTS:', e)
       isSpeaking.value = false
       if (!isChatMode.value) {
-        startContinuousListening(currentSystemPrompt.value, currentLang.value)
+        startContinuousListening(currentLang.value)
       }
     }
   }
 
-  // --- LOGICA DI RISPOSTA (GROQ) ---
-  const processMessage = async (text: string, systemPrompt?: string) => {
-    if (systemPrompt) currentSystemPrompt.value = systemPrompt
+  // ─── Risposta AI (Groq via server) ─────────────────────────────────────────
+  // Il server assembla il system prompt completo a partire da `lang` e `poiId`.
+  // Qui inviamo solo la cronologia + i parametri di contesto.
 
+  const processMessage = async (text: string) => {
     chatHistory.value.push({ role: 'user', content: text })
-    const limitedHistory = chatHistory.value.slice(-10)
-
-    const messagesToSend = [
-      {
-        role: 'system',
-        content: currentSystemPrompt.value || 'Sei un assistente utile.'
-      },
-      ...limitedHistory
-    ]
 
     try {
       const response = await $fetch<any>('/api/chat', {
         method: 'POST',
         body: {
-          messages: messagesToSend,
-          poiId: arStore.selectedPoi?.id || 'navigli-generale'
+          messages: chatHistory.value.slice(-10),
+          poiId: arStore.selectedPoi?.id || 'navigli-generale',
+          lang: currentLang.value
         }
       })
 
@@ -126,31 +113,45 @@ export const useAiNonna = () => {
     }
   }
 
-  // --- ASCOLTO CONTINUO DEEPGRAM ---
-  const startContinuousListening = async (
-    systemPrompt?: string,
-    lang: string = 'it'
-  ) => {
-    if (systemPrompt) currentSystemPrompt.value = systemPrompt
+  // ─── Ascolto continuo (Deepgram) ───────────────────────────────────────────
+
+  const startContinuousListening = async (lang: string = 'it') => {
     currentLang.value = lang
 
     if (isSpeaking.value || isChatMode.value || isListening.value) return
 
     try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
+      console.log('🔑 Token ricevuto dal server:', token)
+
+      try {
+        console.log('🕵️ Avvio test HTTP verso Deepgram...')
+        const testRes = await fetch(
+          'https://api.deepgram.com/v1/listen?model=nova-2',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Token ${token}`,
+              'Content-Type': 'audio/wav'
+            },
+            body: new Blob([])
+          }
+        )
+        const errorBody = await testRes.json()
+        console.log('🚨 STATO RISPOSTA DEEPGRAM:', testRes.status)
+        console.log('🚨 MOTIVO ESATTO DEL BLOCCO:', errorBody)
+      } catch (e) {
+        console.error('Errore nel test:', e)
+      }
 
       socket = new WebSocket(
         `wss://api.deepgram.com/v1/listen?model=nova-2&language=${lang}&smart_format=true&endpointing=300&filler_words=true`,
         ['token', token]
       )
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-      const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? { mimeType: 'audio/webm;codecs=opus' }
-        : { mimeType: 'audio/mp4' }
-
-      mediaRecorder = new MediaRecorder(stream, options)
+      mediaRecorder = new MediaRecorder(stream)
 
       socket.onopen = () => {
         isListening.value = true
@@ -178,11 +179,11 @@ export const useAiNonna = () => {
 
             if (data.speech_final) {
               stopAll()
-              await processMessage(transcript, currentSystemPrompt.value)
+              await processMessage(transcript)
             } else {
               stabilityTimer = setTimeout(async () => {
                 stopAll()
-                await processMessage(transcript, currentSystemPrompt.value)
+                await processMessage(transcript)
               }, 800)
             }
           }
@@ -214,6 +215,8 @@ export const useAiNonna = () => {
     isChatMode,
     chatHistory,
     isNearNonna,
+    currentPoiLabel,
+    currentLang,
     stopAll
   }
 }

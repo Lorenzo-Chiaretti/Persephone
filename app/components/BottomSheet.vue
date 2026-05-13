@@ -174,7 +174,6 @@
               </p>
             </div>
           </div>
-
           <div
             class="flex items-start gap-4 bg-[#f7f9fc] rounded-[16px] px-4 py-4"
           >
@@ -208,7 +207,6 @@
               </p>
             </div>
           </div>
-
           <div
             class="flex items-start gap-4 bg-[#f7f9fc] rounded-[16px] px-4 py-4"
           >
@@ -322,16 +320,19 @@ const SNAP_CONFIGS: SnapConfig[] = [
   { type: 'vh', value: 0.92 }
 ]
 
-const VELOCITY_THRESHOLD = 0.25 // px/ms
-const DRAG_THRESHOLD = 10 // px
+const VELOCITY_THRESHOLD = 0.25
+const DRAG_THRESHOLD = 10
 
 const snapIndex = ref(0)
-const currentY = ref(0)
 const dragging = ref(false)
 const scrollEl = ref<HTMLElement | null>(null)
+const isMounted = ref(false)
 
-// Guard SSR-safe
-const windowH = ref(typeof window !== 'undefined' ? window.innerHeight : 0)
+// SSR-SAFE: inizializzato a null, valorizzato solo in onMounted
+const windowH = ref<number | null>(null)
+
+// currentY parte da 0 — verrà impostato correttamente in onMounted
+const currentY = ref(0)
 
 let startY = 0
 let startTranslateY = 0
@@ -341,12 +342,14 @@ let lastY = 0
 let lastTime = 0
 
 function snapHeightPx(idx: number): number {
+  if (windowH.value === null) return 0
   const cfg = SNAP_CONFIGS[idx]
   if (!cfg) return 0
   return cfg.type === 'px' ? cfg.value : cfg.value * windowH.value
 }
 
 function translateForSnap(idx: number): number {
+  if (windowH.value === null) return 0
   return windowH.value - snapHeightPx(idx)
 }
 
@@ -355,13 +358,23 @@ function applySnap(idx: number) {
   currentY.value = translateForSnap(idx)
 }
 
-const sheetStyle = computed(() => ({
-  transform: `translateY(${currentY.value}px)`,
-  transition: dragging.value
-    ? 'none'
-    : 'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
-  height: `${windowH.value * 0.97}px`
-}))
+const sheetStyle = computed(() => {
+  // SSR: niente height e niente transform rivelatori
+  if (!isMounted.value || windowH.value === null) {
+    return {
+      transform: 'translateY(0px)',
+      transition: 'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
+      height: '0px'
+    }
+  }
+  return {
+    transform: `translateY(${currentY.value}px)`,
+    transition: dragging.value
+      ? 'none'
+      : 'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
+    height: `${windowH.value * 0.97}px`
+  }
+})
 
 // ─── Touch handlers ───────────────────────────────────────────────────────────
 
@@ -387,9 +400,7 @@ function onTouchStart(e: TouchEvent) {
 
 function onTouchMove(e: TouchEvent) {
   if (!dragging.value || !e.touches?.[0]) return
-
   const dy = e.touches[0].clientY - startY
-
   if (
     !dragFromHandle &&
     snapIndex.value > 0 &&
@@ -400,17 +411,12 @@ function onTouchMove(e: TouchEvent) {
     const atBottom =
       scrollEl.value.scrollTop + scrollEl.value.clientHeight >=
       scrollEl.value.scrollHeight - 1
-    const draggingDown = dy > 0
-    const draggingUp = dy < 0
-    if ((!atTop && draggingDown) || (!atBottom && draggingUp)) return
+    if ((!atTop && dy > 0) || (!atBottom && dy < 0)) return
   }
-
   e.preventDefault()
   isDraggingSheet = true
-
   lastY = e.touches[0].clientY
   lastTime = Date.now()
-
   currentY.value = Math.max(
     translateForSnap(1),
     Math.min(translateForSnap(0), startTranslateY + dy)
@@ -418,7 +424,6 @@ function onTouchMove(e: TouchEvent) {
 }
 
 function onTouchEnd() {
-  // Aggiorna lastTime al momento del rilascio per una velocity accurata
   lastTime = Date.now()
   dragging.value = false
   isDraggingSheet = false
@@ -426,7 +431,7 @@ function onTouchEnd() {
   snapFromGesture()
 }
 
-// ─── Mouse handlers (desktop) ─────────────────────────────────────────────────
+// ─── Mouse handlers ───────────────────────────────────────────────────────────
 
 function onMouseDown(e: MouseEvent) {
   startY = e.clientY
@@ -436,7 +441,7 @@ function onMouseDown(e: MouseEvent) {
   dragging.value = true
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
-  window.addEventListener('mouseleave', onMouseUp) // FIX: cursore fuori finestra
+  window.addEventListener('mouseleave', onMouseUp)
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -474,7 +479,6 @@ function snapFromGesture() {
     applySnap(1)
     return
   }
-
   if (Math.abs(totalDrag) >= DRAG_THRESHOLD) {
     applySnap(totalDrag > 0 ? 0 : 1)
     return
@@ -499,11 +503,9 @@ const navigliP1 = computed(() =>
     leonardo: eggSpan('leonardo', t('wordLeonardo'))
   })
 )
-
 const navigliP2 = computed(() =>
   t('navigliP2', { viadacqua: eggSpan('viadacqua', t('wordViadacqua')) })
 )
-
 const persephoneP1 = computed(() =>
   t('persephoneP1', {
     persefone: eggSpan('persefone', t('wordPersefone')),
@@ -559,23 +561,18 @@ function playZenWaterSound() {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     const filter = ctx.createBiquadFilter()
-
     osc.type = 'sine'
     osc.frequency.setValueAtTime(400, ctx.currentTime)
     osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.5)
     osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 1.2)
-
     filter.type = 'lowpass'
     filter.frequency.value = 800
-
     gain.gain.setValueAtTime(0, ctx.currentTime)
     gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.1)
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2)
-
     osc.connect(filter)
     filter.connect(gain)
     gain.connect(ctx.destination)
-
     osc.start()
     osc.stop(ctx.currentTime + 1.2)
     setTimeout(() => ctx.close(), 1500)
@@ -593,7 +590,7 @@ function triggerEgg(key: string) {
   if (easterTimeout) {
     clearTimeout(easterTimeout)
     easterTimeout = null
-  } // FIX: azzera dopo clear
+  }
   easterTimeout = setTimeout(() => {
     easterEggVisible.value = false
     easterTimeout = null
@@ -624,7 +621,10 @@ function onResize() {
 }
 
 onMounted(() => {
+  // Valorizzazione SSR-safe: solo qui siamo sicuri di avere window
   windowH.value = window.innerHeight
+  isMounted.value = true
+  // Ora applica lo snap iniziale con le dimensioni reali
   applySnap(0)
   window.addEventListener('resize', onResize)
   document.addEventListener('click', onContentClick)
