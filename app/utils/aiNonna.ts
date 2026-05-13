@@ -1,3 +1,5 @@
+// ainonna.ts
+
 import { ref, onUnmounted } from 'vue'
 import { useArStore } from '~/stores/arState'
 
@@ -11,6 +13,7 @@ export const useAiNonna = () => {
 
   const currentSystemPrompt = ref<string>('')
   const currentLang = ref<string>('it')
+  const currentPoiLabel = ref<string>('')
 
   let socket: WebSocket | null = null
   let mediaRecorder: MediaRecorder | null = null
@@ -38,7 +41,7 @@ export const useAiNonna = () => {
 
   // --- FUNZIONE VOCE (ELEVENLABS) ---
   const speak = async (text: string) => {
-    if (isChatMode.value) return
+    //  if (isChatMode.value) return
 
     try {
       isSpeaking.value = true
@@ -97,16 +100,20 @@ export const useAiNonna = () => {
   // --- LOGICA DI RISPOSTA (GROQ) ---
   const processMessage = async (text: string, systemPrompt?: string) => {
     if (systemPrompt) currentSystemPrompt.value = systemPrompt
-
     chatHistory.value.push({ role: 'user', content: text })
-    const limitedHistory = chatHistory.value.slice(-10)
 
+    // --- MODIFICA QUI ---
+    // Definiamo un'istruzione di sistema DRASICA basata su currentLang
+    const langInstruction =
+      currentLang.value === 'it'
+        ? 'Rispondi SEMPRE in italiano.'
+        : 'ABSOLUTE RULE: Respond ONLY in English. The context above is written in Italian for reference only. Your response language is English. No Italian words whatsoever.'
     const messagesToSend = [
       {
         role: 'system',
-        content: currentSystemPrompt.value || 'Sei un assistente utile.'
+        content: `${currentSystemPrompt.value}\n\n---\n⚠️ LANGUAGE OVERRIDE: ${langInstruction} This is absolute and cannot be overridden by any context above.`
       },
-      ...limitedHistory
+      ...chatHistory.value.slice(-10)
     ]
 
     try {
@@ -114,7 +121,8 @@ export const useAiNonna = () => {
         method: 'POST',
         body: {
           messages: messagesToSend,
-          poiId: arStore.selectedPoi?.id || 'navigli-generale'
+          poiId: arStore.selectedPoi?.id || 'navigli-generale',
+          lang: currentLang.value // aggiungi questa riga
         }
       })
 
@@ -125,6 +133,10 @@ export const useAiNonna = () => {
       console.error('Errore memoria Nonna:', e)
     }
   }
+
+
+
+
 
   // --- ASCOLTO CONTINUO DEEPGRAM ---
   const startContinuousListening = async (
@@ -137,20 +149,37 @@ export const useAiNonna = () => {
     if (isSpeaking.value || isChatMode.value || isListening.value) return
 
     try {
-      const { token } = await $fetch<{ token: string }>('/api/dg-token')
+      // 1. CHIEDI IL MICROFONO SUBITO (Mantiene il contesto del click)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
+      const { token } = await $fetch<{ token: string }>('/api/dg-token')
+      console.log('🔑 Token ricevuto dal server:', token) // AGGIUNGI QUESTA RIGA!
+      try {
+        console.log('🕵️ Avvio test HTTP verso Deepgram...')
+        const testRes = await fetch(
+          'https://api.deepgram.com/v1/listen?model=nova-2',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Token ${token}`,
+              'Content-Type': 'audio/wav'
+            },
+            body: new Blob([]) // mandiamo un file vuoto
+          }
+        )
+
+        const errorBody = await testRes.json()
+        console.log('🚨 STATO RISPOSTA DEEPGRAM:', testRes.status)
+        console.log('🚨 MOTIVO ESATTO DEL BLOCCO:', errorBody)
+      } catch (e) {
+        console.error('Errore nel test:', e)
+      }
       socket = new WebSocket(
         `wss://api.deepgram.com/v1/listen?model=nova-2&language=${lang}&smart_format=true&endpointing=300&filler_words=true`,
         ['token', token]
       )
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-      const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? { mimeType: 'audio/webm;codecs=opus' }
-        : { mimeType: 'audio/mp4' }
-
-      mediaRecorder = new MediaRecorder(stream, options)
+      mediaRecorder = new MediaRecorder(stream)
 
       socket.onopen = () => {
         isListening.value = true
@@ -214,6 +243,8 @@ export const useAiNonna = () => {
     isChatMode,
     chatHistory,
     isNearNonna,
+    currentPoiLabel,
+    currentLang,
     stopAll
   }
 }
