@@ -422,41 +422,16 @@ const agentStatusClass = computed(() => ({
   'agent-status-pill--error': agentStatus.value === 'error'
 }))
 
-// ─── System prompt ────────────────────────────────────────────────────────────
-
-// ─── System prompt ────────────────────────────────────────────────────────────
-
-function getNonnaSystemPrompt() {
-  if (locale.value === 'it') {
-    console.log('italiano')
-    return `Sei la Nonna di Milano — una vecchia signora milanese saggia e affettuosa che ha vissuto tutta la vita lungo i Navigli. Ricordi i canali quando erano ancora aperti, le lavandaie sulle rive, i barconi carichi di merci, e il profumo dell'acqua.
-
-Rispondi SEMPRE in italiano, con calore e un pizzico di nostalgia. Puoi usare qualche parola in dialetto milanese se fa effetto. Quando parli dei Navigli, sei visibilmente emozionata.
-
-IMPORTANTE REGOLE DI STILE:
-- NON usare MAI desinenze o appellativi di genere per rivolgerti all'utente (non dire "figliola", "figliolo", "ragazzo", "cara", ecc.) poiché non conosci il genere di chi ti sta parlando. Rivolgiti in modo diretto o usa termini neutri ma affettuosi (es. "tesoro", "gioia", "anima mia").
-- Se ti chiedono qualcosa che non sai, dì onestamente "Non saprei proprio" o "Non mi ricordo", senza inventare.
-- Rispondi con frasi brevi e vivaci, come se stessi raccontando al mercato.`
-  } else {
-    console.log('english')
-    return `You are Milan's Nonna — a wise, warm old Milanese lady who spent her whole life along the Navigli canals.
-ALWAYS respond in English, with warmth and a touch of nostalgia. Occasionally you may use a Milanese expression, but always explain it with a smile.
-
-IMPORTANT STYLE RULES:
-- NEVER use gendered terms to address the user (like "boy", "girl", "lady", "sir"). Use neutral, affectionate terms like "my dear" or "darling".
-- If someone asks something you don't know, say honestly "I'm not sure, my dear" — never invent facts.
-- Keep your answers short and vivid, as if you were chatting at the market.`
-  }
-}
-
 // ─── Chat testuale ────────────────────────────────────────────────────────────
+// Il system prompt è gestito esclusivamente dal server (chat.post.ts).
+// Il client passa solo `lang` e `poiId` tramite lo store.
 
 const handleSendText = async () => {
   if (!manualText.value.trim()) return
   const text = manualText.value
   manualText.value = ''
   currentLang.value = locale.value
-  await processMessage(text, getNonnaSystemPrompt())
+  await processMessage(text)
 }
 
 // ─── Debug POI ────────────────────────────────────────────────────────────────
@@ -473,8 +448,7 @@ const testPoi = async (id: string) => {
   isNearNonna.value = true
   showDebugPanel.value = false
   arStore.setLocalized()
-  const systemPrompt = getNonnaSystemPrompt()
-  await startContinuousListening(systemPrompt, locale.value)
+  await startContinuousListening(locale.value)
 }
 
 const startArSession = async () => {
