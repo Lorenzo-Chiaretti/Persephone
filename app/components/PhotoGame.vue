@@ -69,7 +69,28 @@
                         >
                           <div class="phone-frame">
                             <div class="phone-screen">
-                              <div class="phone-img">📷</div>
+                              <div class="phone-img">
+                                <svg
+                                  width="28"
+                                  height="28"
+                                  viewBox="0 0 28 28"
+                                  fill="none"
+                                >
+                                  <circle
+                                    cx="14"
+                                    cy="11"
+                                    r="5"
+                                    stroke="rgba(32,113,193,0.8)"
+                                    stroke-width="1.5"
+                                  />
+                                  <path
+                                    d="M4 24c0-5.523 4.477-10 10-10s10 4.477 10 10"
+                                    stroke="rgba(32,113,193,0.6)"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                  />
+                                </svg>
+                              </div>
                               <div class="slide1-scanline" />
                             </div>
                           </div>
@@ -118,96 +139,550 @@
                         />
                       </template>
 
-                      <!-- Step 2: VIDEO DI SFONDO -->
-                      <!-- omino (slide2-walker) e puntini mappa commentati —
-                           il video occupa tutto lo sfondo da solo              -->
+                      <!-- Step 2: Navigli animated background -->
                       <template v-else-if="i === 1">
-                        <video
-                          autoplay
-                          muted
-                          loop
-                          playsinline
-                          class="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
-                        >
-                          <source src="/images/rule_vid.mp4" type="video/mp4" />
-                        </video>
-
-                        <!--
-                        <div
-                          class="absolute inset-0 flex flex-col items-center justify-center gap-4 pb-[120px]"
-                        >
+                        <div class="navigli-scene">
+                          <!-- Stars -->
                           <div
+                            class="nav-star"
+                            style="top: 7%; left: 11%; animation-delay: 0s"
+                          />
+                          <div
+                            class="nav-star"
+                            style="top: 14%; left: 34%; animation-delay: 1.1s"
+                          />
+                          <div
+                            class="nav-star nav-star-sm"
+                            style="top: 5%; left: 54%; animation-delay: 0.4s"
+                          />
+                          <div
+                            class="nav-star"
+                            style="top: 19%; left: 71%; animation-delay: 2s"
+                          />
+                          <div
+                            class="nav-star nav-star-sm"
+                            style="top: 9%; left: 87%; animation-delay: 0.8s"
+                          />
+                          <div
+                            class="nav-star nav-star-sm"
+                            style="top: 22%; left: 19%; animation-delay: 1.7s"
+                          />
+                          <div
+                            class="nav-star"
+                            style="top: 4%; left: 77%; animation-delay: 2.5s"
+                          />
+
+                          <!-- Buildings left -->
+                          <div
+                            class="nav-bld"
                             style="
-                              position: relative;
-                              width: 130px;
-                              height: 80px;
+                              left: 0;
+                              width: 17%;
+                              height: 95px;
+                              bottom: 308px;
                             "
                           >
                             <div
+                              class="nav-win nav-win-lit"
                               style="
-                                position: absolute;
-                                left: 8px;
-                                top: 14px;
-                                width: 5px;
-                                height: 5px;
-                                border-radius: 50%;
-                                background: rgba(32, 113, 193, 0.65);
-                              "
-                            />
-                            <div
-                              style="
-                                position: absolute;
-                                left: 50px;
-                                top: 22px;
-                                width: 5px;
-                                height: 5px;
-                                border-radius: 50%;
-                                background: rgba(32, 113, 193, 0.65);
-                              "
-                            />
-                            <div
-                              style="
-                                position: absolute;
-                                right: 18px;
-                                top: 8px;
-                                width: 5px;
-                                height: 5px;
-                                border-radius: 50%;
-                                background: rgba(32, 113, 193, 0.65);
-                              "
-                            />
-                            <div
-                              style="
-                                position: absolute;
-                                left: 18px;
-                                bottom: 4px;
-                                width: 5px;
-                                height: 5px;
-                                border-radius: 50%;
-                                background: rgba(32, 113, 193, 0.65);
-                              "
-                            />
-                            <div
-                              class="slide2-mapdot"
-                              style="
-                                position: absolute;
-                                right: 28px;
-                                bottom: 12px;
                                 width: 10px;
-                                height: 10px;
-                                border-radius: 50%;
-                                background: #2071c1;
+                                height: 8px;
+                                top: 14px;
+                                left: 10px;
+                                animation-delay: 1.3s;
+                              "
+                            />
+                            <div
+                              class="nav-win"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 14px;
+                                left: 24px;
+                              "
+                            />
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 30px;
+                                left: 10px;
+                              "
+                            />
+                            <div
+                              class="nav-win"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 46px;
+                                left: 24px;
                               "
                             />
                           </div>
                           <div
-                            class="slide2-walker drop-shadow-md"
-                            style="font-size: 38px; line-height: 1"
+                            class="nav-bld"
+                            style="
+                              left: 17%;
+                              width: 13%;
+                              height: 75px;
+                              bottom: 308px;
+                            "
                           >
-                            🚶
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 9px;
+                                height: 7px;
+                                top: 12px;
+                                left: 7px;
+                                animation-delay: 0.7s;
+                              "
+                            />
+                            <div
+                              class="nav-win"
+                              style="
+                                width: 9px;
+                                height: 7px;
+                                top: 28px;
+                                left: 7px;
+                              "
+                            />
+                          </div>
+                          <div
+                            class="nav-bld"
+                            style="
+                              left: 30%;
+                              width: 10%;
+                              height: 55px;
+                              bottom: 308px;
+                            "
+                          >
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 8px;
+                                height: 7px;
+                                top: 10px;
+                                left: 6px;
+                                animation-delay: 0.3s;
+                              "
+                            />
+                          </div>
+                          <!-- Buildings right -->
+                          <div
+                            class="nav-bld"
+                            style="
+                              right: 0;
+                              width: 18%;
+                              height: 105px;
+                              bottom: 308px;
+                            "
+                          >
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 14px;
+                                left: 10px;
+                                animation-delay: 1.5s;
+                              "
+                            />
+                            <div
+                              class="nav-win"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 14px;
+                                left: 26px;
+                              "
+                            />
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 30px;
+                                left: 26px;
+                                animation-delay: 0.6s;
+                              "
+                            />
+                            <div
+                              class="nav-win"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 46px;
+                                left: 10px;
+                              "
+                            />
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 10px;
+                                height: 8px;
+                                top: 62px;
+                                left: 26px;
+                                animation-delay: 2.3s;
+                              "
+                            />
+                          </div>
+                          <div
+                            class="nav-bld"
+                            style="
+                              right: 18%;
+                              width: 13%;
+                              height: 82px;
+                              bottom: 308px;
+                            "
+                          >
+                            <div
+                              class="nav-win"
+                              style="
+                                width: 9px;
+                                height: 7px;
+                                top: 12px;
+                                left: 7px;
+                              "
+                            />
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 9px;
+                                height: 7px;
+                                top: 12px;
+                                left: 20px;
+                                animation-delay: 1.1s;
+                              "
+                            />
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 9px;
+                                height: 7px;
+                                top: 28px;
+                                left: 7px;
+                                animation-delay: 3.1s;
+                              "
+                            />
+                          </div>
+                          <div
+                            class="nav-bld"
+                            style="
+                              right: 31%;
+                              width: 9%;
+                              height: 62px;
+                              bottom: 308px;
+                            "
+                          >
+                            <div
+                              class="nav-win nav-win-lit"
+                              style="
+                                width: 8px;
+                                height: 7px;
+                                top: 10px;
+                                left: 5px;
+                                animation-delay: 0.9s;
+                              "
+                            />
+                          </div>
+
+                          <!-- Canal -->
+                          <div class="nav-canal">
+                            <div class="nav-canal-shimmer" />
+                          </div>
+
+                          <!-- Bridges -->
+                          <div class="nav-bridge" style="left: 18%">
+                            <div class="nav-bridge-arch" />
+                          </div>
+                          <div class="nav-bridge" style="right: 16%">
+                            <div class="nav-bridge-arch" />
+                          </div>
+
+                          <!-- Path -->
+                          <div class="nav-path">
+                            <div class="nav-path-dashes" />
+                          </div>
+
+                          <!-- Direction arrows (SVG chevrons, no emoji) -->
+                          <div
+                            class="nav-dir-arrow"
+                            style="left: 22%; animation-delay: 0s"
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
+                              <path
+                                d="M2 2l4 4-4 4"
+                                stroke="rgba(34,197,94,0.55)"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                              <path
+                                d="M6 2l4 4-4 4"
+                                stroke="rgba(34,197,94,0.35)"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <div
+                            class="nav-dir-arrow"
+                            style="left: 44%; animation-delay: 0.5s"
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
+                              <path
+                                d="M2 2l4 4-4 4"
+                                stroke="rgba(34,197,94,0.55)"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                              <path
+                                d="M6 2l4 4-4 4"
+                                stroke="rgba(34,197,94,0.35)"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <div
+                            class="nav-dir-arrow"
+                            style="left: 64%; animation-delay: 1s"
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
+                              <path
+                                d="M2 2l4 4-4 4"
+                                stroke="rgba(34,197,94,0.55)"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                              <path
+                                d="M6 2l4 4-4 4"
+                                stroke="rgba(34,197,94,0.35)"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </svg>
+                          </div>
+
+                          <!-- Destination glow -->
+                          <div class="nav-destination" />
+
+                          <!-- Ground -->
+                          <div class="nav-ground" />
+
+                          <!-- Walking character L→R -->
+                          <div class="nav-character">
+                            <svg
+                              width="22"
+                              height="38"
+                              viewBox="0 0 22 38"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <circle
+                                cx="11"
+                                cy="6"
+                                r="5"
+                                fill="rgba(34,197,94,0.85)"
+                              />
+                              <rect
+                                x="7"
+                                y="11"
+                                width="8"
+                                height="11"
+                                rx="3"
+                                fill="rgba(32,113,193,0.9)"
+                              />
+                              <rect
+                                x="7"
+                                y="22"
+                                width="4"
+                                height="9"
+                                rx="2"
+                                fill="rgba(34,197,94,0.75)"
+                                style="
+                                  transform-origin: 9px 22px;
+                                  animation: nav-leg-l 0.5s ease-in-out infinite;
+                                "
+                              />
+                              <rect
+                                x="11"
+                                y="22"
+                                width="4"
+                                height="9"
+                                rx="2"
+                                fill="rgba(34,197,94,0.75)"
+                                style="
+                                  transform-origin: 13px 22px;
+                                  animation: nav-leg-r 0.5s ease-in-out infinite;
+                                "
+                              />
+                              <rect
+                                x="2"
+                                y="13"
+                                width="3"
+                                height="8"
+                                rx="1.5"
+                                fill="rgba(32,113,193,0.7)"
+                                style="
+                                  transform-origin: 3.5px 13px;
+                                  animation: nav-arm-l 0.5s ease-in-out infinite;
+                                "
+                              />
+                              <rect
+                                x="17"
+                                y="13"
+                                width="3"
+                                height="8"
+                                rx="1.5"
+                                fill="rgba(32,113,193,0.7)"
+                                style="
+                                  transform-origin: 18.5px 13px;
+                                  animation: nav-arm-r 0.5s ease-in-out infinite;
+                                "
+                              />
+                            </svg>
+                          </div>
+
+                          <!-- Walking character R→L (mirrored, offset timing) -->
+                          <div class="nav-character-rtl">
+                            <svg
+                              width="22"
+                              height="38"
+                              viewBox="0 0 22 38"
+                              xmlns="http://www.w3.org/2000/svg"
+                              style="transform: scaleX(-1)"
+                            >
+                              <circle
+                                cx="11"
+                                cy="6"
+                                r="5"
+                                fill="rgba(32,113,193,0.75)"
+                              />
+                              <rect
+                                x="7"
+                                y="11"
+                                width="8"
+                                height="11"
+                                rx="3"
+                                fill="rgba(34,197,94,0.7)"
+                              />
+                              <rect
+                                x="7"
+                                y="22"
+                                width="4"
+                                height="9"
+                                rx="2"
+                                fill="rgba(32,113,193,0.65)"
+                                style="
+                                  transform-origin: 9px 22px;
+                                  animation: nav-leg-l 0.5s ease-in-out infinite;
+                                  animation-delay: 0.25s;
+                                "
+                              />
+                              <rect
+                                x="11"
+                                y="22"
+                                width="4"
+                                height="9"
+                                rx="2"
+                                fill="rgba(32,113,193,0.65)"
+                                style="
+                                  transform-origin: 13px 22px;
+                                  animation: nav-leg-r 0.5s ease-in-out infinite;
+                                  animation-delay: 0.25s;
+                                "
+                              />
+                              <rect
+                                x="2"
+                                y="13"
+                                width="3"
+                                height="8"
+                                rx="1.5"
+                                fill="rgba(34,197,94,0.6)"
+                                style="
+                                  transform-origin: 3.5px 13px;
+                                  animation: nav-arm-l 0.5s ease-in-out infinite;
+                                  animation-delay: 0.25s;
+                                "
+                              />
+                              <rect
+                                x="17"
+                                y="13"
+                                width="3"
+                                height="8"
+                                rx="1.5"
+                                fill="rgba(34,197,94,0.6)"
+                                style="
+                                  transform-origin: 18.5px 13px;
+                                  animation: nav-arm-r 0.5s ease-in-out infinite;
+                                  animation-delay: 0.25s;
+                                "
+                              />
+                            </svg>
+                          </div>
+
+                          <!-- Phone UI card -->
+                          <div class="nav-phone-ui">
+                            <div class="nav-phone-label">
+                              {{ $t('gameLoc') }}
+                            </div>
+                            <div class="nav-map-track">
+                              <div class="nav-map-fill" />
+                              <div class="nav-map-dot" />
+                              <div class="nav-map-dest" />
+                            </div>
+                            <div class="nav-phone-hint">
+                              <div class="nav-hint-icon">
+                                <svg
+                                  width="10"
+                                  height="10"
+                                  viewBox="0 0 10 10"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M1 1l4 4-4 4"
+                                    stroke="rgba(34,197,94,0.9)"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M4 1l4 4-4 4"
+                                    stroke="rgba(34,197,94,0.6)"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                </svg>
+                              </div>
+                              <span class="nav-hint-text">{{
+                                $t('gameWalk')
+                              }}</span>
+                            </div>
                           </div>
                         </div>
-                        -->
 
                         <div
                           class="slide-radial-glow"
@@ -404,7 +879,6 @@
 
               <!-- Bottom bar -->
               <div class="flex gap-2 items-center px-6">
-                <!-- Indietro: dalla slide 2 in poi -->
                 <button
                   v-if="slideIndex > 0"
                   class="flex h-11 w-11 items-center justify-center rounded-[12px] bg-white/8 hover:bg-white/15 transition-colors cursor-pointer flex-shrink-0"
@@ -422,7 +896,6 @@
                   </svg>
                 </button>
 
-                <!-- Salta: solo alla prima slide -->
                 <button
                   v-if="slideIndex === 0"
                   class="font-['Inter'] text-[14px] text-white/40 hover:text-white/70 transition-colors cursor-pointer flex-shrink-0 h-11 px-2 flex items-center"
@@ -474,7 +947,31 @@
                   v-else
                   class="h-[180px] flex flex-col items-center justify-center gap-2 text-white/30"
                 >
-                  <span class="text-4xl">📷</span>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect
+                      x="3"
+                      y="7"
+                      width="30"
+                      height="22"
+                      rx="3"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="6"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <path
+                      d="M13 7l2-4h6l2 4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
                   <p class="font-['Inter'] text-[13px]">
                     {{ $t('gameNoPic') }}
                   </p>
@@ -784,9 +1281,7 @@ function nextSlide() {
 function finishOnboarding() {
   try {
     localStorage.setItem(TUTORIAL_STORAGE_KEY, '1')
-  } catch (_) {
-    // Safari privato: ignora silenziosamente
-  }
+  } catch (_) {}
   phase.value = 'game'
 }
 
@@ -1016,9 +1511,7 @@ onMounted(() => {
     if (localStorage.getItem(TUTORIAL_STORAGE_KEY)) {
       phase.value = 'game'
     }
-  } catch (_) {
-    // localStorage non disponibile: mostra il tutorial ogni volta
-  }
+  } catch (_) {}
   startGps()
   window.addEventListener('keydown', onKey)
 })
@@ -1061,7 +1554,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
 }
 .slide1-scanline {
   position: absolute;
@@ -1093,9 +1585,438 @@ onUnmounted(() => {
   }
 }
 
-/* ── Slide 2: animazioni commentate insieme agli elementi ── */
-/* .slide2-mapdot { ... } */
-/* .slide2-walker { ... } */
+/* ── Slide 2: Navigli scene ── */
+.navigli-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.nav-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(200, 240, 220, 0.4);
+  animation: nav-twinkle 3s ease-in-out infinite;
+}
+.nav-star-sm {
+  width: 1.5px;
+  height: 1.5px;
+}
+@keyframes nav-twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.nav-bld {
+  position: absolute;
+  background: rgba(10, 30, 18, 0.92);
+  border-top: 1px solid rgba(34, 197, 94, 0.1);
+  border-radius: 2px 2px 0 0;
+}
+.nav-win {
+  position: absolute;
+  background: rgba(250, 230, 120, 0.15);
+  border-radius: 1px;
+}
+.nav-win-lit {
+  background: rgba(250, 230, 120, 0.5);
+  animation: nav-flicker 4s ease-in-out infinite;
+}
+@keyframes nav-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.6;
+  }
+  47% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+}
+
+.nav-canal {
+  position: absolute;
+  bottom: 250px;
+  left: 0;
+  right: 0;
+  height: 58px;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 90, 60, 0.55) 0%,
+    rgba(10, 60, 40, 0.75) 100%
+  );
+  border-top: 1.5px solid rgba(34, 197, 94, 0.18);
+}
+.nav-canal-shimmer {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 60px,
+    rgba(34, 197, 94, 0.07) 60px,
+    rgba(34, 197, 94, 0.07) 62px
+  );
+  animation: nav-shimmer 5s linear infinite;
+}
+@keyframes nav-shimmer {
+  0% {
+    background-position-x: 0;
+  }
+  100% {
+    background-position-x: 122px;
+  }
+}
+
+.nav-bridge {
+  position: absolute;
+  bottom: 248px;
+  width: 90px;
+  height: 16px;
+  border-radius: 8px 8px 0 0;
+  background: rgba(15, 50, 28, 0.95);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-bottom: none;
+}
+.nav-bridge-arch {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 12px;
+  border-radius: 25px 25px 0 0;
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  border-bottom: none;
+}
+
+.nav-path {
+  position: absolute;
+  bottom: 222px;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: rgba(16, 40, 22, 0.85);
+  border-top: 1px solid rgba(34, 197, 94, 0.14);
+}
+.nav-path-dashes {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(34, 197, 94, 0.25) 0px,
+    rgba(34, 197, 94, 0.25) 14px,
+    transparent 14px,
+    transparent 28px
+  );
+  animation: nav-dash-scroll 2.5s linear infinite;
+}
+@keyframes nav-dash-scroll {
+  0% {
+    background-position-x: 0;
+  }
+  100% {
+    background-position-x: -28px;
+  }
+}
+
+.nav-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 222px;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 36, 18, 0.98) 0%,
+    rgba(8, 20, 12, 1) 100%
+  );
+}
+
+.nav-dir-arrow {
+  position: absolute;
+  bottom: 231px;
+  display: flex;
+  align-items: center;
+  animation: nav-arrow-pulse 2s ease-in-out infinite;
+}
+@keyframes nav-arrow-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateX(4px);
+  }
+}
+
+.nav-destination {
+  position: absolute;
+  bottom: 238px;
+  right: 90px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.85);
+  animation: nav-dest-pulse 1.8s ease-out infinite;
+}
+@keyframes nav-dest-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+}
+
+.nav-character {
+  position: absolute;
+  bottom: 222px;
+  animation: nav-walk-x 14s linear infinite;
+}
+@keyframes nav-walk-x {
+  0% {
+    left: -30px;
+    opacity: 1;
+  }
+  82% {
+    left: calc(100% - 30px);
+    opacity: 1;
+  }
+  85% {
+    left: calc(100% - 30px);
+    opacity: 0;
+  }
+  86% {
+    left: -30px;
+    opacity: 0;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: -30px;
+    opacity: 1;
+  }
+}
+.nav-character-rtl {
+  position: absolute;
+  bottom: 222px;
+  animation: nav-walk-rtl 18s linear infinite;
+  animation-delay: -6s;
+}
+@keyframes nav-walk-rtl {
+  0% {
+    right: -30px;
+    opacity: 1;
+  }
+  82% {
+    right: calc(100% - 30px);
+    opacity: 1;
+  }
+  85% {
+    right: calc(100% - 30px);
+    opacity: 0;
+  }
+  86% {
+    right: -30px;
+    opacity: 0;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    right: -30px;
+    opacity: 1;
+  }
+}
+@keyframes nav-leg-l {
+  0%,
+  100% {
+    transform: rotate(-18deg);
+  }
+  50% {
+    transform: rotate(18deg);
+  }
+}
+@keyframes nav-leg-r {
+  0%,
+  100% {
+    transform: rotate(18deg);
+  }
+  50% {
+    transform: rotate(-18deg);
+  }
+}
+@keyframes nav-arm-l {
+  0%,
+  100% {
+    transform: rotate(20deg);
+  }
+  50% {
+    transform: rotate(-20deg);
+  }
+}
+@keyframes nav-arm-r {
+  0%,
+  100% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+}
+
+.nav-phone-ui {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 126px;
+  background: rgba(10, 26, 16, 0.88);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.nav-phone-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(34, 197, 94, 0.6);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.nav-map-track {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.nav-map-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(34, 197, 94, 0.7);
+  border-radius: 3px;
+  animation: nav-track-fill 14s linear infinite;
+}
+@keyframes nav-track-fill {
+  0% {
+    width: 0%;
+  }
+  82% {
+    width: 88%;
+  }
+  85% {
+    width: 88%;
+  }
+  86% {
+    width: 0%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+.nav-map-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid rgba(10, 26, 16, 1);
+  animation: nav-map-dot-x 14s linear infinite;
+  box-shadow: 0 0 5px rgba(34, 197, 94, 0.7);
+}
+@keyframes nav-map-dot-x {
+  0% {
+    left: 0%;
+  }
+  82% {
+    left: calc(88% - 5px);
+  }
+  85% {
+    left: calc(88% - 5px);
+  }
+  86% {
+    left: 0%;
+  }
+  100% {
+    left: 0%;
+  }
+}
+.nav-map-dest {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.4);
+  border: 1px solid rgba(34, 197, 94, 0.7);
+  animation: nav-dest-dot-pulse 1.8s ease-in-out infinite;
+}
+@keyframes nav-dest-dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+  }
+}
+.nav-phone-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nav-hint-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: nav-hint-pulse 2s ease-in-out infinite;
+}
+@keyframes nav-hint-pulse {
+  0%,
+  100% {
+    background: rgba(34, 197, 94, 0.12);
+  }
+  50% {
+    background: rgba(34, 197, 94, 0.28);
+  }
+}
+.nav-hint-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(34, 197, 94, 0.7);
+}
 
 /* ── Slide 3: ripple tap ── */
 .slide3-ripple {
@@ -1154,10 +2075,29 @@ onUnmounted(() => {
   }
 }
 
-/* ── Glow di sfondo condiviso ── */
+/* ── Shared background glow ── */
 .slide-radial-glow {
   position: absolute;
   inset: -40px;
   pointer-events: none;
+}
+
+/* ── Vue transitions ── */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.slide-up-enter-active {
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease;
+}
+.slide-up-enter-from {
+  transform: translateY(40px);
+  opacity: 0;
 }
 </style>
