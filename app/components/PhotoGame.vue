@@ -1280,7 +1280,7 @@ function nextSlide() {
 
 function finishOnboarding() {
   try {
-    localStorage.setItem(TUTORIAL_STORAGE_KEY, '1')
+    sessionStorage.setItem(TUTORIAL_STORAGE_KEY, '1')
   } catch (_) {}
   phase.value = 'game'
 }
@@ -1508,7 +1508,7 @@ function onKey(e: KeyboardEvent) {
 
 onMounted(() => {
   try {
-    if (localStorage.getItem(TUTORIAL_STORAGE_KEY)) {
+    if (sessionStorage.getItem(TUTORIAL_STORAGE_KEY)) {
       phase.value = 'game'
     }
   } catch (_) {}
