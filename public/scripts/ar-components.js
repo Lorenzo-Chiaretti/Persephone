@@ -1,7 +1,5 @@
 let modelPlaced = false
 let waterVisible = false
-let sceneReady = false
-
 
   // ====================================================================================
   // PLACE NAVIGLIO MODEL
@@ -196,5 +194,6 @@ window.addEventListener('message', (event) => {
     
   }
 });
+
 
 
