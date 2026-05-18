@@ -40,7 +40,13 @@ export default defineNuxtConfig({
           'https://*.mapbox.com', // Sblocca Mapbox
           'https://cdn.jsdelivr.net' // Sblocca Eruda e altri script
         ],
-        'img-src': ["'self'", 'data:', 'blob:', 'https://*.mapbox.com', 'https://cdn.jsdelivr.net'], // Necessario per le mappe
+        'img-src': [
+          "'self'",
+          'data:',
+          'blob:',
+          'https://*.mapbox.com',
+          'https://cdn.jsdelivr.net'
+        ], // Necessario per le mappe
         'worker-src': ["'self'", 'blob:'], // Necessario per Mapbox
         'upgrade-insecure-requests': true
       },
@@ -75,12 +81,12 @@ export default defineNuxtConfig({
   },
   vue: {
     compilerOptions: {
-      isCustomElement: (tag) => tag.startsWith('a-'),
-    },
+      isCustomElement: (tag) => tag.startsWith('a-')
+    }
   },
   vite: {
     server: {
-      allowedHosts: process.env.ALLOWED_VITE_HOST ? [process.env.ALLOWED_VITE_HOST] : []
+      allowedHosts: true // <-- Accetta qualsiasi dominio (perfetto per ngrok)
     }
-  },
+  }
 })

@@ -112,9 +112,13 @@
   "gameRule3Desc": "When you think you’ve reached the right spot, press the \"I'm here!\" button.",
   "gameRule4Title": "GPS verification",
   "gameRule4Desc": "The system will check your position via GPS. To win the challenge, you must be within {dist} meters of the exact point.",
-  "arProcessing" : "Processing…",
-  "arSpeaking"   : "Speaking…",
-  "arDebugTitle" :  "Location Debug",
-  "arDebugHint"  : "Simulate user location"
-
+  "arProcessing": "Processing…",
+  "arSpeaking": "Speaking…",
+  "arDebugTitle": "Location Debug",
+  "arDebugHint": "Simulate user location",
+  "gameStep": "Step",
+  "gameNext": "Next →",
+  "gameSkip": "Skip",
+  "gameBack": "Back",
+  "gameRule4Badge": "Within 30m ✓"
 }
