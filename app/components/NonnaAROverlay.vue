@@ -95,12 +95,9 @@
   </div>
 
   <div
-    v-show="!arStore.isIdle"
-    class="relative w-full h-screen overflow-hidden bg-black"
+    class="relative w-full h-screen overflow-hidden pointer-events-none"
   >
-    <canvas ref="canvasRef" class="block w-full h-full touch-pan-y" />
-
-    <div ref="overlayRef" class="absolute inset-0 pointer-events-none">
+    <div class="absolute inset-0 pointer-events-none">
       <div
         id="ar-ui-root"
         v-if="arStore.isActive"
@@ -433,7 +430,7 @@
 <script setup lang="ts">
 import { useArStore } from '~/stores/arState'
 import { useAiNonna } from '~/utils/aiNonna'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const arStore = useArStore()
 const { locale } = useI18n()
@@ -463,6 +460,22 @@ onMounted(() => {
     isDebugMode.value = new URLSearchParams(window.location.search).has('debug')
   }
 })
+
+// ====================================================================================
+// HOOK PER FEATURE FUTURA: attivazione chat alla prossimità del modello
+// Quando arStore.isNearModel diventa true (segnale USER_NEAR_MODEL dall'iframe),
+// qui si potrà avviare automaticamente startContinuousListening.
+// ====================================================================================
+watch(
+  () => arStore.isNearModel,
+  (isNear) => {
+    if (isNear && arStore.selectedPoi) {
+      // TODO: attivare la chat automaticamente quando l'utente si avvicina al modello
+      // await startContinuousListening(locale.value)
+      console.log('User is near the model — chat can be activated here')
+    }
+  }
+)
 
 const agentStatus = computed<
   'idle' | 'listening' | 'processing' | 'speaking' | 'error'
@@ -500,8 +513,6 @@ const testPoi = async (id: string) => {
   arStore.setLocalized()
   await startContinuousListening(locale.value)
 }
-
-defineExpose({ startArSession: async () => arStore.setLocalized() })
 </script>
 
 <style scoped>
