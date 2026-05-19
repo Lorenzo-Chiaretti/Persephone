@@ -101,7 +101,7 @@
       <div
         id="ar-ui-root"
         v-if="arStore.isActive"
-        class="fixed inset-0 z-50 flex flex-col justify-between pointer-events-auto"
+        class="fixed inset-0 z-50 flex flex-col justify-between pointer-events-none"
       >
         <!-- TOP: Status + AI Response -->
         <div
@@ -332,7 +332,7 @@
       <Transition name="fade">
         <div
           v-if="arStore.isLoading"
-          class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 pointer-events-auto backdrop-blur-sm"
+          class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 pointer-events-none backdrop-blur-sm"
         >
           <div
             class="w-11 h-11 rounded-full border-4 border-white/15 border-t-[#2071c1] animate-spin"
@@ -343,9 +343,10 @@
             {{ $t('arLoading') }}
           </p>
         </div>
-
+        </Transition>
+        <Transition name="fade">
         <div
-          v-else-if="arStore.isScanning"
+          v-if="arStore.isScanning"
           class="absolute inset-0 flex flex-col items-center justify-center gap-8 pointer-events-none"
         >
           <div class="relative w-36 h-36 flex items-center justify-center">
@@ -383,11 +384,15 @@
             <span>{{ $t('arScan') }}</span>
           </div>
         </div>
-
+        </Transition>
+        <Transition name="fade">
         <div
-          v-else-if="arStore.isError"
-          class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+90px)] left-1/2 -translate-x-1/2 min-w-[280px] w-max max-w-[calc(100vw-32px)] flex items-start gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-red-500/15 pointer-events-auto"
+          v-if="arStore.isError"
+          class="absolute inset-0 pointer-events-none"
         >
+                  <div
+            class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+90px)] left-1/2 -translate-x-1/2 min-w-[280px] w-max max-w-[calc(100vw-32px)] flex items-start gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-red-500/15 pointer-events-auto"
+          >
           <svg
             class="shrink-0 text-red-500"
             width="20"
@@ -421,6 +426,7 @@
           >
             {{ $t('arRetry') }}
           </button>
+          </div>
         </div>
       </Transition>
     </div>
