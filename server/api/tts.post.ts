@@ -2,14 +2,13 @@
 export default defineEventHandler(async (event) => {
   const { text } = await readBody(event)
   const apiKey = process.env.ELEVENLABS_API_KEY
-
-  // ID VOCE CONSIGLIATO per una nonna:
-  // Prova 'XB0fDUndgU76y8Z455XU' (Alice) o cercala nella Library
-  const voiceId = 'JkwfwmvGT71qYVCwRCMo'
+  //JkwfwmvGT71qYVCwRCMo id nonna prima che lo cambiassi
+  //voce seconda YBrIkf7z6YBcR3bKJphj
+  const voiceId = 'YBrIkf7z6YBcR3bKJphj'
 
   try {
     const response = await $fetch<Blob>(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
         method: 'POST',
         headers: {
@@ -18,9 +17,9 @@ export default defineEventHandler(async (event) => {
         },
         body: {
           text,
-          model_id: 'eleven_multilingual_v2',
+          model_id: 'eleven_turbo_v2_5',
           voice_settings: {
-            stability: 0.6, // Più è alto, più la voce è stabile (meno emotiva)
+            stability: 0.5,
             similarity_boost: 0.75
           }
         },
@@ -30,13 +29,13 @@ export default defineEventHandler(async (event) => {
 
     return response
   } catch (error: any) {
-  // Leggiamo il contenuto del Blob di errore
-  const errorText = await error.data?.text()
-  console.error('ERRORE REALE ELEVENLABS:', errorText)
+    // Leggiamo il contenuto del Blob di errore
+    const errorText = await error.data?.text()
+    console.error('ERRORE REALE ELEVENLABS:', errorText)
 
-  throw createError({
-    statusCode: 500,
-    statusMessage: `ElevenLabs Error: ${errorText}`
-  })
-}
+    throw createError({
+      statusCode: 500,
+      statusMessage: `ElevenLabs Error: ${errorText}`
+    })
+  }
 })
