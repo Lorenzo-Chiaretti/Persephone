@@ -6,9 +6,15 @@ import OnboardingModal from './components/OnboardingModal.vue'
 import BottomSheet from './components/BottomSheet.vue'
 import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
+import { useLocationTracker } from '~/composables/useLocationTracker'
+import { useAppStore } from '~/stores/appState'
+ 
+const appStore = useAppStore()
 
 const arStore = useArStore()
 const { locale, setLocale } = useI18n()
+
+const {currentPoi, locationError, startTracking } = useLocationTracker()
 
 const errorMessage = ref('')
 const arCanvasBridge = ref<any>(null)
@@ -20,6 +26,12 @@ const startArSessionButton = async () => {
 
 const toggleLang = () => {
   setLocale(locale.value === 'it' ? 'en' : 'it')
+}
+
+const handleOnboardingClose = () => {
+  showOnboarding.value = false
+  // L'utente ha (sperabilmente) accettato i permessi. Facciamo partire il GPS globale!
+  startTracking()
 }
 
 onMounted(() => {
@@ -162,9 +174,18 @@ onMounted(() => {
       <p class="text-red-600 text-sm font-bold">{{ errorMessage }}</p>
     </div>
 
+    <div
+      v-if="locationError"
+      class="absolute top-36 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-lg border-l-4 border-yellow-500 pointer-events-auto"
+    >
+      <p class="text-yellow-700 text-sm font-bold">
+        Attenzione: GPS disattivato. L'esperienza interattiva sarà limitata.
+      </p>
+    </div>
+
     <!-- ── Overlays ── -->
     <PoiDetail />
-    <OnboardingModal v-if="showOnboarding" @close="showOnboarding = false" />
+    <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
   </main>
 </template>
 
