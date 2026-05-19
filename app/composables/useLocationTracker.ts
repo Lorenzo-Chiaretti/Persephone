@@ -1,8 +1,8 @@
 // composables/useLocationTracker.ts
 import { ref, onScopeDispose } from 'vue'
-import { useAppStore } from '~/stores/appState'
 import poisData from '~~/public/data/pois.json'
 import type { Poi } from '~/stores/appState' // adatta al tuo path effettivo
+import { getCurrentPOI } from '~/utils/geo'
 
 const THRESHOLD_METERS = 50
 
