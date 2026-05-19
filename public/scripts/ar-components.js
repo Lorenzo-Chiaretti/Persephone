@@ -64,6 +64,8 @@ let waterVisible = false
               dur: 800,
             })
 
+            // Send notification to Vue
+            window.parent.postMessage({ type: 'MODEL_PLACED' }, '*') 
           })
         })
       },
@@ -186,6 +188,8 @@ AFRAME.registerComponent('naviglio-water', {
 window.addEventListener('message', (event) => {
   // Ascoltiamo un comando specifico inviato da Vue
   if (event.data && event.data.type === 'TRIGGER_WATER') {
+
+    console.log("Iframe (from VUE): triggering water")
     
     const naviglioEntity = document.querySelector('[naviglio-water]');
     if (naviglioEntity) {
@@ -194,6 +198,14 @@ window.addEventListener('message', (event) => {
     
   }
 });
+
+AFRAME.registerComponent('notify-ready', {
+      init: function () {
+        this.el.sceneEl.addEventListener('loaded', () => {
+          window.parent.postMessage({ type: 'AR_READY' }, '*')
+        })
+      }
+    })
 
 
 
