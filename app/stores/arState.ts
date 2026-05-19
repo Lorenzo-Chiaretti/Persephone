@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, shallowRef } from 'vue' // Aggiunto shallowRef
+import { ref, computed, shallowRef } from 'vue'
 
 export type ArStatus = 'IDLE' | 'LOADING' | 'SCANNING' | 'ACTIVE' | 'ERROR'
 
@@ -8,8 +8,8 @@ export const useArStore = defineStore('ar', () => {
   const errorMessage = ref<string | null>(null)
   const session = shallowRef<XRSession | null>(null)
 
-  // --- AGGIUNGI QUESTA RIGA ---
   const selectedPoi = ref<{ id: string } | null>(null)
+  const isNearModel = ref(false)
 
   const isIdle = computed(() => status.value === 'IDLE')
   const isLoading = computed(() => status.value === 'LOADING')
@@ -44,6 +44,7 @@ export const useArStore = defineStore('ar', () => {
     status.value = 'IDLE'
     errorMessage.value = null
     selectedPoi.value = null // Reset del POI alla chiusura
+    isNearModel.value = false
     if (session.value) {
       try {
         session.value.end()
@@ -58,7 +59,8 @@ export const useArStore = defineStore('ar', () => {
     status,
     errorMessage,
     session,
-    selectedPoi, // --- AGGIUNGI QUESTO ---
+    selectedPoi,
+    isNearModel,
     isIdle,
     isLoading,
     isActive,
