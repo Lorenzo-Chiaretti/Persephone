@@ -44,7 +44,6 @@ let waterVisible = false
             mesh.traverse((node) => {
               const child = node
               if (child.isMesh) {
-                console.log('mesh:', node.name, '| material:', node.material?.name)
                 child.castShadow = true
                 child.receiveShadow = true
                 if (child.material?.name === 'Mat_Holdout') {

@@ -40,37 +40,39 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted, nextTick, ref } from 'vue'
+  import { onMounted, onUnmounted, ref } from 'vue'
   import { useArStore } from '~/stores/arState'
-
-  const emit = defineEmits(['exit'])
 
   const arStore = useArStore()
   const modelPlaced = ref(false)
   const waterVisible = ref(false)
   const sceneReady = ref(false)
-  const iframeRef = ref(null)
+  const iframeRef = ref<HTMLIFrameElement | null>(null)
 
   const triggerWater = () => {
     waterVisible.value = true
-    iframeRef.value.contentWindow.postMessage({ type: 'TRIGGER_WATER' }, '*');
+    iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
   }
 
-  const handleIframeMessages = (event) => {
-    // Sicurezza base
+  const handleIframeMessages = (event: MessageEvent) => {
     if (!event.data || !event.data.type) return
 
     switch (event.data.type) {
       case 'AR_READY':
         console.log('Vue (from iframe): Iframe AR caricato e pronto!')
         sceneReady.value = true
-        arStore.setLocalized(); //TODO: CAMBIA E AGGIUNGI LOGICA LOCALIZZAZIONE
-        break;
+        arStore.setLocalized() // TODO: CAMBIA E AGGIUNGI LOGICA LOCALIZZAZIONE
+        break
       
       case 'MODEL_PLACED':
         console.log('Vue (from iframe): Model Placed!')
         modelPlaced.value = true
-        break;
+        break
+        
+      case 'USER_NEAR_MODEL': // TODO (feature): inviare questo messaggio da ar-components.js
+        console.log('Vue (from iframe): User is near the model!')
+        arStore.isNearModel = true
+        break
     }
   }
 
@@ -80,11 +82,10 @@
 
   function exitAR() {
     arStore.resetSession()
-    if (typeof window.XR8 !== 'undefined') {
-    window.XR8.stop()
-    }
-    emit('exit')
-    window.location.reload()
+//    if (typeof window.XR8 !== 'undefined') {
+//    window.XR8.stop()
+//    }
+//    window.location.reload()
   }
 
 
@@ -97,8 +98,11 @@
   })
 
   onUnmounted(() => {
+    //Forced iframe cleanup
+    if (iframeRef.value) {
+      iframeRef.value.src = 'about:blank'
+    }
     arStore.resetSession()
     window.removeEventListener('message', handleIframeMessages)
   })
-
 </script>
