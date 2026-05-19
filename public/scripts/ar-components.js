@@ -6,69 +6,101 @@ let waterVisible = false
   // ====================================================================================
 
     AFRAME.registerComponent('tap-place', {
-      init() {
-        const ground = document.getElementById('ground')
+  init() {
+    const ground = document.getElementById('ground')
 
-        ground.addEventListener('click', (event) => {
+    ground.addEventListener('click', (event) => {
+      // Usa this.modelPlaced o window.modelPlaced a seconda del tuo scope
+      if (window.modelPlaced) return
+      window.modelPlaced = true
 
-          if (modelPlaced) return
-          modelPlaced = true
+      const touchPoint = event.detail.intersection.point
 
-          // Create new entity for the new object
-          const newElement = document.createElement('a-entity')
+      // ==========================================
+      // 1. SPAWN DEL NAVIGLIO
+      // ==========================================
+      const naviglioEl = document.createElement('a-entity')
+      naviglioEl.setAttribute('position', {
+        x: touchPoint.x,
+        y: touchPoint.y - 2, // Sotto terra
+        z: touchPoint.z,
+      })
+      naviglioEl.setAttribute('rotation', '0 60 0')
+      naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
+      naviglioEl.setAttribute('visible', 'false')
+      naviglioEl.setAttribute('gltf-model', '#naviglioModel')
+      naviglioEl.setAttribute('shadow', { receive: false })
+      naviglioEl.setAttribute('naviglio-water', '')
 
-          // The raycaster gives a location of the touch in the scene
-          const touchPoint = event.detail.intersection.point
-          newElement.setAttribute('position', touchPoint)
+      this.el.sceneEl.appendChild(naviglioEl)
 
-          newElement.setAttribute('rotation', '0 60 0')
-          newElement.setAttribute('scale', '0.0001 0.0001 0.0001')
-          newElement.setAttribute('visible', 'false')
-          newElement.setAttribute('gltf-model', '#naviglioModel')
-          newElement.setAttribute('shadow', { receive: false })
-          newElement.setAttribute('position', {
-            x: touchPoint.x,
-            y: touchPoint.y - 2, // under ground offset
-            z: touchPoint.z,
-          })
-
-          // Add water shader
-          newElement.setAttribute('naviglio-water', '')
-
-          this.el.sceneEl.appendChild(newElement)
-
-          newElement.addEventListener('model-loaded', () => {
-            const mesh = newElement.getObject3D('mesh')
-
-            // Add holdout effect
-            mesh.traverse((node) => {
-              const child = node
-              if (child.isMesh) {
-                child.castShadow = true
-                child.receiveShadow = true
-                if (child.material?.name === 'Mat_Holdout') {
-                  child.material.colorWrite = false
-                  child.material.depthWrite = true
-                  child.renderOrder = -1
-                }
-              }
-            })
-
-            newElement.setAttribute('visible', 'true')
-            //popup animation
-            newElement.setAttribute('animation', {
-              property: 'scale',
-              to: '1 1 1',
-              easing: 'easeOutElastic',
-              dur: 800,
-            })
-
-            // Send notification to Vue
-            window.parent.postMessage({ type: 'MODEL_PLACED' }, '*') 
-          })
+      naviglioEl.addEventListener('model-loaded', () => {
+        const mesh = naviglioEl.getObject3D('mesh')
+        
+        // Add holdout effect
+        mesh.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = true
+            node.receiveShadow = true
+            if (node.material?.name === 'Mat_Holdout') {
+              node.material.colorWrite = false
+              node.material.depthWrite = true
+              node.renderOrder = -1
+            }
+          }
         })
-      },
+
+        naviglioEl.setAttribute('visible', 'true')
+        naviglioEl.setAttribute('animation', {
+          property: 'scale',
+          to: '0.3 0.3 0.3',
+          easing: 'easeOutElastic',
+          dur: 800,
+        })
+      })
+
+      // ==========================================
+      // 2. SPAWN DELLA VECCHIETTA
+      // ==========================================
+      const nonnaEl = document.createElement('a-entity')
+      // Assicurati di avere <a-asset-item id="nonna-model" ...> nell'HTML
+      nonnaEl.setAttribute('gltf-model', '#nonna-model') 
+      
+      // La posizioniamo 1 metro a destra e 1 metro più vicina a noi rispetto al centro del naviglio
+      nonnaEl.setAttribute('position', {
+        x: touchPoint.x + 2,
+        y: touchPoint.y, // Lei sta SUL terreno, niente offset negativo!
+        z: touchPoint.z + 2,
+      })
+      
+      // La facciamo guardare verso di noi (o incliniamo in base a come è esportato il modello)
+      nonnaEl.setAttribute('rotation', '0 -30 0') 
+      nonnaEl.setAttribute('scale', '0.0001 0.0001 0.0001')
+      nonnaEl.setAttribute('visible', 'false')
+      nonnaEl.setAttribute('shadow', { receive: true, cast: true }) 
+      nonnaEl.setAttribute('animation-mixer', 'clip: *; loop: repeat; crossFadeDuration: 0.2')
+
+      this.el.sceneEl.appendChild(nonnaEl)
+
+      nonnaEl.addEventListener('model-loaded', () => {
+        nonnaEl.setAttribute('visible', 'true')
+        
+        // Animazione di comparsa con leggero ritardo per effetto "Wow"
+        nonnaEl.setAttribute('animation', {
+          property: 'scale',
+          to: '0.07 0.07 0.07', // Adatta questo valore in base a quanto è grande il tuo .glb!
+          easing: 'easeOutElastic',
+          dur: 800,
+          delay: 300 // Appare 300ms dopo il naviglio
+        })
+
+        // Mandiamo la notifica a Vue quando TUTTA la scena è caricata
+        window.parent.postMessage({ type: 'MODEL_PLACED' }, '*')
+      })
+
     })
+  },
+})
 
     // ====================================================================================
   // RENDER AND ANIMATE WATER
