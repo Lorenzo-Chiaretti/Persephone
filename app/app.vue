@@ -46,14 +46,11 @@ onMounted(() => {
     }
   }
   showOnboarding.value = true
+  arStore.setLocalized()
 })
 </script>
 
 <template>
-  <ClientOnly>
-    <ArExperience />
-  </ClientOnly>
-  <template v-if="false">
   <main class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
     <!-- ── Mappa a tutto schermo ── -->
     <div class="absolute inset-0 z-0">
@@ -191,7 +188,6 @@ onMounted(() => {
     <PoiDetail />
     <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
   </main>
-  </template>
 </template>
 
 <style>
