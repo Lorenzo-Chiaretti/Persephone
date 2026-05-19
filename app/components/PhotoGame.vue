@@ -1287,18 +1287,30 @@ function finishOnboarding() {
 
 // ─── GPS ─────────────────────────────────────────────────────────────────────
 
-const userLat = ref<number | null>(null)
-const userLng = ref<number | null>(null)
-const userAccuracy = ref<number | null>(null)
-const gpsError = ref<string | null>(null)
-const distance = ref<number | null>(null)
-let watchId: number | null = null
 
-const gpsReady = computed(() => userLat.value !== null && !gpsError.value)
+// ─── GPS (Gestito Globalmente) ───────────────────────────────────────────────
+import { useLocationTracker } from '~/composables/useLocationTracker'
+import { calculateDistance } from '~/utils/geo' // 1. IMPORTIAMO LA TUA MATEMATICA!
+
+// 2. RINOMINIAMO locationError in gpsError per far felice l'HTML
+const { currentCoords, locationError: gpsError } = useLocationTracker() 
+
+const gpsReady = computed(() => currentCoords.value !== null && !gpsError.value)
+
+const distance = computed(() => {
+  if (!currentCoords.value) return null
+  
+  // 3. USIAMO LA TUA UTIL GLOBALE INVECE DELLA VECCHIA FUNZIONE
+  return calculateDistance(
+    { lat: currentCoords.value.lat, lng: currentCoords.value.lng },
+    { lat: props.poi.lat, lng: props.poi.lng }
+  )
+})
+
 const gpsStatusText = computed(() => {
-  if (gpsError.value) return `${t('gpsNotAvail')}: ${gpsError.value}`
+  if (gpsError.value) return `${t('gpsNotAvail')}: ${gpsError.value.message || 'Errore'}`
   if (gpsReady.value)
-    return `GPS (±${userAccuracy.value ? Math.round(userAccuracy.value) + 'm' : '…'})`
+    return `GPS (±${currentCoords.value?.accuracy ? Math.round(currentCoords.value.accuracy) + 'm' : '…'})`
   return t('gpsSearching')
 })
 
@@ -1426,61 +1438,6 @@ function toggleAudio() {
   else if (phase.value === 'game' && gpsReady.value) startTicking()
 }
 
-// ─── Geo helpers ─────────────────────────────────────────────────────────────
-
-function haversineMeters(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-) {
-  const R = 6371000
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-function startGps() {
-  if (!navigator.geolocation) {
-    gpsError.value = 'GPS non supportato'
-    return
-  }
-  watchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      userLat.value = pos.coords.latitude
-      userLng.value = pos.coords.longitude
-      userAccuracy.value = pos.coords.accuracy
-      gpsError.value = null
-      distance.value = haversineMeters(
-        pos.coords.latitude,
-        pos.coords.longitude,
-        props.poi.lat,
-        props.poi.lng
-      )
-    },
-    (err) => {
-      gpsError.value = err.message
-    },
-    { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
-  )
-}
-
-function stopGps() {
-  if (watchId !== null) {
-    navigator.geolocation.clearWatch(watchId)
-    watchId = null
-  }
-}
-
-watch([() => phase.value, gpsReady], ([p, ready]) => {
-  if (p === 'game' && ready) startTicking()
-  else stopTicking()
-})
-
 // ─── Game logic ───────────────────────────────────────────────────────────────
 
 async function checkLocation() {
@@ -1512,12 +1469,10 @@ onMounted(() => {
       phase.value = 'game'
     }
   } catch (_) {}
-  startGps()
   window.addEventListener('keydown', onKey)
 })
 
 onUnmounted(() => {
-  stopGps()
   stopTicking()
   audioCtx?.close()
   window.removeEventListener('keydown', onKey)
