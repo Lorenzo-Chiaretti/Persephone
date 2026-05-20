@@ -4,6 +4,7 @@ import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
 import OnboardingModal from './components/OnboardingModal.vue'
 import BottomSheet from './components/BottomSheet.vue'
+import ArExperience from './components/ArExperience.vue'
 import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
 import { useLocationTracker } from '~/composables/useLocationTracker'
@@ -20,8 +21,34 @@ const errorMessage = ref('')
 const arCanvasBridge = ref<any>(null)
 const showOnboarding = ref(false)
 
-const startArSessionButton = async () => {
-  await arCanvasBridge.value?.startArSession()
+// ====================================================================================
+// START AR: risolve il POI tramite GPS, poi monta ArExperience + NonnaAROverlay
+// ====================================================================================
+const startAr = async () => {
+  arStore.startLoading()
+
+  try {
+    if (locationError.value) {
+      arStore.triggerError(`Errore GPS: ${locationError.value.message}`)
+      return
+    }
+
+    if (currentPoi.value) {
+      console.log("POI TROVATO: ", currentPoi.value.id)
+      arStore.selectedPoi = { id: currentPoi.value.id }
+    } else {
+      // Nessun POI nelle vicinanze: l'esperienza parte comunque,
+      // selectedPoi resterà null finché GPS non risolve (o in debug tramite debug panel)
+      console.warn('Nessun POI rilevato nelle vicinanze')
+    }
+
+    // Lo stato LOADING è già settato: ArExperience e NonnaAROverlay si montano
+    // perché !arStore.isIdle === true. ArExperience setterà SCANNING/ACTIVE
+    // tramite i propri postMessage handler.
+
+  } catch (e) {
+    arStore.triggerError('Impossibile avviare la sessione AR')
+  }
 }
 
 const toggleLang = () => {
@@ -46,20 +73,23 @@ onMounted(() => {
     }
   }
   showOnboarding.value = true
-  arStore.setLocalized()
 })
 </script>
 
 <template>
+  <!-- AR EXPERIENCE -->
   <ClientOnly>
-    <ArExperience />
+    <template v-if="!arStore.isIdle">
+      <ArExperience />
+      <NonnaAROverlay />
+    </template>
   </ClientOnly>
-  <template v-if="false">
-    <main class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
-      <!-- ── Mappa a tutto schermo ── -->
-      <div class="absolute inset-0 z-0">
-        <Mapbox />
-      </div>
+  
+  <main v-if="arStore.isIdle" class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
+    <!-- ── Mappa a tutto schermo ── -->
+    <div class="absolute inset-0 z-0">
+      <Mapbox />
+    </div>
 
       <!-- ── Header sovrapposto ── -->
       <div
@@ -138,42 +168,35 @@ onMounted(() => {
               </span>
             </button>
 
-            <!-- Onboarding button -->
-            <button
-              class="bg-white/90 backdrop-blur-md rounded-2xl w-10 h-10 shadow-lg flex items-center justify-center cursor-pointer hover:bg-white transition-colors"
-              @click="showOnboarding = true"
+          <!-- Onboarding button -->
+          <button
+            class="bg-white/90 backdrop-blur-md rounded-2xl w-10 h-10 shadow-lg flex items-center justify-center cursor-pointer hover:bg-white transition-colors"
+            @click="showOnboarding = true"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#424242"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#424242"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <circle cx="12" cy="17" r="0.5" fill="#424242" />
-              </svg>
-            </button>
-          </div>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <circle cx="12" cy="17" r="0.5" fill="#424242" />
+            </svg>
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- ── AR Canvas ── -->
-      <ClientOnly>
-        <NonnaAROverlay :active="arStore.isActive" ref="arCanvasBridge" />
-      </ClientOnly>
-
-      <!-- ── Bottom Sheet ── -->
-      <div v-if="!arStore.isActive">
+    <!-- ── Bottom Sheet ── -->
         <BottomSheet
-          @start-ar="startArSessionButton"
+          @start-ar="startAr"
           @open-onboarding="showOnboarding = true"
         />
-      </div>
 
       <!-- ── Errori ── -->
       <div
