@@ -5,73 +5,143 @@ let waterVisible = false
   // PLACE NAVIGLIO MODEL
   // ====================================================================================
 
-    AFRAME.registerComponent('tap-place', {
-      init() {
-        const ground = document.getElementById('ground')
+AFRAME.registerComponent('tap-place', {
+  init() {
+  const ground = document.getElementById('ground')
 
-        ground.addEventListener('click', (event) => {
+  ground.addEventListener('click', (event) => {
+    if (window.modelPlaced) return
+    window.modelPlaced = true
 
-          if (modelPlaced) return
-          modelPlaced = true
+    const touchPoint = event.detail.intersection.point
 
-          // Create new entity for the new object
-          const newElement = document.createElement('a-entity')
+    // ==========================================
+    // 1. SPAWN DEL NAVIGLIO
+    // ==========================================
+    const naviglioEl = document.createElement('a-entity')
+    naviglioEl.setAttribute('position', {
+      x: touchPoint.x+0,
+      y: touchPoint.y, 
+      z: touchPoint.z-50,
+    })
+    naviglioEl.setAttribute('rotation', '0 310 0')
+    naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
+    naviglioEl.setAttribute('visible', 'false')
+    naviglioEl.setAttribute('gltf-model', '#poiModel')
+    naviglioEl.setAttribute('shadow', { receive: false })
+    naviglioEl.setAttribute('naviglio-water', '')
 
-          // The raycaster gives a location of the touch in the scene
-          const touchPoint = event.detail.intersection.point
-          newElement.setAttribute('position', touchPoint)
+    this.el.sceneEl.appendChild(naviglioEl)
 
-          newElement.setAttribute('rotation', '0 60 0')
-          newElement.setAttribute('scale', '0.0001 0.0001 0.0001')
-          newElement.setAttribute('visible', 'false')
-          newElement.setAttribute('gltf-model', '#poiModel')
-          newElement.setAttribute('shadow', { receive: false })
-          newElement.setAttribute('position', {
-            x: touchPoint.x,
-            y: touchPoint.y - 2, // under ground offset
-            z: touchPoint.z,
-          })
+    naviglioEl.addEventListener('model-loaded', () => {
+      const mesh = naviglioEl.getObject3D('mesh')
+      
+      // Add holdout effect
+      mesh.traverse((node) => {
+        if (node.isMesh) {
+          node.castShadow = true
+          node.receiveShadow = true
+          if (node.material?.name === 'Mat_Holdout') {
+            node.material.colorWrite = false
+            node.material.depthWrite = true
+            node.renderOrder = -1
+          }
+        }
+      })
 
-          // Add water shader
-          newElement.setAttribute('naviglio-water', '')
-
-          this.el.sceneEl.appendChild(newElement)
-
-          newElement.addEventListener('model-loaded', () => {
-            const mesh = newElement.getObject3D('mesh')
-
-            // Add holdout effect
-            mesh.traverse((node) => {
-              const child = node
-              if (child.isMesh) {
-                console.log("MESH NAME: ", child.material?.name)
-                child.castShadow = true
-                child.receiveShadow = true
-                if (child.material?.name === 'Mat_Holdout') {
-                  child.material.colorWrite = false
-                  child.material.depthWrite = true
-                  child.renderOrder = -1
-                }
-              }
-            })
-
-            newElement.setAttribute('visible', 'true')
-            //popup animation
-            newElement.setAttribute('animation', {
-              property: 'scale',
-              to: '1 1 1',
-              easing: 'easeOutElastic',
-              dur: 800,
-            })
-
-            // Send notification to Vue
-            window.parent.postMessage({ type: 'MODEL_PLACED' }, '*') 
-          })
-        })
-      },
+      naviglioEl.setAttribute('visible', 'true')
+      naviglioEl.setAttribute('animation', {
+        property: 'scale',
+        to: '2 2 2',
+        easing: 'easeOutElastic',
+        dur: 800,
+      })
     })
 
-    // ====================================================================================
+    // ==========================================
+    // 2. SPAWN DELLA VECCHIETTA
+    // ==========================================
+    const nonnaEl = document.createElement('a-entity')
+    nonnaEl.setAttribute('gltf-model', '#nonna-model') 
+    
+    nonnaEl.setAttribute('position', {
+      x: touchPoint.x + 2,
+      y: touchPoint.y, 
+      z: touchPoint.z + 2,
+    })
+    
+    nonnaEl.setAttribute('rotation', '0 -30 0') 
+    nonnaEl.setAttribute('scale', '0.0001 0.0001 0.0001')
+    nonnaEl.setAttribute('visible', 'false')
+    nonnaEl.setAttribute('shadow', { receive: true, cast: true }) 
+    nonnaEl.setAttribute('animation-mixer', 'clip: *; loop: repeat; crossFadeDuration: 0.2')
+    nonnaEl.setAttribute('proximity-trigger', 'distance: 30')
+
+    this.el.sceneEl.appendChild(nonnaEl)
+
+    nonnaEl.addEventListener('model-loaded', () => {
+      nonnaEl.setAttribute('visible', 'true')
+      
+      
+      nonnaEl.setAttribute('animation', {
+        property: 'scale',
+        to: '0.07 0.07 0.07', 
+        easing: 'easeOutElastic',
+        dur: 800,
+        delay: 1000 
+      })
+
+      window.parent.postMessage({ type: 'MODEL_PLACED' }, '*')
+      })
+    })
+  },
+})
+
+AFRAME.registerComponent('proximity-trigger',{
+  schema: {
+    distance: { type: 'number', default: 4.5 },
+  },
+
+  init: function () {
+    const THREE = window.THREE;
+
+    this.camera = document.getElementById('camera')
+    this.isNear = false 
+
+    this.cameraPos = new THREE.Vector3()
+    this.avatarPos = new THREE.Vector3()
+  },
+
+  tick: function () {
+    if (!this.camera) return
+
+    // 1. Prendi la posizione reale della telecamera (il telefono)
+    this.camera.object3D.getWorldPosition(this.cameraPos)
+    
+    // 2. Prendi la posizione reale dell'avatar (la vecchietta)
+    this.el.object3D.getWorldPosition(this.avatarPos)
+
+    // 3. Calcola la distanza SOLO sugli assi X e Z (ignoriamo l'altezza Y)
+    const dx = this.cameraPos.x - this.avatarPos.x
+    const dz = this.cameraPos.z - this.avatarPos.z
+    const dist = Math.sqrt(dx * dx + dz * dz)
+
+    // 4. Controlla se abbiamo superato la soglia (es. 2 metri)
+    if (dist < this.data.distance) {
+      if (!this.isNear) {
+        this.isNear = true
+        window.parent.postMessage({ type: 'USER_NEAR_MODEL' }, '*')
+      }
+    } else {
+      if (this.isNear) {
+        this.isNear = false
+        // Sei appena uscito dall'area! Manda il messaggio per nascondere la UI
+      }
+    }
+  }
+})
+
+  // ====================================================================================
   // RENDER AND ANIMATE WATER
   // ====================================================================================
 
@@ -157,8 +227,6 @@ AFRAME.registerComponent('naviglio-water', {
                     this.water.visible = true; // Show water (now it's underneath)
                 }
               });
-              // -----------------------------------------
-
             }
           });
         });
