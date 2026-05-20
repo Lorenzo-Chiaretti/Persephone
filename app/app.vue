@@ -34,7 +34,7 @@ const startAr = async () => {
     }
 
     if (currentPoi.value) {
-      console.log("POI TROVATO: ", currentPoi.value.id)
+      console.log('POI TROVATO: ', currentPoi.value.id)
       arStore.selectedPoi = { id: currentPoi.value.id }
     } else {
       // Nessun POI nelle vicinanze: l'esperienza parte comunque,
@@ -45,7 +45,6 @@ const startAr = async () => {
     // Lo stato LOADING è già settato: ArExperience e NonnaAROverlay si montano
     // perché !arStore.isIdle === true. ArExperience setterà SCANNING/ACTIVE
     // tramite i propri postMessage handler.
-
   } catch (e) {
     arStore.triggerError('Impossibile avviare la sessione AR')
   }
@@ -84,89 +83,88 @@ onMounted(() => {
       <NonnaAROverlay />
     </template>
   </ClientOnly>
-  
-  <main v-if="arStore.isIdle" class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
+
+  <main
+    v-if="arStore.isIdle"
+    class="relative w-full h-full bg-[#0f0e1a] overflow-hidden"
+  >
     <!-- ── Mappa a tutto schermo ── -->
     <div class="absolute inset-0 z-0">
       <Mapbox />
     </div>
 
-      <!-- ── Header sovrapposto ── -->
+    <!-- ── Header sovrapposto ── -->
+    <div
+      class="absolute top-0 left-0 right-0 z-10 pointer-events-none"
+      style="padding-top: env(safe-area-inset-top)"
+    >
       <div
-        class="absolute top-0 left-0 right-0 z-10 pointer-events-none"
-        style="padding-top: env(safe-area-inset-top)"
+        class="mx-4 mt-3 flex items-center justify-between pointer-events-auto"
       >
+        <!-- Logo + nome -->
         <div
-          class="mx-4 mt-3 flex items-center justify-between pointer-events-auto"
+          class="flex items-center gap-2.5 bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg"
         >
-          <!-- Logo + nome -->
-          <div
-            class="flex items-center gap-2.5 bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg"
+          <img src="/Persephone_Logo.png" alt="Persephone" class="h-7 w-auto" />
+          <span
+            class="font-['Playfair_Display'] text-[18px] font-bold text-[#424242] leading-none"
           >
-            <img
-              src="/Persephone_Logo.png"
-              alt="Persephone"
-              class="h-7 w-auto"
-            />
-            <span
-              class="font-['Playfair_Display'] text-[18px] font-bold text-[#424242] leading-none"
-            >
-              {{ $t('appName') }}
-            </span>
-          </div>
+            {{ $t('appName') }}
+          </span>
+        </div>
 
-          <!-- Language toggle + Onboarding button -->
-          <div class="flex items-center gap-2">
-            <button
-              class="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-white transition-colors"
-              @click="toggleLang"
+        <!-- Language toggle + Onboarding button -->
+        <div class="flex items-center gap-2">
+          <button
+            class="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-white transition-colors"
+            @click="toggleLang"
+          >
+            <!-- IT flag SVG -->
+            <svg
+              v-if="locale === 'it'"
+              width="20"
+              height="14"
+              viewBox="0 0 20 14"
+              xmlns="http://www.w3.org/2000/svg"
+              class="rounded-sm"
             >
-              <!-- IT flag SVG -->
-              <svg
-                v-if="locale === 'it'"
-                width="20"
-                height="14"
-                viewBox="0 0 20 14"
-                xmlns="http://www.w3.org/2000/svg"
-                class="rounded-sm"
-              >
-                <rect width="20" height="14" fill="#CE2B37" />
-                <rect width="6.67" height="14" fill="#009246" />
-                <rect x="6.67" width="6.67" height="14" fill="#FFFFFF" />
-              </svg>
-              <!-- EN flag SVG -->
-              <svg
-                v-else
-                width="20"
-                height="14"
-                viewBox="0 0 20 14"
-                xmlns="http://www.w3.org/2000/svg"
-                class="rounded-sm"
-              >
-                <rect width="20" height="14" fill="#012169" />
-                <path
-                  d="M0 0 L20 14 M20 0 L0 14"
-                  stroke="white"
-                  stroke-width="2.8"
-                />
-                <path
-                  d="M0 0 L20 14 M20 0 L0 14"
-                  stroke="#C8102E"
-                  stroke-width="1.6"
-                />
-                <path d="M10 0 V14 M0 7 H20" stroke="white" stroke-width="4" />
-                <path
-                  d="M10 0 V14 M0 7 H20"
-                  stroke="#C8102E"
-                  stroke-width="2.4"
-                />
-              </svg>
-              <span
-                class="text-[13px] font-['Inter'] font-semibold text-[#424242]"
-              >
-                {{ locale === 'it' ? 'IT' : 'EN' }}
-              </span>
-            </button>
+              <rect width="20" height="14" fill="#CE2B37" />
+              <rect width="6.67" height="14" fill="#009246" />
+              <rect x="6.67" width="6.67" height="14" fill="#FFFFFF" />
+            </svg>
+            <!-- EN flag SVG -->
+            <svg
+              v-else
+              width="20"
+              height="14"
+              viewBox="0 0 20 14"
+              xmlns="http://www.w3.org/2000/svg"
+              class="rounded-sm"
+            >
+              <rect width="20" height="14" fill="#012169" />
+              <path
+                d="M0 0 L20 14 M20 0 L0 14"
+                stroke="white"
+                stroke-width="2.8"
+              />
+              <path
+                d="M0 0 L20 14 M20 0 L0 14"
+                stroke="#C8102E"
+                stroke-width="1.6"
+              />
+              <path d="M10 0 V14 M0 7 H20" stroke="white" stroke-width="4" />
+              <path
+                d="M10 0 V14 M0 7 H20"
+                stroke="#C8102E"
+                stroke-width="2.4"
+              />
+            </svg>
+            <span
+              class="text-[13px] font-['Inter'] font-semibold text-[#424242]"
+            >
+              {{ locale === 'it' ? 'IT' : 'EN' }}
+            </span>
+          </button>
 
           <!-- Onboarding button -->
           <button
@@ -193,33 +191,29 @@ onMounted(() => {
     </div>
 
     <!-- ── Bottom Sheet ── -->
-        <BottomSheet
-          @start-ar="startAr"
-          @open-onboarding="showOnboarding = true"
-        />
+    <BottomSheet @start-ar="startAr" @open-onboarding="showOnboarding = true" />
 
-      <!-- ── Errori ── -->
-      <div
-        v-if="errorMessage"
-        class="absolute top-20 left-4 right-4 z-[100] bg-white p-3 rounded-lg shadow-lg border-l-4 border-red-500"
-      >
-        <p class="text-red-600 text-sm font-bold">{{ errorMessage }}</p>
-      </div>
+    <!-- ── Errori ── -->
+    <div
+      v-if="errorMessage"
+      class="absolute top-20 left-4 right-4 z-[100] bg-white p-3 rounded-lg shadow-lg border-l-4 border-red-500"
+    >
+      <p class="text-red-600 text-sm font-bold">{{ errorMessage }}</p>
+    </div>
 
-      <div
-        v-if="locationError"
-        class="absolute top-36 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-lg border-l-4 border-yellow-500 pointer-events-auto"
-      >
-        <p class="text-yellow-700 text-sm font-bold">
-          Attenzione: GPS disattivato. L'esperienza interattiva sarà limitata.
-        </p>
-      </div>
+    <div
+      v-if="locationError"
+      class="absolute top-36 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-lg border-l-4 border-yellow-500 pointer-events-auto"
+    >
+      <p class="text-yellow-700 text-sm font-bold">
+        Attenzione: GPS disattivato. L'esperienza interattiva sarà limitata.
+      </p>
+    </div>
 
-      <!-- ── Overlays ── -->
-      <PoiDetail />
-      <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
-    </main>
-  </template>
+    <!-- ── Overlays ── -->
+    <PoiDetail />
+    <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
+  </main>
 </template>
 
 <style>
