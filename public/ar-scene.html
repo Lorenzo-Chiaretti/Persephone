@@ -11,6 +11,18 @@
     </head>
     
     <body>
+        <script>
+          // Read POI id from query string and sets model src
+          // before A-Frame initializes the scene, to avoid race condition.
+          // Fallback to 'via-senato' if missing parameter.
+          const _poiId = new URLSearchParams(window.location.search).get('poi') || 'via-senato'
+          document.write(
+            '<a-assets>' +
+            '  <a-asset-item id="poiModel" src="/models/' + _poiId + '.glb"></a-asset-item>' +
+            '</a-assets>'
+          )
+        </script>
+
         <script src="/scripts/ar-components.js"></script>
 
         <a-scene
@@ -22,10 +34,6 @@
             xrweb="allowedDevices: any;"
             xrconfig
         >
-            <a-assets>
-                <a-asset-item id="naviglioModel" src="/models/naviglio.glb"></a-asset-item>
-            </a-assets>
-
             <a-camera
                 id="camera"
                 position="0 8 8"

@@ -24,7 +24,7 @@ let waterVisible = false
           newElement.setAttribute('rotation', '0 60 0')
           newElement.setAttribute('scale', '0.0001 0.0001 0.0001')
           newElement.setAttribute('visible', 'false')
-          newElement.setAttribute('gltf-model', '#naviglioModel')
+          newElement.setAttribute('gltf-model', '#poiModel')
           newElement.setAttribute('shadow', { receive: false })
           newElement.setAttribute('position', {
             x: touchPoint.x,
@@ -44,6 +44,7 @@ let waterVisible = false
             mesh.traverse((node) => {
               const child = node
               if (child.isMesh) {
+                console.log("MESH NAME: ", child.material?.name)
                 child.castShadow = true
                 child.receiveShadow = true
                 if (child.material?.name === 'Mat_Holdout') {
@@ -100,9 +101,9 @@ AFRAME.registerComponent('naviglio-water', {
           if (!mesh) return;
           const { Water } = await import('/scripts/Water.js');
 
-          // Search for mesh "Acqua"
+          // Search for mesh "Water"
           mesh.traverse((child) => {
-            if (child.isMesh && child.name === 'Acqua') {
+            if (child.isMesh && child.name === 'Water') {
               
               const waterGeometry = child.geometry;
 
