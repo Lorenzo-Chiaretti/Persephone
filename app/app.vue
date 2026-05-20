@@ -9,13 +9,13 @@ import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
 import { useLocationTracker } from '~/composables/useLocationTracker'
 import { useAppStore } from '~/stores/appState'
- 
+
 const appStore = useAppStore()
 
 const arStore = useArStore()
 const { locale, setLocale } = useI18n()
 
-const {currentPoi, locationError, startTracking } = useLocationTracker()
+const { currentPoi, locationError, startTracking } = useLocationTracker()
 
 const errorMessage = ref('')
 const arCanvasBridge = ref<any>(null)
@@ -34,7 +34,7 @@ const startAr = async () => {
     }
 
     if (currentPoi.value) {
-      console.log("POI TROVATO: ", currentPoi.value.id)
+      console.log('POI TROVATO: ', currentPoi.value.id)
       arStore.selectedPoi = { id: currentPoi.value.id }
     } else {
       // Nessun POI nelle vicinanze: l'esperienza parte comunque,
@@ -45,7 +45,6 @@ const startAr = async () => {
     // Lo stato LOADING è già settato: ArExperience e NonnaAROverlay si montano
     // perché !arStore.isIdle === true. ArExperience setterà SCANNING/ACTIVE
     // tramite i propri postMessage handler.
-
   } catch (e) {
     arStore.triggerError('Impossibile avviare la sessione AR')
   }
@@ -84,8 +83,11 @@ onMounted(() => {
       <NonnaAROverlay />
     </template>
   </ClientOnly>
-  
-  <main v-if="arStore.isIdle" class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
+
+  <main
+    v-if="arStore.isIdle"
+    class="relative w-full h-full bg-[#0f0e1a] overflow-hidden"
+  >
     <!-- ── Mappa a tutto schermo ── -->
     <div class="absolute inset-0 z-0">
       <Mapbox />
@@ -189,10 +191,7 @@ onMounted(() => {
     </div>
 
     <!-- ── Bottom Sheet ── -->
-        <BottomSheet
-          @start-ar="startAr"
-          @open-onboarding="showOnboarding = true"
-        />
+    <BottomSheet @start-ar="startAr" @open-onboarding="showOnboarding = true" />
 
     <!-- ── Errori ── -->
     <div
