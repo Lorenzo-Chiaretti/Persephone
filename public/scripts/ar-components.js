@@ -5,104 +5,143 @@ let waterVisible = false
   // PLACE NAVIGLIO MODEL
   // ====================================================================================
 
-    AFRAME.registerComponent('tap-place', {
+AFRAME.registerComponent('tap-place', {
   init() {
-    const ground = document.getElementById('ground')
+  const ground = document.getElementById('ground')
 
-    ground.addEventListener('click', (event) => {
-      // Usa this.modelPlaced o window.modelPlaced a seconda del tuo scope
-      if (window.modelPlaced) return
-      window.modelPlaced = true
+  ground.addEventListener('click', (event) => {
+    if (window.modelPlaced) return
+    window.modelPlaced = true
 
-      const touchPoint = event.detail.intersection.point
+    const touchPoint = event.detail.intersection.point
 
-      // ==========================================
-      // 1. SPAWN DEL NAVIGLIO
-      // ==========================================
-      const naviglioEl = document.createElement('a-entity')
-      naviglioEl.setAttribute('position', {
-        x: touchPoint.x,
-        y: touchPoint.y - 2, // Sotto terra
-        z: touchPoint.z,
-      })
-      naviglioEl.setAttribute('rotation', '0 60 0')
-      naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
-      naviglioEl.setAttribute('visible', 'false')
-      naviglioEl.setAttribute('gltf-model', '#naviglioModel')
-      naviglioEl.setAttribute('shadow', { receive: false })
-      naviglioEl.setAttribute('naviglio-water', '')
+    // ==========================================
+    // 1. SPAWN DEL NAVIGLIO
+    // ==========================================
+    const naviglioEl = document.createElement('a-entity')
+    naviglioEl.setAttribute('position', {
+      x: touchPoint.x,
+      y: touchPoint.y - 2, 
+      z: touchPoint.z,
+    })
+    naviglioEl.setAttribute('rotation', '0 60 0')
+    naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
+    naviglioEl.setAttribute('visible', 'false')
+    naviglioEl.setAttribute('gltf-model', '#naviglioModel')
+    naviglioEl.setAttribute('shadow', { receive: false })
+    naviglioEl.setAttribute('naviglio-water', '')
 
-      this.el.sceneEl.appendChild(naviglioEl)
+    this.el.sceneEl.appendChild(naviglioEl)
 
-      naviglioEl.addEventListener('model-loaded', () => {
-        const mesh = naviglioEl.getObject3D('mesh')
-        
-        // Add holdout effect
-        mesh.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = true
-            node.receiveShadow = true
-            if (node.material?.name === 'Mat_Holdout') {
-              node.material.colorWrite = false
-              node.material.depthWrite = true
-              node.renderOrder = -1
-            }
+    naviglioEl.addEventListener('model-loaded', () => {
+      const mesh = naviglioEl.getObject3D('mesh')
+      
+      // Add holdout effect
+      mesh.traverse((node) => {
+        if (node.isMesh) {
+          node.castShadow = true
+          node.receiveShadow = true
+          if (node.material?.name === 'Mat_Holdout') {
+            node.material.colorWrite = false
+            node.material.depthWrite = true
+            node.renderOrder = -1
           }
-        })
-
-        naviglioEl.setAttribute('visible', 'true')
-        naviglioEl.setAttribute('animation', {
-          property: 'scale',
-          to: '0.3 0.3 0.3',
-          easing: 'easeOutElastic',
-          dur: 800,
-        })
+        }
       })
 
-      // ==========================================
-      // 2. SPAWN DELLA VECCHIETTA
-      // ==========================================
-      const nonnaEl = document.createElement('a-entity')
-      // Assicurati di avere <a-asset-item id="nonna-model" ...> nell'HTML
-      nonnaEl.setAttribute('gltf-model', '#nonna-model') 
+      naviglioEl.setAttribute('visible', 'true')
+      naviglioEl.setAttribute('animation', {
+        property: 'scale',
+        to: '0.3 0.3 0.3',
+        easing: 'easeOutElastic',
+        dur: 800,
+      })
+    })
+
+    // ==========================================
+    // 2. SPAWN DELLA VECCHIETTA
+    // ==========================================
+    const nonnaEl = document.createElement('a-entity')
+    nonnaEl.setAttribute('gltf-model', '#nonna-model') 
+    
+    nonnaEl.setAttribute('position', {
+      x: touchPoint.x + 2,
+      y: touchPoint.y, 
+      z: touchPoint.z + 2,
+    })
+    
+    nonnaEl.setAttribute('rotation', '0 -30 0') 
+    nonnaEl.setAttribute('scale', '0.0001 0.0001 0.0001')
+    nonnaEl.setAttribute('visible', 'false')
+    nonnaEl.setAttribute('shadow', { receive: true, cast: true }) 
+    nonnaEl.setAttribute('animation-mixer', 'clip: *; loop: repeat; crossFadeDuration: 0.2')
+    nonnaEl.setAttribute('proximity-trigger', 'distance: 30')
+
+    this.el.sceneEl.appendChild(nonnaEl)
+
+    nonnaEl.addEventListener('model-loaded', () => {
+      nonnaEl.setAttribute('visible', 'true')
       
-      // La posizioniamo 1 metro a destra e 1 metro più vicina a noi rispetto al centro del naviglio
-      nonnaEl.setAttribute('position', {
-        x: touchPoint.x + 2,
-        y: touchPoint.y, // Lei sta SUL terreno, niente offset negativo!
-        z: touchPoint.z + 2,
-      })
       
-      // La facciamo guardare verso di noi (o incliniamo in base a come è esportato il modello)
-      nonnaEl.setAttribute('rotation', '0 -30 0') 
-      nonnaEl.setAttribute('scale', '0.0001 0.0001 0.0001')
-      nonnaEl.setAttribute('visible', 'false')
-      nonnaEl.setAttribute('shadow', { receive: true, cast: true }) 
-      nonnaEl.setAttribute('animation-mixer', 'clip: *; loop: repeat; crossFadeDuration: 0.2')
-
-      this.el.sceneEl.appendChild(nonnaEl)
-
-      nonnaEl.addEventListener('model-loaded', () => {
-        nonnaEl.setAttribute('visible', 'true')
-        
-        // Animazione di comparsa con leggero ritardo per effetto "Wow"
-        nonnaEl.setAttribute('animation', {
-          property: 'scale',
-          to: '0.07 0.07 0.07', // Adatta questo valore in base a quanto è grande il tuo .glb!
-          easing: 'easeOutElastic',
-          dur: 800,
-          delay: 300 // Appare 300ms dopo il naviglio
-        })
-
-        // Mandiamo la notifica a Vue quando TUTTA la scena è caricata
-        window.parent.postMessage({ type: 'MODEL_PLACED' }, '*')
+      nonnaEl.setAttribute('animation', {
+        property: 'scale',
+        to: '0.07 0.07 0.07', 
+        easing: 'easeOutElastic',
+        dur: 800,
+        delay: 1000 
       })
 
+      window.parent.postMessage({ type: 'MODEL_PLACED' }, '*')
+      })
     })
   },
 })
 
-    // ====================================================================================
+AFRAME.registerComponent('proximity-trigger',{
+  schema: {
+    distance: { type: 'number', default: 4.5 },
+  },
+
+  init: function () {
+    const THREE = window.THREE;
+
+    this.camera = document.getElementById('camera')
+    this.isNear = false 
+
+    this.cameraPos = new THREE.Vector3()
+    this.avatarPos = new THREE.Vector3()
+  },
+
+  tick: function () {
+    if (!this.camera) return
+
+    // 1. Prendi la posizione reale della telecamera (il telefono)
+    this.camera.object3D.getWorldPosition(this.cameraPos)
+    
+    // 2. Prendi la posizione reale dell'avatar (la vecchietta)
+    this.el.object3D.getWorldPosition(this.avatarPos)
+
+    // 3. Calcola la distanza SOLO sugli assi X e Z (ignoriamo l'altezza Y)
+    const dx = this.cameraPos.x - this.avatarPos.x
+    const dz = this.cameraPos.z - this.avatarPos.z
+    const dist = Math.sqrt(dx * dx + dz * dz)
+
+    // 4. Controlla se abbiamo superato la soglia (es. 2 metri)
+    if (dist < this.data.distance) {
+      if (!this.isNear) {
+        this.isNear = true
+        window.parent.postMessage({ type: 'USER_NEAR_MODEL' }, '*')
+      }
+    } else {
+      if (this.isNear) {
+        this.isNear = false
+        // Sei appena uscito dall'area! Manda il messaggio per nascondere la UI
+      }
+    }
+  }
+})
+
+  // ====================================================================================
   // RENDER AND ANIMATE WATER
   // ====================================================================================
 
@@ -188,8 +227,6 @@ AFRAME.registerComponent('naviglio-water', {
                     this.water.visible = true; // Show water (now it's underneath)
                 }
               });
-              // -----------------------------------------
-
             }
           });
         });
