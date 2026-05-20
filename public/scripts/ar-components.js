@@ -20,11 +20,11 @@ AFRAME.registerComponent('tap-place', {
     // ==========================================
     const naviglioEl = document.createElement('a-entity')
     naviglioEl.setAttribute('position', {
-      x: touchPoint.x,
-      y: touchPoint.y - 2, 
-      z: touchPoint.z,
+      x: touchPoint.x+0,
+      y: touchPoint.y, 
+      z: touchPoint.z-50,
     })
-    naviglioEl.setAttribute('rotation', '0 60 0')
+    naviglioEl.setAttribute('rotation', '0 310 0')
     naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
     naviglioEl.setAttribute('visible', 'false')
     naviglioEl.setAttribute('gltf-model', '#naviglioModel')
@@ -52,7 +52,7 @@ AFRAME.registerComponent('tap-place', {
       naviglioEl.setAttribute('visible', 'true')
       naviglioEl.setAttribute('animation', {
         property: 'scale',
-        to: '0.3 0.3 0.3',
+        to: '2 2 2',
         easing: 'easeOutElastic',
         dur: 800,
       })
