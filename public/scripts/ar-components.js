@@ -27,7 +27,7 @@ AFRAME.registerComponent('tap-place', {
     naviglioEl.setAttribute('rotation', '0 310 0')
     naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
     naviglioEl.setAttribute('visible', 'false')
-    naviglioEl.setAttribute('gltf-model', '#naviglioModel')
+    naviglioEl.setAttribute('gltf-model', '#poiModel')
     naviglioEl.setAttribute('shadow', { receive: false })
     naviglioEl.setAttribute('naviglio-water', '')
 
@@ -39,6 +39,7 @@ AFRAME.registerComponent('tap-place', {
       // Add holdout effect
       mesh.traverse((node) => {
         if (node.isMesh) {
+          console.log(node.name)
           node.castShadow = true
           node.receiveShadow = true
           if (node.material?.name === 'Mat_Holdout') {
@@ -171,9 +172,9 @@ AFRAME.registerComponent('naviglio-water', {
           if (!mesh) return;
           const { Water } = await import('/scripts/Water.js');
 
-          // Search for mesh "Acqua"
+          // Search for mesh "Water"
           mesh.traverse((child) => {
-            if (child.isMesh && child.name === 'Acqua') {
+            if (child.isMesh && (child.name === 'Acqua' || child.name === 'Water')) {
               
               const waterGeometry = child.geometry;
 

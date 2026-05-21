@@ -24,7 +24,7 @@
     <!-- A-Frame Scene -->
     <iframe 
       ref="iframeRef"
-      src="/ar-scene.html" 
+      :src="iframeSrc" 
       allow="camera; gyroscope; accelerometer; magnetometer; xr-spatial-tracking; microphone;"
       class="absolute top-0 left-0 w-full h-full border-none z-0"
     ></iframe>
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted, ref } from 'vue'
+  import { onMounted, onUnmounted, ref, computed } from 'vue'
   import { useArStore } from '~/stores/arState'
 
   const arStore = useArStore()
@@ -41,6 +41,13 @@
   const waterVisible = ref(false)
   const sceneReady = ref(false)
   const iframeRef = ref<HTMLIFrameElement | null>(null)
+
+  // Pass POI id as query string
+  const iframeSrc = computed(() => {
+    const poiId = arStore.selectedPoi?.id
+    if (!poiId) return '/ar-scene.html'
+    return `/ar-scene.html?poi=${poiId}`
+  })
 
   const triggerWater = () => {
     waterVisible.value = true

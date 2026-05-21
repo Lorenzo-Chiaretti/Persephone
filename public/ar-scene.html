@@ -12,7 +12,19 @@
     </head>
     
     <body>
-        <script src="/scripts/ar-components.js?v=2"></script>
+        <script>
+          // Read POI id from query string and sets model src
+          // before A-Frame initializes the scene, to avoid race condition.
+          // Fallback to 'via-senato' if missing parameter.
+          const _poiId = new URLSearchParams(window.location.search).get('poi') || 'via-senato'
+          document.write(
+            '<a-assets>' +
+            '  <a-asset-item id="poiModel" src="/models/' + _poiId + '.glb"></a-asset-item>' +
+            '</a-assets>'
+          )
+        </script>
+
+        <script src="/scripts/ar-components.js"></script>
 
         <a-scene
             notify-ready
@@ -24,7 +36,6 @@
             xrconfig
         >
             <a-assets>
-                <a-asset-item id="naviglioModel" src="/models/naviglio.glb"></a-asset-item>
                 <!-- <a-asset-item id="nonna-model" src="/models/vecchietta.glb"></a-asset-item> -->
                 <a-asset-item id="nonna-model" src="/models/vecchietta_danzante.glb"></a-asset-item>
             </a-assets>
