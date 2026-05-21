@@ -34,7 +34,7 @@
           {{ $t('scrollHint') }}
         </p>
         <button
-          class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ff3b30] via-[#ff453a] to-[#ff7a00] hover:brightness-110 active:scale-95 text-white py-4 rounded-2xl shadow-[0_4px_20px_rgba(255,59,48,0.35)] hover:shadow-[0_6px_25px_rgba(255,59,48,0.5)] font-['Inter'] font-bold text-[15px] transition-all cursor-pointer"
+          class="w-full flex items-center justify-center gap-2 bg-[#2071c1] hover:bg-[#1a5b9c] active:scale-95 text-white py-4 rounded-2xl shadow-lg font-['Inter'] font-bold text-[15px] transition-all cursor-pointer"
           @click="emit('start-ar')"
         >
           <svg
@@ -64,7 +64,7 @@
         "
       >
         <button
-          class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ff3b30] via-[#ff453a] to-[#ff7a00] hover:brightness-110 active:scale-95 text-white py-4 rounded-2xl shadow-[0_4px_20px_rgba(255,59,48,0.35)] hover:shadow-[0_6px_25px_rgba(255,59,48,0.5)] font-['Inter'] font-bold text-[15px] transition-all cursor-pointer mb-7"
+          class="w-full flex items-center justify-center gap-2 bg-[#2071c1] hover:bg-[#1a5b9c] active:scale-95 text-white py-4 rounded-2xl shadow-lg font-['Inter'] font-bold text-[15px] transition-all cursor-pointer mb-7"
           @click="emit('start-ar')"
         >
           <svg
