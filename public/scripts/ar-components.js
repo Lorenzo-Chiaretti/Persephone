@@ -39,6 +39,7 @@ AFRAME.registerComponent('tap-place', {
       // Add holdout effect
       mesh.traverse((node) => {
         if (node.isMesh) {
+          console.log(node.name)
           node.castShadow = true
           node.receiveShadow = true
           if (node.material?.name === 'Mat_Holdout') {
@@ -173,7 +174,7 @@ AFRAME.registerComponent('naviglio-water', {
 
           // Search for mesh "Water"
           mesh.traverse((child) => {
-            if (child.isMesh && child.name === 'Water') {
+            if (child.isMesh && (child.name === 'Acqua' || child.name === 'Water')) {
               
               const waterGeometry = child.geometry;
 
