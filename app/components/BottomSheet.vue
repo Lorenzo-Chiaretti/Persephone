@@ -1,6 +1,6 @@
 <template>
   <div
-    class="absolute left-0 right-0 z-20 flex flex-col"
+    class="absolute left-0 right-0 z-20 flex flex-col pb-[env(safe-area-inset-bottom,0px)]"
     :style="sheetStyle"
     style="bottom: 0; touch-action: none"
   >
@@ -316,7 +316,7 @@ const { t } = useI18n()
 type SnapConfig = { type: 'px' | 'vh'; value: number }
 
 const SNAP_CONFIGS: SnapConfig[] = [
-  { type: 'px', value: 120 },
+  { type: 'px', value: 160 },
   { type: 'vh', value: 0.92 }
 ]
 
