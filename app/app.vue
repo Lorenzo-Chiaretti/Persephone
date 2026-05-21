@@ -9,8 +9,10 @@ import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
 import { useLocationTracker } from '~/composables/useLocationTracker'
 import { useAppStore } from '~/stores/appState'
+import { useAiNonna } from '~/utils/aiNonna'
 
 const appStore = useAppStore()
+const { warmupAudio } = useAiNonna()
 
 const arStore = useArStore()
 const { locale, setLocale } = useI18n()
@@ -25,6 +27,7 @@ const showOnboarding = ref(false)
 // START AR: risolve il POI tramite GPS, poi monta ArExperience + NonnaAROverlay
 // ====================================================================================
 const startAr = async () => {
+  warmupAudio() // Sblocca l'audio su iOS/Safari fin dal primo click
   arStore.startLoading()
 
   try {
@@ -55,6 +58,7 @@ const toggleLang = () => {
 }
 
 const handleOnboardingClose = () => {
+  warmupAudio() // Sblocca l'audio anche qui per sicurezza
   showOnboarding.value = false
   // L'utente ha (sperabilmente) accettato i permessi. Facciamo partire il GPS globale!
   startTracking()

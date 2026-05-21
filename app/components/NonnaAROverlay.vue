@@ -224,7 +224,7 @@
 
           <div class="flex items-center gap-2">
             <button
-              @click="toggleChatMode"
+              @click="handleToggleChatMode"
               class="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-white text-[13px] font-medium backdrop-blur-md border transition-all active:scale-95 whitespace-nowrap"
               :class="
                 isChatMode
@@ -449,7 +449,8 @@ const {
   toggleChatMode,
   chatHistory,
   isNearNonna,
-  currentLang
+  currentLang,
+  warmupAudio
 } = useAiNonna()
 
 const debugPois = [
@@ -506,10 +507,16 @@ const agentStatusClass = computed(() => {
 
 const handleSendText = async () => {
   if (!manualText.value.trim()) return
+  warmupAudio() // Unlock audio on mobile Safari
   const text = manualText.value
   manualText.value = ''
   currentLang.value = locale.value
   await processMessage(text)
+}
+
+const handleToggleChatMode = () => {
+  warmupAudio() // Unlock audio on mobile Safari
+  toggleChatMode()
 }
 
 const handleExit = () => {
@@ -519,6 +526,7 @@ const handleExit = () => {
 
 const testPoi = async (id: string) => {
   if (!debugPois.find((p) => p.id === id)) return
+  warmupAudio() // Unlock audio on mobile Safari
   arStore.selectedPoi = { id }
   isNearNonna.value = true
   showDebugPanel.value = false

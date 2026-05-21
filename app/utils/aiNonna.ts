@@ -3,6 +3,9 @@
 import { ref, onUnmounted } from 'vue'
 import { useArStore } from '~/stores/arState'
 
+// Singleton AudioContext — va creato/ripreso in risposta a un gesto utente
+let audioCtx: AudioContext | null = null
+
 export const useAiNonna = () => {
   const arStore = useArStore()
   const isListening = ref(false)
@@ -14,6 +17,39 @@ export const useAiNonna = () => {
 
   const currentLang = ref<string>('it')
   const currentPoiLabel = ref<string>('')
+
+  const getAudioContext = (): AudioContext => {
+    if (!audioCtx || audioCtx.state === 'closed') {
+      const AudioCtxClass = (window as any).AudioContext || (window as any).webkitAudioContext
+      audioCtx = new AudioCtxClass()
+    }
+    // Su iOS il contesto viene sospeso se non c'è interazione: lo riprendiamo
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume()
+    }
+    return audioCtx
+  }
+
+  /**
+   * Sblocca l'audio su iOS/Safari. 
+   * Va chiamata all'interno di un evento scatenato dall'utente (click, touch).
+   */
+  const warmupAudio = () => {
+    try {
+      const ctx = getAudioContext()
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+      // Eseguiamo un piccolissimo suono silenzioso per "svegliare" l'hardware
+      const buffer = ctx.createBuffer(1, 1, 22050)
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+      source.connect(ctx.destination)
+      source.start(0)
+    } catch (e) {
+      console.warn('Audio warmup failed:', e)
+    }
+  }
 
   const toggleChatMode = () => {
     isChatMode.value = !isChatMode.value
@@ -29,20 +65,6 @@ export const useAiNonna = () => {
 
   let socket: WebSocket | null = null
   let mediaRecorder: MediaRecorder | null = null
-
-  // Singleton AudioContext — va creato/ripreso in risposta a un gesto utente
-  let audioCtx: AudioContext | null = null
-
-  const getAudioContext = (): AudioContext => {
-    if (!audioCtx || audioCtx.state === 'closed') {
-      audioCtx = new AudioContext()
-    }
-    // Su iOS il contesto viene sospeso se non c'è interazione: lo riprendiamo
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume()
-    }
-    return audioCtx
-  }
 
   // ─── Pulizia hardware e connessioni ────────────────────────────────────────
 
@@ -225,7 +247,6 @@ export const useAiNonna = () => {
 
   onUnmounted(() => {
     stopAll()
-    audioCtx?.close()
   })
 
   return {
@@ -239,6 +260,7 @@ export const useAiNonna = () => {
     isNearNonna,
     currentPoiLabel,
     currentLang,
-    stopAll
+    stopAll,
+    warmupAudio
   }
 }
