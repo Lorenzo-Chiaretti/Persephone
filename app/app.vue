@@ -4,22 +4,60 @@ import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
 import OnboardingModal from './components/OnboardingModal.vue'
 import BottomSheet from './components/BottomSheet.vue'
+import ArExperience from './components/ArExperience.vue'
 import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
+import { useLocationTracker } from '~/composables/useLocationTracker'
+import { useAppStore } from '~/stores/appState'
+
+const appStore = useAppStore()
 
 const arStore = useArStore()
 const { locale, setLocale } = useI18n()
+
+const { currentPoi, locationError, startTracking } = useLocationTracker()
 
 const errorMessage = ref('')
 const arCanvasBridge = ref<any>(null)
 const showOnboarding = ref(false)
 
-const startArSessionButton = async () => {
-  await arCanvasBridge.value?.startArSession()
+// ====================================================================================
+// START AR: risolve il POI tramite GPS, poi monta ArExperience + NonnaAROverlay
+// ====================================================================================
+const startAr = async () => {
+  arStore.startLoading()
+
+  try {
+    if (locationError.value) {
+      arStore.triggerError(`Errore GPS: ${locationError.value.message}`)
+      return
+    }
+
+    if (currentPoi.value) {
+      console.log('POI TROVATO: ', currentPoi.value.id)
+      arStore.selectedPoi = { id: currentPoi.value.id }
+    } else {
+      // Nessun POI nelle vicinanze: l'esperienza parte comunque,
+      // selectedPoi resterà null finché GPS non risolve (o in debug tramite debug panel)
+      console.warn('Nessun POI rilevato nelle vicinanze')
+    }
+
+    // Lo stato LOADING è già settato: ArExperience e NonnaAROverlay si montano
+    // perché !arStore.isIdle === true. ArExperience setterà SCANNING/ACTIVE
+    // tramite i propri postMessage handler.
+  } catch (e) {
+    arStore.triggerError('Impossibile avviare la sessione AR')
+  }
 }
 
 const toggleLang = () => {
   setLocale(locale.value === 'it' ? 'en' : 'it')
+}
+
+const handleOnboardingClose = () => {
+  showOnboarding.value = false
+  // L'utente ha (sperabilmente) accettato i permessi. Facciamo partire il GPS globale!
+  startTracking()
 }
 
 onMounted(() => {
@@ -38,7 +76,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="relative w-full h-full bg-[#0f0e1a] overflow-hidden">
+  <!-- AR EXPERIENCE -->
+  <ClientOnly>
+    <template v-if="!arStore.isIdle">
+      <ArExperience />
+      <NonnaAROverlay />
+    </template>
+  </ClientOnly>
+
+  <main
+    v-if="arStore.isIdle"
+    class="relative w-full h-full bg-[#0f0e1a] overflow-hidden"
+  >
     <!-- ── Mappa a tutto schermo ── -->
     <div class="absolute inset-0 z-0">
       <Mapbox />
@@ -141,18 +190,8 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- ── AR Canvas ── -->
-    <ClientOnly>
-      <NonnaAROverlay :active="arStore.isActive" ref="arCanvasBridge" />
-    </ClientOnly>
-
     <!-- ── Bottom Sheet ── -->
-     <div v-if="!arStore.isActive">
-        <BottomSheet
-          @start-ar="startArSessionButton"
-          @open-onboarding="showOnboarding = true"
-        />
-      </div>
+    <BottomSheet @start-ar="startAr" @open-onboarding="showOnboarding = true" />
 
     <!-- ── Errori ── -->
     <div
@@ -162,9 +201,18 @@ onMounted(() => {
       <p class="text-red-600 text-sm font-bold">{{ errorMessage }}</p>
     </div>
 
+    <div
+      v-if="locationError"
+      class="absolute top-36 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-lg border-l-4 border-yellow-500 pointer-events-auto"
+    >
+      <p class="text-yellow-700 text-sm font-bold">
+        Attenzione: GPS disattivato. L'esperienza interattiva sarà limitata.
+      </p>
+    </div>
+
     <!-- ── Overlays ── -->
     <PoiDetail />
-    <OnboardingModal v-if="showOnboarding" @close="showOnboarding = false" />
+    <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
   </main>
 </template>
 

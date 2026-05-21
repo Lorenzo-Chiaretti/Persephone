@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <!-- 8THWALL AND A-FRAME SCRIPTS --> 
+        <script crossorigin="anonymous" src="/external/scripts/8frame-1.5.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" crossorigin="anonymous" async="true" data-preload-chunks="slam"></script>
+
+    </head>
+    
+    <body>
+        <script src="/scripts/ar-components.js?v=2"></script>
+
+        <a-scene
+            notify-ready
+            tap-place
+            xrextras-loading
+            xrextras-runtime-error
+            renderer="colorManagement: true"
+            xrweb="allowedDevices: any;"
+            xrconfig
+        >
+            <a-assets>
+                <a-asset-item id="naviglioModel" src="/models/naviglio.glb"></a-asset-item>
+                <!-- <a-asset-item id="nonna-model" src="/models/vecchietta.glb"></a-asset-item> -->
+                <a-asset-item id="nonna-model" src="/models/vecchietta_danzante.glb"></a-asset-item>
+            </a-assets>
+
+            <a-camera
+                id="camera"
+                position="0 8 8"
+                raycaster="objects: .cantap"
+                cursor="
+                fuse: false; 
+                rayOrigin: mouse;">
+            </a-camera>
+
+            <a-entity
+                light="type: directional; intensity: 0.8; castShadow: true"
+                position="1 4.3 2.5"
+            >
+            </a-entity>
+
+            <a-light type="ambient" intensity="0.5"></a-light>
+
+            <!-- uses cantap class to allow the ground to be clicked -->
+            <a-box
+                id="ground"
+                class="cantap"
+                scale="1000 2 1000"
+                position="0 -0.99 0"
+                material="shader: shadow; transparent: true; opacity: 0.4"
+                shadow
+            >
+            </a-box>
+        </a-scene>
+    </body>
+</html>

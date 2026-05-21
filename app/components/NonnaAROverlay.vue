@@ -95,16 +95,13 @@
   </div>
 
   <div
-    v-show="!arStore.isIdle"
-    class="relative w-full h-screen overflow-hidden bg-black"
+    class="relative w-full h-screen overflow-hidden pointer-events-none"
   >
-    <canvas ref="canvasRef" class="block w-full h-full touch-pan-y" />
-
-    <div ref="overlayRef" class="absolute inset-0 pointer-events-none">
+    <div class="absolute inset-0 pointer-events-none">
       <div
         id="ar-ui-root"
         v-if="arStore.isActive"
-        class="fixed inset-0 z-50 flex flex-col justify-between pointer-events-auto"
+        class="fixed inset-0 z-50 flex flex-col justify-between pointer-events-none"
       >
         <!-- TOP: Status + AI Response -->
         <div
@@ -335,7 +332,7 @@
       <Transition name="fade">
         <div
           v-if="arStore.isLoading"
-          class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 pointer-events-auto backdrop-blur-sm"
+          class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 pointer-events-none backdrop-blur-sm"
         >
           <div
             class="w-11 h-11 rounded-full border-4 border-white/15 border-t-[#2071c1] animate-spin"
@@ -346,9 +343,10 @@
             {{ $t('arLoading') }}
           </p>
         </div>
-
+        </Transition>
+        <Transition name="fade">
         <div
-          v-else-if="arStore.isScanning"
+          v-if="arStore.isScanning"
           class="absolute inset-0 flex flex-col items-center justify-center gap-8 pointer-events-none"
         >
           <div class="relative w-36 h-36 flex items-center justify-center">
@@ -386,11 +384,15 @@
             <span>{{ $t('arScan') }}</span>
           </div>
         </div>
-
+        </Transition>
+        <Transition name="fade">
         <div
-          v-else-if="arStore.isError"
-          class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+90px)] left-1/2 -translate-x-1/2 min-w-[280px] w-max max-w-[calc(100vw-32px)] flex items-start gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-red-500/15 pointer-events-auto"
+          v-if="arStore.isError"
+          class="absolute inset-0 pointer-events-none"
         >
+                  <div
+            class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+90px)] left-1/2 -translate-x-1/2 min-w-[280px] w-max max-w-[calc(100vw-32px)] flex items-start gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-red-500/15 pointer-events-auto"
+          >
           <svg
             class="shrink-0 text-red-500"
             width="20"
@@ -424,6 +426,7 @@
           >
             {{ $t('arRetry') }}
           </button>
+          </div>
         </div>
       </Transition>
     </div>
@@ -433,7 +436,7 @@
 <script setup lang="ts">
 import { useArStore } from '~/stores/arState'
 import { useAiNonna } from '~/utils/aiNonna'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const arStore = useArStore()
 const { locale } = useI18n()
@@ -464,6 +467,22 @@ onMounted(() => {
     isDebugMode.value = new URLSearchParams(window.location.search).has('debug')
   }
 })
+
+// ====================================================================================
+// HOOK PER FEATURE FUTURA: attivazione chat alla prossimità del modello
+// Quando arStore.isNearModel diventa true (segnale USER_NEAR_MODEL dall'iframe),
+// qui si potrà avviare automaticamente startContinuousListening.
+// ====================================================================================
+watch(
+  () => arStore.isNearModel,
+  (isNear) => {
+    if (isNear && arStore.selectedPoi) {
+      // TODO: attivare la chat automaticamente quando l'utente si avvicina al modello
+      // await startContinuousListening(locale.value)
+      console.log('User is near the model — chat can be activated here')
+    }
+  }
+)
 
 const agentStatus = computed<
   'idle' | 'listening' | 'processing' | 'speaking' | 'error'
@@ -508,8 +527,6 @@ const testPoi = async (id: string) => {
   // Start listening immediately without forcing a greeting
   await startContinuousListening(locale.value)
 }
-
-defineExpose({ startArSession: async () => arStore.setLocalized() })
 </script>
 
 <style scoped>
