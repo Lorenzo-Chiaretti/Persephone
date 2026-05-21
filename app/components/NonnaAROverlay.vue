@@ -224,7 +224,7 @@
 
           <div class="flex items-center gap-2">
             <button
-              @click="isChatMode = !isChatMode"
+              @click="toggleChatMode"
               class="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-white text-[13px] font-medium backdrop-blur-md border transition-all active:scale-95 whitespace-nowrap"
               :class="
                 isChatMode
@@ -310,7 +310,7 @@
               </svg>
             </button>
             <button
-              @click="arStore.resetSession"
+              @click="handleExit"
               class="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-gray-800/80 border border-white/10 text-white/90 text-[13px] font-medium backdrop-blur-md transition-all active:scale-95 active:bg-gray-800"
             >
               <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -421,7 +421,7 @@
             <p class="text-[13px] text-gray-600">{{ arStore.errorMessage }}</p>
           </div>
           <button
-            @click="arStore.resetSession"
+            @click="handleExit"
             class="self-center shrink-0 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-600 text-xs font-semibold hover:bg-red-500/20 transition-colors"
           >
             {{ $t('arRetry') }}
@@ -446,6 +446,7 @@ const {
   isListening,
   isSpeaking,
   isChatMode,
+  toggleChatMode,
   chatHistory,
   isNearNonna,
   currentLang
@@ -453,8 +454,8 @@ const {
 
 const debugPois = [
   { id: 'via-senato', label: 'Via Senato', desc: 'Naviglio della Martesana' },
-  { id: 'laghetto-marco', label: 'Laghetto', desc: 'Laghetto di S. Marco' },
-  { id: 'conca-fallata', label: 'Conca Fallata', desc: 'Conca leonardesca' }
+  { id: 'laghetto-san-marco', label: 'Laghetto San Marco', desc: 'Cuore commerciale' },
+  { id: 'laghetto-stefano', label: 'Laghetto S. Stefano', desc: 'Il porto del marmo' }
 ]
 
 const showDebugPanel = ref(false)
@@ -511,12 +512,19 @@ const handleSendText = async () => {
   await processMessage(text)
 }
 
+const handleExit = () => {
+  stopAll()
+  arStore.resetSession()
+}
+
 const testPoi = async (id: string) => {
   if (!debugPois.find((p) => p.id === id)) return
   arStore.selectedPoi = { id }
   isNearNonna.value = true
   showDebugPanel.value = false
   arStore.setLocalized()
+  
+  // Start listening immediately without forcing a greeting
   await startContinuousListening(locale.value)
 }
 </script>
