@@ -1,8 +1,100 @@
 <template>
   <!-- AR Layer & Overlay Wrappers -->
   <div
-    class="relative w-full h-screen overflow-hidden pointer-events-none"
+    v-show="!arStore.isIdle"
+    class="fixed inset-0 z-[60] pointer-events-none"
   >
+    <!-- Debug Panel -->
+    <Transition name="fade-slide">
+      <div
+        v-if="showDebugPanel"
+        class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+75px)] right-4 z-[9998] w60 bg-white/95 rounded-2xl shadow-xl backdrop-blur-xl border border-black/5 overflow-hidden pointer-events-auto"
+      >
+        <div class="flex items-center gap-2 p-3 border-b border-gray-200/50">
+          <div class="w-2 h-2 rounded-full bg-amber-400" />
+          <span
+            class="flex-1 text-xs font-semibold text-gray-700 tracking-wide"
+            >{{ $t('arDebugTitle') }}</span
+          >
+          <button
+            @click="showDebugPanel = false"
+            class="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors text-gray-700"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M2 2l10 10M12 2L2 12"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <p class="text-[11px] text-gray-500 px-3.5 pt-2 pb-1">
+          {{ $t('arDebugHint') }}
+        </p>
+        <div class="p-2 flex flex-col gap-1">
+          <button
+            v-for="poi in debugPois"
+            :key="poi.id"
+            @click="testPoi(poi.id)"
+            class="flex items-center gap-2.5 p-2.5 rounded-xl border-1.5 border-transparent hover:bg-blue-600/10 transition-colors text-left w-full"
+            :class="{
+              'bg-blue-600/10 border-blue-600/25':
+                arStore.selectedPoi?.id === poi.id
+            }"
+          >
+            <div
+              class="w-7 h-7 rounded-lg bg-blue-600/10 text-[#2071c1] flex items-center justify-center shrink-0"
+              :class="{
+                'bg-[#2071c1] text-white': arStore.selectedPoi?.id === poi.id
+              }"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M7 1C4.79 1 3 2.79 3 5c0 2.625 4 8 4 8s4-5.375 4-8c0-2.21-1.79-4-4-4z"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linejoin="round"
+                />
+                <circle
+                  cx="7"
+                  cy="5"
+                  r="1.2"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col">
+              <span class="text-sm font-semibold text-gray-800">{{
+                poi.label
+              }}</span>
+              <span class="text-[11px] text-gray-500 truncate">{{
+                poi.desc
+              }}</span>
+            </div>
+            <div
+              v-if="arStore.selectedPoi?.id === poi.id"
+              class="w-5 h-5 rounded-full bg-[#2071c1] text-white flex items-center justify-center shrink-0"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path
+                  d="M2 6l3 3 5-5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
+    </Transition>
+  </div>
+
+  <div class="relative w-full h-screen overflow-hidden pointer-events-none">
     <div class="absolute inset-0 pointer-events-none">
       <div
         id="ar-ui-root"
@@ -342,8 +434,8 @@
             {{ $t('arLoading') }}
           </p>
         </div>
-        </Transition>
-        <Transition name="fade">
+      </Transition>
+      <Transition name="fade">
         <div
           v-if="arStore.isScanning"
           class="absolute inset-0 flex flex-col items-center justify-center gap-8 pointer-events-none"
@@ -383,48 +475,50 @@
             <span>{{ $t('arScan') }}</span>
           </div>
         </div>
-        </Transition>
-        <Transition name="fade">
+      </Transition>
+      <Transition name="fade">
         <div
           v-if="arStore.isError"
           class="absolute inset-0 pointer-events-none"
         >
-                  <div
+          <div
             class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+90px)] left-1/2 -translate-x-1/2 min-w-[280px] w-max max-w-[calc(100vw-32px)] flex items-start gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-red-500/15 pointer-events-auto"
           >
-          <svg
-            class="shrink-0 text-red-500"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-          >
-            <circle
-              cx="10"
-              cy="10"
-              r="8.5"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M10 6.5V10.5M10 13.5h.01"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-red-700 mb-0.5">
-              {{ $t('arOops') }}
-            </p>
-            <p class="text-[13px] text-gray-600">{{ arStore.errorMessage }}</p>
-          </div>
-          <button
-            @click="handleExit"
-            class="self-center shrink-0 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-600 text-xs font-semibold hover:bg-red-500/20 transition-colors"
-          >
-            {{ $t('arRetry') }}
-          </button>
+            <svg
+              class="shrink-0 text-red-500"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+            >
+              <circle
+                cx="10"
+                cy="10"
+                r="8.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M10 6.5V10.5M10 13.5h.01"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-red-700 mb-0.5">
+                {{ $t('arOops') }}
+              </p>
+              <p class="text-[13px] text-gray-600">
+                {{ arStore.errorMessage }}
+              </p>
+            </div>
+            <button
+              @click="handleExit"
+              class="self-center shrink-0 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-600 text-xs font-semibold hover:bg-red-500/20 transition-colors"
+            >
+              {{ $t('arRetry') }}
+            </button>
           </div>
         </div>
       </Transition>
@@ -455,6 +549,21 @@ const {
   stopAll
 } = useAiNonna()
 
+const debugPois = [
+  { id: 'via-senato', label: 'Via Senato', desc: 'Naviglio della Martesana' },
+  {
+    id: 'laghetto-san-marco',
+    label: 'Laghetto San Marco',
+    desc: 'Cuore commerciale'
+  },
+  {
+    id: 'laghetto-stefano',
+    label: 'Laghetto S. Stefano',
+    desc: 'Il porto del marmo'
+  }
+]
+
+const showDebugPanel = ref(false)
 const manualText = ref('')
 
 // ====================================================================================
@@ -523,6 +632,17 @@ const handleExit = () => {
 
 const triggerWater = () => {
   arStore.waterVisible = true
+}
+
+const testPoi = async (id: string) => {
+  if (!debugPois.find((p) => p.id === id)) return
+  arStore.selectedPoi = { id }
+  isNearNonna.value = true
+  showDebugPanel.value = false
+  arStore.setLocalized()
+
+  // Start listening immediately without forcing a greeting
+  await startContinuousListening(locale.value)
 }
 </script>
 
