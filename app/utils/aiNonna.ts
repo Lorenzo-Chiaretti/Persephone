@@ -11,11 +11,70 @@ export const useAiNonna = () => {
   const chatHistory = ref<{ role: string; content: string }[]>([])
   const isNearNonna = ref(false)
   const shouldContinueListening = ref(false)
+  const isMuted = ref(false)
 
   const currentLang = ref<string>('it')
   const currentPoiLabel = ref<string>('')
 
+  const unlockAudio = () => {
+    // Configura la sessione audio per ignorare l'interruttore silenzioso di iOS
+    if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
+      try {
+        (navigator as any).audioSession.type = 'playback'
+        console.log('📱 AudioSession impostata su playback per bypassare il silenzioso.')
+      } catch (err) {
+        console.warn('Errore configurazione AudioSession:', err)
+      }
+    }
+
+    const ctx = getAudioContext()
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        // Riproduciamo un piccolissimo campione di silenzio per sbloccare l'audio hardware su iOS
+        const buffer = ctx.createBuffer(1, 1, 22050)
+        const source = ctx.createBufferSource()
+        source.buffer = buffer
+        source.connect(ctx.destination)
+        source.start(0)
+        console.log('🔊 AudioContext sbloccato con successo per iOS.')
+      }).catch((err) => {
+        console.error('Impossibile sbloccare l\'AudioContext:', err)
+      })
+    }
+  }
+
+  const toggleMute = () => {
+    unlockAudio()
+    isMuted.value = !isMuted.value
+    if (isMuted.value) {
+      // Disattiva subito microfono e socket Deepgram
+      if (mediaRecorder) {
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop()
+        }
+        mediaRecorder.stream.getTracks().forEach((track) => track.stop())
+        mediaRecorder = null
+      }
+
+      if (socket) {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.close()
+        }
+        socket = null
+      }
+
+      isListening.value = false
+      console.log('🔇 Microfono silenziato.')
+    } else {
+      console.log('🔊 Microfono riattivato.')
+      if (!isSpeaking.value && !isChatMode.value) {
+        startContinuousListening(currentLang.value)
+      }
+    }
+  }
+
   const toggleChatMode = () => {
+    unlockAudio()
     isChatMode.value = !isChatMode.value
     if (isChatMode.value) {
       // Se passiamo a tastiera, spegniamo subito microfono e socket
@@ -48,6 +107,7 @@ export const useAiNonna = () => {
 
   const stopAll = () => {
     shouldContinueListening.value = false
+    isMuted.value = false
     if (mediaRecorder) {
       if (mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop()
@@ -117,7 +177,7 @@ export const useAiNonna = () => {
       return false
     } finally {
       isSpeaking.value = false
-      if (!isChatMode.value && shouldContinueListening.value) {
+      if (!isChatMode.value && shouldContinueListening.value && !isMuted.value) {
         setTimeout(() => startContinuousListening(currentLang.value), 300)
       }
     }
@@ -157,10 +217,26 @@ export const useAiNonna = () => {
     currentLang.value = lang
     shouldContinueListening.value = true
 
-    if (isSpeaking.value || isChatMode.value || isListening.value) return
+    if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value) return
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // Imposta la sessione in modalità di registrazione e riproduzione su iOS
+      if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
+        try {
+          (navigator as any).audioSession.type = 'play-and-record'
+          console.log('📱 AudioSession impostata su play-and-record per il microfono.')
+        } catch (err) {
+          console.warn('Errore configurazione AudioSession per microfono:', err)
+        }
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: false // Disattiva il guadagno automatico per ridurre i rumori in sottofondo
+        }
+      })
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
       console.log('🔑 Token ricevuto dal server:', token)
 
@@ -239,6 +315,9 @@ export const useAiNonna = () => {
     isNearNonna,
     currentPoiLabel,
     currentLang,
-    stopAll
+    stopAll,
+    isMuted,
+    toggleMute,
+    unlockAudio
   }
 }
