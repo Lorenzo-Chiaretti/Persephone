@@ -21,6 +21,12 @@ const errorMessage = ref('')
 const arCanvasBridge = ref<any>(null)
 const showOnboarding = ref(false)
 
+const showHistory = ref(false)
+
+const handleOpenHistory = () => {
+  showHistory.value = true
+}
+
 // ====================================================================================
 // START AR: risolve il POI tramite GPS, poi monta ArExperience + NonnaAROverlay
 // ====================================================================================
@@ -101,7 +107,6 @@ onMounted(() => {
       <div
         class="mx-4 mt-3 flex items-center justify-between pointer-events-auto"
       >
-        <!-- Logo + nome -->
         <div
           class="flex items-center gap-2.5 bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg"
         >
@@ -113,13 +118,23 @@ onMounted(() => {
           </span>
         </div>
 
-        <!-- Language toggle + Onboarding button -->
         <div class="flex items-center gap-2">
+          
+          <button
+            class="bg-white/90 backdrop-blur-md rounded-2xl w-10 h-10 shadow-lg flex items-center justify-center cursor-pointer hover:bg-white text-[#2071c1] transition-colors"
+            @click="handleOpenHistory"
+            aria-label="Storia"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </button>
+
           <button
             class="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-white transition-colors"
             @click="toggleLang"
           >
-            <!-- IT flag SVG -->
             <svg
               v-if="locale === 'it'"
               width="20"
@@ -132,7 +147,6 @@ onMounted(() => {
               <rect width="6.67" height="14" fill="#009246" />
               <rect x="6.67" width="6.67" height="14" fill="#FFFFFF" />
             </svg>
-            <!-- EN flag SVG -->
             <svg
               v-else
               width="20"
@@ -166,7 +180,6 @@ onMounted(() => {
             </span>
           </button>
 
-          <!-- Onboarding button -->
           <button
             class="bg-white/90 backdrop-blur-md rounded-2xl w-10 h-10 shadow-lg flex items-center justify-center cursor-pointer hover:bg-white transition-colors"
             @click="showOnboarding = true"
@@ -191,7 +204,12 @@ onMounted(() => {
     </div>
 
     <!-- ── Bottom Sheet ── -->
-    <BottomSheet @start-ar="startAr" @open-onboarding="showOnboarding = true" />
+    <div v-if="!arStore.isActive">
+      <BottomSheet
+        @start-ar="startAr"
+        @open-onboarding="showOnboarding = true"
+      />
+    </div>
 
     <!-- ── Errori ── -->
     <div
@@ -213,6 +231,7 @@ onMounted(() => {
     <!-- ── Overlays ── -->
     <PoiDetail />
     <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
+    <HistoryModal v-if="showHistory" @close="showHistory = false" />
   </main>
 </template>
 
