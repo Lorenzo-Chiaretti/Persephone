@@ -94,9 +94,7 @@
     </Transition>
   </div>
 
-  <div
-    class="relative w-full h-screen overflow-hidden pointer-events-none"
-  >
+  <div class="relative w-full h-screen overflow-hidden pointer-events-none">
     <div class="absolute inset-0 pointer-events-none">
       <div
         id="ar-ui-root"
@@ -322,7 +320,7 @@
                   stroke-linejoin="round"
                 />
               </svg>
-              <span>{{ $t('arExit') }}</span>
+              <span>{{ $t('ExitAr') }}</span>
             </button>
           </div>
         </div>
@@ -343,8 +341,8 @@
             {{ $t('arLoading') }}
           </p>
         </div>
-        </Transition>
-        <Transition name="fade">
+      </Transition>
+      <Transition name="fade">
         <div
           v-if="arStore.isScanning"
           class="absolute inset-0 flex flex-col items-center justify-center gap-8 pointer-events-none"
@@ -384,48 +382,50 @@
             <span>{{ $t('arScan') }}</span>
           </div>
         </div>
-        </Transition>
-        <Transition name="fade">
+      </Transition>
+      <Transition name="fade">
         <div
           v-if="arStore.isError"
           class="absolute inset-0 pointer-events-none"
         >
-                  <div
+          <div
             class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+90px)] left-1/2 -translate-x-1/2 min-w-[280px] w-max max-w-[calc(100vw-32px)] flex items-start gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-red-500/15 pointer-events-auto"
           >
-          <svg
-            class="shrink-0 text-red-500"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-          >
-            <circle
-              cx="10"
-              cy="10"
-              r="8.5"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M10 6.5V10.5M10 13.5h.01"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-red-700 mb-0.5">
-              {{ $t('arOops') }}
-            </p>
-            <p class="text-[13px] text-gray-600">{{ arStore.errorMessage }}</p>
-          </div>
-          <button
-            @click="handleExit"
-            class="self-center shrink-0 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-600 text-xs font-semibold hover:bg-red-500/20 transition-colors"
-          >
-            {{ $t('arRetry') }}
-          </button>
+            <svg
+              class="shrink-0 text-red-500"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+            >
+              <circle
+                cx="10"
+                cy="10"
+                r="8.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M10 6.5V10.5M10 13.5h.01"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-red-700 mb-0.5">
+                {{ $t('arOops') }}
+              </p>
+              <p class="text-[13px] text-gray-600">
+                {{ arStore.errorMessage }}
+              </p>
+            </div>
+            <button
+              @click="handleExit"
+              class="self-center shrink-0 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-600 text-xs font-semibold hover:bg-red-500/20 transition-colors"
+            >
+              {{ $t('arRetry') }}
+            </button>
           </div>
         </div>
       </Transition>
@@ -449,13 +449,22 @@ const {
   toggleChatMode,
   chatHistory,
   isNearNonna,
-  currentLang
+  currentLang,
+  stopAll
 } = useAiNonna()
 
 const debugPois = [
   { id: 'via-senato', label: 'Via Senato', desc: 'Naviglio della Martesana' },
-  { id: 'laghetto-san-marco', label: 'Laghetto San Marco', desc: 'Cuore commerciale' },
-  { id: 'laghetto-stefano', label: 'Laghetto S. Stefano', desc: 'Il porto del marmo' }
+  {
+    id: 'laghetto-san-marco',
+    label: 'Laghetto San Marco',
+    desc: 'Cuore commerciale'
+  },
+  {
+    id: 'laghetto-stefano',
+    label: 'Laghetto S. Stefano',
+    desc: 'Il porto del marmo'
+  }
 ]
 
 const showDebugPanel = ref(false)
@@ -523,7 +532,7 @@ const testPoi = async (id: string) => {
   isNearNonna.value = true
   showDebugPanel.value = false
   arStore.setLocalized()
-  
+
   // Start listening immediately without forcing a greeting
   await startContinuousListening(locale.value)
 }

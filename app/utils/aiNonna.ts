@@ -3,17 +3,19 @@
 import { ref, onUnmounted } from 'vue'
 import { useArStore } from '~/stores/arState'
 
+// Singleton/Shared state refs in module scope to prevent conflicts and ensure synchronized UI across components
+const isListening = ref(false)
+const isSpeaking = ref(false)
+const isChatMode = ref(false)
+const chatHistory = ref<{ role: string; content: string }[]>([])
+const isNearNonna = ref(false)
+const shouldContinueListening = ref(false)
+
+const currentLang = ref<string>('it')
+const currentPoiLabel = ref<string>('')
+
 export const useAiNonna = () => {
   const arStore = useArStore()
-  const isListening = ref(false)
-  const isSpeaking = ref(false)
-  const isChatMode = ref(false)
-  const chatHistory = ref<{ role: string; content: string }[]>([])
-  const isNearNonna = ref(false)
-  const shouldContinueListening = ref(false)
-
-  const currentLang = ref<string>('it')
-  const currentPoiLabel = ref<string>('')
 
   const toggleChatMode = () => {
     isChatMode.value = !isChatMode.value
