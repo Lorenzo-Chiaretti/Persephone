@@ -65,6 +65,11 @@
         console.log('Vue (from iframe): User is near the model!')
         arStore.isNearModel = true
         break
+
+      case 'USER_LEFT_MODEL':
+        console.log('Vue (from iframe): User left the model!')
+        arStore.isNearModel = false
+        break
     }
   }
 

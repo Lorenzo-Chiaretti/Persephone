@@ -1,100 +1,6 @@
 <template>
   <!-- AR Layer & Overlay Wrappers -->
   <div
-    v-show="!arStore.isIdle"
-    class="fixed inset-0 z-[60] pointer-events-none"
-  >
-    <!-- Debug Panel -->
-    <Transition name="fade-slide">
-      <div
-        v-if="showDebugPanel"
-        class="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+75px)] right-4 z-[9998] w60 bg-white/95 rounded-2xl shadow-xl backdrop-blur-xl border border-black/5 overflow-hidden pointer-events-auto"
-      >
-        <div class="flex items-center gap-2 p-3 border-b border-gray-200/50">
-          <div class="w-2 h-2 rounded-full bg-amber-400" />
-          <span
-            class="flex-1 text-xs font-semibold text-gray-700 tracking-wide"
-            >{{ $t('arDebugTitle') }}</span
-          >
-          <button
-            @click="showDebugPanel = false"
-            class="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors text-gray-700"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M2 2l10 10M12 2L2 12"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-        <p class="text-[11px] text-gray-500 px-3.5 pt-2 pb-1">
-          {{ $t('arDebugHint') }}
-        </p>
-        <div class="p-2 flex flex-col gap-1">
-          <button
-            v-for="poi in debugPois"
-            :key="poi.id"
-            @click="testPoi(poi.id)"
-            class="flex items-center gap-2.5 p-2.5 rounded-xl border-1.5 border-transparent hover:bg-blue-600/10 transition-colors text-left w-full"
-            :class="{
-              'bg-blue-600/10 border-blue-600/25':
-                arStore.selectedPoi?.id === poi.id
-            }"
-          >
-            <div
-              class="w-7 h-7 rounded-lg bg-blue-600/10 text-[#2071c1] flex items-center justify-center shrink-0"
-              :class="{
-                'bg-[#2071c1] text-white': arStore.selectedPoi?.id === poi.id
-              }"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path
-                  d="M7 1C4.79 1 3 2.79 3 5c0 2.625 4 8 4 8s4-5.375 4-8c0-2.21-1.79-4-4-4z"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                  stroke-linejoin="round"
-                />
-                <circle
-                  cx="7"
-                  cy="5"
-                  r="1.2"
-                  stroke="currentColor"
-                  stroke-width="1.2"
-                />
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0 flex flex-col">
-              <span class="text-sm font-semibold text-gray-800">{{
-                poi.label
-              }}</span>
-              <span class="text-[11px] text-gray-500 truncate">{{
-                poi.desc
-              }}</span>
-            </div>
-            <div
-              v-if="arStore.selectedPoi?.id === poi.id"
-              class="w-5 h-5 rounded-full bg-[#2071c1] text-white flex items-center justify-center shrink-0"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path
-                  d="M2 6l3 3 5-5"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-          </button>
-        </div>
-      </div>
-    </Transition>
-  </div>
-
-  <div
     class="relative w-full h-screen overflow-hidden pointer-events-none"
   >
     <div class="absolute inset-0 pointer-events-none">
@@ -400,26 +306,8 @@
               </Transition>
             </div>
 
-            <!-- Right Side: Debug and Exit Actions -->
+            <!-- Right Side: Exit Action -->
             <div class="flex items-center gap-2.5">
-              <!-- Debug Panel Button -->
-              <button
-                @click="showDebugPanel = !showDebugPanel"
-                class="w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md border transition-all active:scale-90"
-                :class="
-                  showDebugPanel
-                    ? 'bg-amber-400/20 border-amber-400/50 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
-                    : 'bg-white/10 border-white/20 text-white/90 hover:bg-white/20'
-                "
-                :title="$t('arDebugTitle')"
-              >
-                <!-- Map Pin/Debug Icon -->
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </button>
-
               <!-- Exit AR Button -->
               <button
                 @click="handleExit"
@@ -547,7 +435,7 @@
 <script setup lang="ts">
 import { useArStore } from '~/stores/arState'
 import { useAiNonna } from '~/utils/aiNonna'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const arStore = useArStore()
 const { locale } = useI18n()
@@ -567,21 +455,7 @@ const {
   stopAll
 } = useAiNonna()
 
-const debugPois = [
-  { id: 'via-senato', label: 'Via Senato', desc: 'Naviglio della Martesana' },
-  { id: 'laghetto-san-marco', label: 'Laghetto San Marco', desc: 'Cuore commerciale' },
-  { id: 'laghetto-stefano', label: 'Laghetto S. Stefano', desc: 'Il porto del marmo' }
-]
-
-const showDebugPanel = ref(false)
 const manualText = ref('')
-const isDebugMode = ref(false)
-
-onMounted(() => {
-  if (typeof window !== 'undefined') {
-    isDebugMode.value = new URLSearchParams(window.location.search).has('debug')
-  }
-})
 
 // ====================================================================================
 // HOOK PER FEATURE FUTURA: attivazione chat alla prossimità del modello
@@ -649,18 +523,6 @@ const handleExit = () => {
 
 const triggerWater = () => {
   arStore.waterVisible = true
-}
-
-const testPoi = async (id: string) => {
-  unlockAudio()
-  if (!debugPois.find((p) => p.id === id)) return
-  arStore.selectedPoi = { id }
-  isNearNonna.value = true
-  showDebugPanel.value = false
-  arStore.setLocalized()
-  
-  // Start listening immediately without forcing a greeting
-  await startContinuousListening(locale.value)
 }
 </script>
 
