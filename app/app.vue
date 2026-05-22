@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import Mapbox from '~/components/MapBox.vue'
 import PoiDetail from './components/PoiDetail.vue'
 import OnboardingModal from './components/OnboardingModal.vue'
+import PoiSelectModal from './components/PoiSelectModal.vue'
 import BottomSheet from './components/BottomSheet.vue'
 import ArExperience from './components/ArExperience.vue'
 import NonnaAROverlay from './components/NonnaAROverlay.vue'
@@ -15,39 +16,43 @@ const appStore = useAppStore()
 const arStore = useArStore()
 const { locale, setLocale } = useI18n()
 
-const { currentPoi, locationError, startTracking } = useLocationTracker()
+const { currentPoi, locationError, startTracking, stopTracking } = useLocationTracker()
 
 const errorMessage = ref('')
 const arCanvasBridge = ref<any>(null)
 const showOnboarding = ref(false)
+const showPoiSelect = ref(false)
 
 // ====================================================================================
 // START AR: risolve il POI tramite GPS, poi monta ArExperience + NonnaAROverlay
+// Se l'utente è lontano da tutti i POI, mostra la modale di selezione manuale.
 // ====================================================================================
 const startAr = async () => {
-  arStore.startLoading()
-
   try {
     if (locationError.value) {
       arStore.triggerError(`Errore GPS: ${locationError.value.message}`)
       return
     }
-
+    
     if (currentPoi.value) {
       console.log('POI TROVATO: ', currentPoi.value.id)
       arStore.selectedPoi = { id: currentPoi.value.id }
+      arStore.startLoading()
     } else {
-      // Nessun POI nelle vicinanze: l'esperienza parte comunque,
-      // selectedPoi resterà null finché GPS non risolve (o in debug tramite debug panel)
-      console.warn('Nessun POI rilevato nelle vicinanze')
+      showPoiSelect.value = true
     }
-
-    // Lo stato LOADING è già settato: ArExperience e NonnaAROverlay si montano
-    // perché !arStore.isIdle === true. ArExperience setterà SCANNING/ACTIVE
-    // tramite i propri postMessage handler.
   } catch (e) {
     arStore.triggerError('Impossibile avviare la sessione AR')
   }
+}
+
+// Chiamata quando l'utente seleziona un POI dalla modale.
+// stopTracking evita che il GPS sovrascriva il POI scelto manualmente.
+const handlePoiSelected = (poiId: string, isIndoor: boolean) => {
+  showPoiSelect.value = false
+  stopTracking()
+  arStore.selectedPoi = { id: poiId, isIndoor }
+  arStore.startLoading()
 }
 
 const toggleLang = () => {
@@ -213,6 +218,11 @@ onMounted(() => {
     <!-- ── Overlays ── -->
     <PoiDetail />
     <OnboardingModal v-if="showOnboarding" @close="handleOnboardingClose" />
+    <PoiSelectModal
+      v-if="showPoiSelect"
+      @select-poi="handlePoiSelected"
+      @close="showPoiSelect = false"
+    />
   </main>
 </template>
 

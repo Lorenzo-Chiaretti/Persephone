@@ -44,9 +44,11 @@
 
   // Pass POI id as query string
   const iframeSrc = computed(() => {
-    const poiId = arStore.selectedPoi?.id
-    if (!poiId) return '/ar-scene.html'
-    return `/ar-scene.html?poi=${poiId}`
+    const poi = arStore.selectedPoi
+    if (!poi?.id) return '/ar-scene.html'
+    const params = new URLSearchParams({ poi: poi.id })
+    if (poi.isIndoor) params.set('mode', 'indoor')
+    return `/ar-scene.html?${params.toString()}`
   })
 
   const triggerWater = () => {

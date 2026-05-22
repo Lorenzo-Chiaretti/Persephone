@@ -120,5 +120,11 @@
   "gameNext": "Avanti →",
   "gameSkip": "Salta",
   "gameBack": "Indietro",
-  "gameRule4Badge": "Entro 30m ✓"
+  "gameRule4Badge": "Entro 30m ✓",
+
+  "poiSelectTitle": "Sei lontano dai Navigli",
+  "poiSelectDesc": "Non sei vicino a nessun punto di interesse. Puoi simulare l'esperienza selezionando manualmente uno dei luoghi disponibili.",
+  "poiSelectIndoor": "Modalità interno",
+  "poiSelectIndoorDesc": "Attiva se sei in un ambiente chiuso: il modello verrà ridimensionato per adattarsi allo spazio.",
+  "poiSelectConfirm": "Inizia l'esperienza AR"
 }
