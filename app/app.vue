@@ -10,10 +10,11 @@ import NonnaAROverlay from './components/NonnaAROverlay.vue'
 import { useArStore } from '~/stores/arState'
 import { useLocationTracker } from '~/composables/useLocationTracker'
 import { useAppStore } from '~/stores/appState'
+import { useAiNonna } from '~/utils/aiNonna'
 
 const appStore = useAppStore()
-
 const arStore = useArStore()
+const { unlockAudio } = useAiNonna()
 const { locale, setLocale } = useI18n()
 
 const { currentPoi, locationError, startTracking, stopTracking } = useLocationTracker()
@@ -28,6 +29,11 @@ const showPoiSelect = ref(false)
 // Se l'utente è lontano da tutti i POI, mostra la modale di selezione manuale.
 // ====================================================================================
 const startAr = async () => {
+  // Sblocca preventivamente l'audio su iOS
+  unlockAudio()
+  
+  arStore.startLoading()
+
   try {
     if (locationError.value) {
       arStore.triggerError(`Errore GPS: ${locationError.value.message}`)
