@@ -632,6 +632,8 @@ const handleExit = () => {
 
 const triggerWater = () => {
   arStore.waterVisible = true
+}
+
 const testPoi = async (id: string) => {
   if (!debugPois.find((p) => p.id === id)) return
   arStore.selectedPoi = { id }
