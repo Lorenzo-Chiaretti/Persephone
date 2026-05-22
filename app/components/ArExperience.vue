@@ -1,25 +1,15 @@
 <template>
   <div class="fixed inset-0 z-50">
 
-    <!-- "BRING THE WATER BACK!" -->
-    <div v-if="modelPlaced && !waterVisible">
-      <button 
-        class="absolute top-4 left-4 z-20 bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur"
-        @click="triggerWater"
-      >
-        Bring the Water Back!
-      </button>
-    </div>
-
+    <!-- "TAP TO PLACE MODEL" HINT -->
     <div
-      v-if="sceneReady && !modelPlaced"
-      class="absolute bottom-12 left-0 right-0 z-20 flex justify-center"
+      v-if="arStore.sceneReady && !arStore.modelPlaced"
+      class="absolute bottom-28 left-4 right-4 z-20 flex justify-center pointer-events-none animate-bounce"
     >
-      <span class="bg-black/50 text-white px-6 py-3 rounded-full text-sm backdrop-blur">
-        Tap to place model
+      <span class="bg-black/60 text-white px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide backdrop-blur-md shadow-lg border border-white/10 text-center">
+        {{ $t('arPlaceHint') }}
       </span>
     </div>
-
 
     <!-- A-Frame Scene -->
     <iframe 
@@ -33,13 +23,10 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted, ref, computed } from 'vue'
+  import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
   import { useArStore } from '~/stores/arState'
 
   const arStore = useArStore()
-  const modelPlaced = ref(false)
-  const waterVisible = ref(false)
-  const sceneReady = ref(false)
   const iframeRef = ref<HTMLIFrameElement | null>(null)
 
   // Pass POI id as query string
@@ -49,10 +36,15 @@
     return `/ar-scene.html?poi=${poiId}`
   })
 
-  const triggerWater = () => {
-    waterVisible.value = true
-    iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
-  }
+  // Watch for water trigger from overlay and forward it to A-Frame scene
+  watch(
+    () => arStore.waterVisible,
+    (visible) => {
+      if (visible) {
+        iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
+      }
+    }
+  )
 
   const handleIframeMessages = (event: MessageEvent) => {
     if (!event.data || !event.data.type) return
@@ -60,18 +52,23 @@
     switch (event.data.type) {
       case 'AR_READY':
         console.log('Vue (from iframe): Iframe AR caricato e pronto!')
-        sceneReady.value = true
+        arStore.sceneReady = true
         arStore.setLocalized() // TODO: CAMBIA E AGGIUNGI LOGICA LOCALIZZAZIONE
         break
       
       case 'MODEL_PLACED':
         console.log('Vue (from iframe): Model Placed!')
-        modelPlaced.value = true
+        arStore.modelPlaced = true
         break
         
       case 'USER_NEAR_MODEL': // TODO (feature): inviare questo messaggio da ar-components.js
         console.log('Vue (from iframe): User is near the model!')
         arStore.isNearModel = true
+        break
+
+      case 'USER_LEFT_MODEL':
+        console.log('Vue (from iframe): User left the model!')
+        arStore.isNearModel = false
         break
     }
   }
@@ -85,7 +82,7 @@
   })
 
   onUnmounted(() => {
-    //Forced iframe cleanup
+    // Forced iframe cleanup
     if (iframeRef.value) {
       iframeRef.value.src = 'about:blank'
     }

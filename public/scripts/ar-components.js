@@ -137,6 +137,7 @@ AFRAME.registerComponent('proximity-trigger',{
       if (this.isNear) {
         this.isNear = false
         // Sei appena uscito dall'area! Manda il messaggio per nascondere la UI
+        window.parent.postMessage({ type: 'USER_LEFT_MODEL' }, '*')
       }
     }
   }
