@@ -78,11 +78,10 @@
       v-if="sceneReady && !modelPlaced"
       class="absolute bottom-12 left-0 right-0 z-20 flex justify-center pointer-events-auto"
     >
-      <span class="bg-black/50 text-white px-6 py-3 rounded-full text-sm backdrop-blur">
-        Tap to place model
+      <span class="bg-black/60 text-white px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide backdrop-blur-md shadow-lg border border-white/10 text-center">
+        {{ $t('arPlaceHint') }}
       </span>
     </div>
-
 
     <!-- A-Frame Scene -->
     <iframe 
@@ -317,7 +316,7 @@
       
       case 'MODEL_PLACED':
         console.log('Vue (from iframe): Model Placed!')
-        modelPlaced.value = true
+        arStore.modelPlaced = true
         break
       
       case 'USER_NEAR_MODEL':
