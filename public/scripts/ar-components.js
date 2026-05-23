@@ -133,10 +133,10 @@ AFRAME.registerComponent('proximity-trigger',{
         this.isNear = true
         window.parent.postMessage({ type: 'USER_NEAR_MODEL' }, '*')
       }
-    } else {
+    } else if(dist > this.data.distance + 1){
       if (this.isNear) {
         this.isNear = false
-        // Sei appena uscito dall'area! Manda il messaggio per nascondere la UI
+        window.parent.postMessage({type : 'USER_FAR_FROM_MODEL'}, '*')
       }
     }
   }

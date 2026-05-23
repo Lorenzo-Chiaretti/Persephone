@@ -8,8 +8,13 @@ export const useArStore = defineStore('ar', () => {
   const errorMessage = ref<string | null>(null)
   const session = shallowRef<XRSession | null>(null)
 
-  const selectedPoi = ref<{ id: string } | null>(null)
+  const selectedPoi = ref<{ id: string; isIndoor?: boolean } | null>(null)
   const isNearModel = ref(false)
+  
+  // State for model placement and interactions
+  const modelPlaced = ref(false)
+  const waterVisible = ref(false)
+  const sceneReady = ref(false)
 
   const isIdle = computed(() => status.value === 'IDLE')
   const isLoading = computed(() => status.value === 'LOADING')
@@ -45,6 +50,9 @@ export const useArStore = defineStore('ar', () => {
     errorMessage.value = null
     selectedPoi.value = null // Reset del POI alla chiusura
     isNearModel.value = false
+    modelPlaced.value = false
+    waterVisible.value = false
+    sceneReady.value = false
     if (session.value) {
       try {
         session.value.end()
@@ -66,6 +74,9 @@ export const useArStore = defineStore('ar', () => {
     isActive,
     isError,
     isScanning,
+    modelPlaced,
+    waterVisible,
+    sceneReady,
     startLoading,
     setCameraReady,
     setLocalized,
