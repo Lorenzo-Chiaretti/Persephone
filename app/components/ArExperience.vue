@@ -103,9 +103,18 @@
   const { locale } = useI18n()
   const { stopAll: stopNonnaAll, startContinuousListening: startNonnaListening, isListening: isNonnaListening } = useAiNonna()
 
-  const modelPlaced = ref(false)
-  const waterVisible = ref(false)
-  const sceneReady = ref(false)
+  const modelPlaced = computed({
+    get: () => arStore.modelPlaced,
+    set: (val) => { arStore.modelPlaced = val }
+  })
+  const waterVisible = computed({
+    get: () => arStore.waterVisible,
+    set: (val) => { arStore.waterVisible = val }
+  })
+  const sceneReady = computed({
+    get: () => arStore.sceneReady,
+    set: (val) => { arStore.sceneReady = val }
+  })
   const iframeRef = ref<HTMLIFrameElement | null>(null)
 
   // Voice activation state
@@ -157,17 +166,23 @@
 
   const triggerWater = () => {
     waterVisible.value = true
-    stopVoiceListening()
-    iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
-    
-    // Ripristiniamo l'ascolto di Nonna se era attivo in precedenza
-    if (wasNonnaListening) {
-      setTimeout(() => {
-        console.log("👵 Ripristino dell'ascolto continuo di Nonna...")
-        startNonnaListening(locale.value)
-      }, 500)
-    }
   }
+
+  // Watcher per quando l'acqua viene attivata (sia tramite controllo vocale, pulsante locale o overlay di Nonna)
+  watch(waterVisible, (visible) => {
+    if (visible) {
+      stopVoiceListening()
+      iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
+      
+      // Ripristiniamo l'ascolto di Nonna se era attivo in precedenza
+      if (wasNonnaListening) {
+        setTimeout(() => {
+          console.log("👵 Ripristino dell'ascolto continuo di Nonna...")
+          startNonnaListening(locale.value)
+        }, 500)
+      }
+    }
+  })
 
   const handleVoiceError = () => {
     listeningError.value = true
@@ -220,7 +235,13 @@
     }, intervalTime)
 
     try {
-      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      audioStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: false // help in noisy environments to avoid amplifying ambient noise
+        }
+      })
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
       
       const isIt = locale.value?.toLowerCase()?.startsWith('it')
@@ -251,34 +272,32 @@
           liveTranscript.value = transcript
           
           const lowerTranscript = transcript.toLowerCase()
-          const isItCurrent = locale.value?.toLowerCase()?.startsWith('it')
           
-          if (isItCurrent) {
-            // Rilevamento italiano super flessibile e robusto
-            if (
-              lowerTranscript.includes('risveglia i navigli') ||
-              lowerTranscript.includes('risveglia navigli') ||
-              (lowerTranscript.includes('risveglia') && lowerTranscript.includes('navigli')) ||
-              lowerTranscript.includes('risveglia') ||
-              lowerTranscript.includes('navigli') ||
-              lowerTranscript.includes('acqua')
-            ) {
-              console.log('✅ Comando vocale italiano rilevato! Risveglio dei navigli in corso...')
-              triggerWater()
-            }
-          } else {
-            // Rilevamento inglese super flessibile e robusto
-            if (
-              lowerTranscript.includes('bring the water back') ||
-              lowerTranscript.includes('bring back the water') ||
-              (lowerTranscript.includes('bring') && lowerTranscript.includes('water') && lowerTranscript.includes('back')) ||
-              (lowerTranscript.includes('water') && lowerTranscript.includes('back')) ||
-              lowerTranscript.includes('water') ||
-              lowerTranscript.includes('bring')
-            ) {
-              console.log('✅ English voice command detected! Bringing water back...')
-              triggerWater()
-            }
+          // Rilevamento italiano super flessibile e robusto
+          const matchItalian = 
+            lowerTranscript.includes('risveglia i navigli') ||
+            lowerTranscript.includes('risveglia navigli') ||
+            (lowerTranscript.includes('risveglia') && lowerTranscript.includes('navigli')) ||
+            lowerTranscript.includes('risveglia') ||
+            lowerTranscript.includes('navigli') ||
+            lowerTranscript.includes('acqua')
+
+          // Rilevamento inglese super flessibile e robusto
+          const matchEnglish = 
+            lowerTranscript.includes('bring the water back') ||
+            lowerTranscript.includes('bring back the water') ||
+            (lowerTranscript.includes('bring') && lowerTranscript.includes('water') && lowerTranscript.includes('back')) ||
+            (lowerTranscript.includes('water') && lowerTranscript.includes('back')) ||
+            lowerTranscript.includes('water') ||
+            lowerTranscript.includes('bring') ||
+            // Supporto per quando la lingua è impostata su IT ma l'utente parla inglese, 
+            // e Deepgram trascrive foneticamente in parole italiane
+            lowerTranscript.includes('uoter') ||
+            lowerTranscript.includes('vuoter')
+
+          if (matchItalian || matchEnglish) {
+            console.log('✅ Comando vocale rilevato (unificato)! Attivazione acqua in corso...', lowerTranscript)
+            triggerWater()
           }
         }
       }

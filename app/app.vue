@@ -38,6 +38,17 @@ const startAr = async () => {
   // Sblocca preventivamente l'audio su iOS
   unlockAudio()
 
+    // Richiedi i permessi del microfono in anticipo per evitare interruzioni dell'esperienza in seguito
+  if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach((track) => track.stop())
+      console.log('🎙️ Permesso microfono acquisito preventivamente.')
+    } catch (e) {
+      console.warn("Permesso microfono negato o non disponibile:", e)
+    }
+  }
+
   try {
     if (locationError.value) {
       arStore.triggerError(`Errore GPS: ${locationError.value.message}`)
