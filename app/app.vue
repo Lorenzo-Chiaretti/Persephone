@@ -37,8 +37,6 @@ const handleOpenHistory = () => {
 const startAr = async () => {
   // Sblocca preventivamente l'audio su iOS
   unlockAudio()
-  
-  arStore.startLoading()
 
   try {
     if (locationError.value) {
