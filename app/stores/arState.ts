@@ -8,7 +8,7 @@ export const useArStore = defineStore('ar', () => {
   const errorMessage = ref<string | null>(null)
   const session = shallowRef<XRSession | null>(null)
 
-  const selectedPoi = ref<{ id: string } | null>(null)
+  const selectedPoi = ref<{ id: string; isIndoor?: boolean } | null>(null)
   const isNearModel = ref(false)
   
   // State for model placement and interactions

@@ -126,5 +126,11 @@
   "gameNext": "Next →",
   "gameSkip": "Skip",
   "gameBack": "Back",
-  "gameRule4Badge": "Within 30m ✓"
+  "gameRule4Badge": "Within 30m ✓",
+
+  "poiSelectTitle": "You're far from the Navigli",
+  "poiSelectDesc": "You're not near any point of interest. You can simulate the experience by manually selecting one of the available locations.",
+  "poiSelectIndoor": "Indoor mode",
+  "poiSelectIndoorDesc": "Enable if you're indoors: the model will be scaled down to fit the space.",
+  "poiSelectConfirm": "Start the AR experience"
 }
