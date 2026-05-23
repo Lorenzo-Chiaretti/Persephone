@@ -105,45 +105,7 @@
         <div
           class="w-full px-4 flex flex-col items-center gap-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] pointer-events-none"
         >
-          <Transition name="fade-slide">
-            <div
-              v-if="agentStatus !== 'idle'"
-              :key="agentStatus"
-              class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md text-sm font-medium text-white shadow-lg transition-colors"
-              :class="agentStatusClass"
-            >
-              <template v-if="agentStatus === 'listening'">
-                <div class="anim-waves"><span /><span /><span /></div>
-                <span>{{ $t('arListening') }}</span>
-              </template>
-              <template v-else-if="agentStatus === 'processing'">
-                <div class="anim-dots"><span /><span /><span /></div>
-                <span>{{ $t('arProcessing') }}</span>
-              </template>
-              <template v-else-if="agentStatus === 'speaking'">
-                <div class="anim-bars"><span /><span /><span /><span /></div>
-                <span>{{ $t('arSpeaking') }}</span>
-              </template>
-              <template v-else-if="agentStatus === 'error'">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle
-                    cx="8"
-                    cy="8"
-                    r="7"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                  />
-                  <path
-                    d="M8 5v3.5M8 11h.01"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
-                </svg>
-                <span>{{ $t('arRetry') }}</span>
-              </template>
-            </div>
-          </Transition>
+
 
           <Transition name="fade-slide">
             <div
