@@ -1,6 +1,11 @@
 let modelPlaced = false
 let waterVisible = false
 
+const _isIndoor = new URLSearchParams(window.location.search).get('mode') === 'indoor'
+const NAVIGLIO_SCALE = _isIndoor ? '0.5 0.5 0.5' : '2 2 2'
+const NAVIGLIO_Z_OFFSET = _isIndoor ? -10 : -50
+const NONNA_SCALE = _isIndoor ? '0.035 0.035 0.035' : '0.07 0.07 0.07'
+
   // ====================================================================================
   // PLACE NAVIGLIO MODEL
   // ====================================================================================
@@ -20,9 +25,9 @@ AFRAME.registerComponent('tap-place', {
     // ==========================================
     const naviglioEl = document.createElement('a-entity')
     naviglioEl.setAttribute('position', {
-      x: touchPoint.x+0,
+      x: touchPoint.x,
       y: touchPoint.y, 
-      z: touchPoint.z-50,
+      z: touchPoint.z + NAVIGLIO_Z_OFFSET,
     })
     naviglioEl.setAttribute('rotation', '0 310 0')
     naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
@@ -39,7 +44,6 @@ AFRAME.registerComponent('tap-place', {
       // Add holdout effect
       mesh.traverse((node) => {
         if (node.isMesh) {
-          console.log(node.name)
           node.castShadow = true
           node.receiveShadow = true
           if (node.material?.name === 'Mat_Holdout') {
@@ -53,7 +57,7 @@ AFRAME.registerComponent('tap-place', {
       naviglioEl.setAttribute('visible', 'true')
       naviglioEl.setAttribute('animation', {
         property: 'scale',
-        to: '2 2 2',
+        to: NAVIGLIO_SCALE,
         easing: 'easeOutElastic',
         dur: 800,
       })
@@ -86,7 +90,7 @@ AFRAME.registerComponent('tap-place', {
       
       nonnaEl.setAttribute('animation', {
         property: 'scale',
-        to: '0.07 0.07 0.07', 
+        to: NONNA_SCALE, 
         easing: 'easeOutElastic',
         dur: 800,
         delay: 1000 
@@ -175,7 +179,6 @@ AFRAME.registerComponent('naviglio-water', {
           // Search for mesh "Water"
           mesh.traverse((child) => {
             if (child.isMesh && (child.name === 'Acqua' || child.name === 'Water')) {
-              
               const waterGeometry = child.geometry;
 
               // Load normals texture
@@ -211,7 +214,7 @@ AFRAME.registerComponent('naviglio-water', {
               this.water.position.y = this.currentY
               this.water.visible = false
               // -----------------------------------------------
-              
+
               // Add water to the model
               child.parent.add(this.water); 
               
@@ -275,6 +278,3 @@ AFRAME.registerComponent('notify-ready', {
         })
       }
     })
-
-
-
