@@ -61,32 +61,6 @@ AFRAME.registerComponent('tap-place', {
         easing: 'easeOutElastic',
         dur: 800,
       })
-    })
-
-    // ==========================================
-    // 2. SPAWN DELLA VECCHIETTA
-    // ==========================================
-    const nonnaEl = document.createElement('a-entity')
-    nonnaEl.setAttribute('gltf-model', '#nonna-model') 
-    
-    nonnaEl.setAttribute('position', {
-      x: touchPoint.x + 2,
-      y: touchPoint.y, 
-      z: touchPoint.z + 2,
-    })
-    
-    nonnaEl.setAttribute('rotation', '0 -30 0') 
-    nonnaEl.setAttribute('scale', '0.0001 0.0001 0.0001')
-    nonnaEl.setAttribute('visible', 'false')
-    nonnaEl.setAttribute('shadow', { receive: true, cast: true }) 
-    nonnaEl.setAttribute('animation-mixer', 'clip: *; loop: repeat; crossFadeDuration: 0.2')
-    nonnaEl.setAttribute('proximity-trigger', 'distance: 30')
-
-    this.el.sceneEl.appendChild(nonnaEl)
-
-    nonnaEl.addEventListener('model-loaded', () => {
-      nonnaEl.setAttribute('visible', 'true')
-      
       
       nonnaEl.setAttribute('animation', {
         property: 'scale',
@@ -97,9 +71,13 @@ AFRAME.registerComponent('tap-place', {
       })
 
       window.parent.postMessage({ type: 'MODEL_PLACED' }, '*')
-      })
     })
-  },
+
+    // Salvo reference per lo spawn della vecchietta in un secondo momento
+    window.lastTouchPoint = touchPoint;
+    window.arSceneEl = this.el.sceneEl;
+  }) // End ground.addEventListener
+  }, // End init
 })
 
 AFRAME.registerComponent('proximity-trigger',{
@@ -268,6 +246,42 @@ window.addEventListener('message', (event) => {
       naviglioEntity.emit('toggle-water');
     }
     
+  } else if (event.data && event.data.type === 'SPAWN_NONNA') {
+    
+    console.log("Iframe (from VUE): spawning nonna")
+    
+    if (!window.lastTouchPoint || !window.arSceneEl) return;
+    
+    const touchPoint = window.lastTouchPoint;
+    const nonnaEl = document.createElement('a-entity');
+    nonnaEl.setAttribute('gltf-model', '#nonna-model');
+    
+    nonnaEl.setAttribute('position', {
+      x: touchPoint.x + 2,
+      y: touchPoint.y, 
+      z: touchPoint.z + 2,
+    });
+    
+    nonnaEl.setAttribute('rotation', '0 -30 0');
+    nonnaEl.setAttribute('scale', '0.0001 0.0001 0.0001');
+    nonnaEl.setAttribute('visible', 'false');
+    nonnaEl.setAttribute('shadow', { receive: true, cast: true });
+    nonnaEl.setAttribute('animation-mixer', 'clip: *; loop: repeat; crossFadeDuration: 0.2');
+    nonnaEl.setAttribute('proximity-trigger', 'distance: 30');
+
+    window.arSceneEl.appendChild(nonnaEl);
+
+    nonnaEl.addEventListener('model-loaded', () => {
+      nonnaEl.setAttribute('visible', 'true');
+      
+      nonnaEl.setAttribute('animation', {
+        property: 'scale',
+        to: '0.07 0.07 0.07', 
+        easing: 'easeOutElastic',
+        dur: 800,
+        delay: 100 
+      });
+    });
   }
 });
 

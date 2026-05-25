@@ -101,9 +101,22 @@
         v-if="arStore.isActive"
         class="fixed inset-0 z-50 flex flex-col justify-between pointer-events-none"
       >
+        <!-- EXIT BUTTON: Top-right corner (always visible in AR) -->
+        <button
+          @click="handleExit"
+          class="ar-exit-top-btn pointer-events-auto"
+          :title="$t('arExit')"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
         <!-- TOP: Status + AI Response -->
         <div
-          class="w-full px-4 flex flex-col items-center gap-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] pointer-events-none"
+          v-show="arStore.nonnaSpawned"
+          class="w-full px-4 flex flex-col items-center gap-3 pt-[calc(env(safe-area-inset-top,0px)+56px)] pointer-events-none"
         >
 
 
@@ -163,7 +176,7 @@
                 </div>
 
                 <!-- Text Area (scrollable for longer text) -->
-                <div class="text-[14.5px] leading-relaxed text-gray-800 break-words max-h-[25vh] overflow-y-auto pr-1 custom-dialogue-scroll font-medium mt-1">
+                <div class="text-[14.5px] leading-relaxed text-gray-800 break-words max-h-[25vh] overflow-y-auto pr-2 pb-6 custom-dialogue-scroll font-medium mt-1 relative">
                   <!-- Case 1: Listening State -->
                   <template v-if="!isChatMode && agentStatus === 'listening'">
                     <span class="text-blue-500/95 italic font-semibold">
@@ -198,47 +211,57 @@
           </Transition>
         </div>
 
-        <!-- BOTTOM: Controls -->
-        <div
-          class="w-full px-4 flex flex-col gap-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] pointer-events-auto"
-        >
-          <!-- FLOATING "BRING THE WATER BACK!" ACTION BUTTON -->
-          <Transition name="fade-slide">
-            <div 
-              v-if="arStore.modelPlaced && !arStore.waterVisible"
-              class="flex justify-center w-full mb-2 pointer-events-auto"
-            >
-              <button
-                @click="triggerWater"
-                class="flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-gradient-to-r from-cyan-500/90 to-blue-600/90 hover:from-cyan-500 hover:to-blue-600 border border-cyan-400/40 text-white text-[15px] font-bold tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.55)] backdrop-blur-md transition-all duration-300 active:scale-95 animate-pulse-subtle"
-              >
-                <!-- Water Droplet SVG Icon -->
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-                  <path d="M12 22a8 8 0 0 0 8-8H4a8 8 0 0 0 8 8z" opacity="0.3" />
-                </svg>
-                <span>{{ $t('arBringWaterBack') }}</span>
-              </button>
-            </div>
-          </Transition>
+        <!-- BOTTOM: Floating Controls (iPhone Lock Screen layout) -->
 
-          <Transition name="fade-slide">
-            <div
-              v-if="isChatMode"
-              class="flex gap-2.5 bg-white/10 border border-white/20 rounded-2xl p-2 pl-4 backdrop-blur-xl mb-1"
-            >
+        <!-- CTA: "Parla con la Sciura" — centered pill -->
+        <Transition name="fade-slide">
+          <div
+            v-if="arStore.waterVisible && !arStore.nonnaSpawned"
+            class="ar-cta-floating pointer-events-auto"
+          >
+            <button @click="spawnNonna" class="ar-pill-btn ar-pill-emerald">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              <span>{{ $t('arTalkToNonna') }}</span>
+            </button>
+          </div>
+        </Transition>
+
+        <!-- CTA: "Bring the Water Back!" — centered pill -->
+        <Transition name="fade-slide">
+          <div
+            v-if="arStore.modelPlaced && !arStore.waterVisible && arStore.showFallbackButton"
+            class="ar-cta-floating pointer-events-auto"
+          >
+            <button @click="triggerWater" class="ar-pill-btn ar-pill-cyan">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>
+              <span>{{ $t('arBringWaterBack') }}</span>
+            </button>
+          </div>
+        </Transition>
+
+        <!-- Chat Input — floating above bottom buttons -->
+        <Transition name="fade-slide">
+          <div
+            v-if="isChatMode && arStore.nonnaSpawned"
+            class="ar-chat-floating pointer-events-auto"
+          >
+            <div class="ar-chat-input-row">
               <input
                 v-model="manualText"
                 @keyup.enter="handleSendText"
                 type="text"
                 :placeholder="$t('arWrite')"
-                class="flex-1 bg-transparent border-none outline-none text-white text-[15px] placeholder-white/45 caret-[#2071c1]"
+                class="ar-chat-input"
                 autofocus
               />
               <button
                 @click="handleSendText"
                 :disabled="!manualText.trim()"
-                class="shrink-0 w-9 h-9 rounded-xl bg-[#2071c1] text-white flex items-center justify-center transition-all disabled:opacity-40 active:scale-95"
+                class="ar-chat-send-btn"
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path
@@ -251,133 +274,78 @@
                 </svg>
               </button>
             </div>
-          </Transition>
-
-          <!-- BOTTOM TOOLBAR -->
-          <div class="flex items-center justify-between gap-3 w-full pointer-events-auto">
-            <!-- Left Side: Voice/Keyboard Switch and Mute controls -->
-            <div class="flex items-center gap-2.5">
-              <!-- Switch Mode Button (Mic Icon or Keyboard Icon) -->
-              <button
-                @click="toggleChatMode"
-                class="w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md border transition-all active:scale-90"
-                :class="
-                  isChatMode
-                    ? 'bg-[#2071c1]/80 border-[#2071c1]/50 text-white shadow-[0_0_10px_rgba(32,113,193,0.3)]'
-                    : 'bg-white/10 border-white/20 text-white/90 hover:bg-white/20'
-                "
-                :title="isChatMode ? $t('arSwitchVoice') : $t('arCantSpeak')"
-              >
-                <!-- Icon Keyboard when voice, Icon Mic when chat -->
-                <svg
-                  v-if="!isChatMode"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
-                  <line x1="6" y1="8" x2="6" y2="8" />
-                  <line x1="10" y1="8" x2="10" y2="8" />
-                  <line x1="14" y1="8" x2="14" y2="8" />
-                  <line x1="18" y1="8" x2="18" y2="8" />
-                  <line x1="6" y1="12" x2="6" y2="12" />
-                  <line x1="18" y1="12" x2="18" y2="12" />
-                  <line x1="7" y1="16" x2="17" y2="16" />
-                  <line x1="10" y1="12" x2="14" y2="12" />
-                </svg>
-                <svg
-                  v-else
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 1v10" />
-                  <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                  <line x1="12" y1="18" x2="12" y2="22" />
-                  <line x1="8" y1="22" x2="16" y2="22" />
-                </svg>
-              </button>
-
-              <!-- Mute / Speech Button (Only visible in voice mode) -->
-              <Transition name="fade-slide">
-                <button
-                  v-if="!isChatMode"
-                  @click="toggleMute"
-                  class="w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md border transition-all active:scale-90"
-                  :class="
-                    isMuted
-                      ? 'bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30'
-                      : 'bg-[#2071c1] border-blue-400/30 text-white shadow-[0_0_15px_rgba(32,113,193,0.5)] animate-listening-pulse'
-                  "
-                  :title="isMuted ? $t('arResumeListening') : $t('arStopListening')"
-                >
-                  <!-- Mic Icon or Mic-Off Icon -->
-                  <svg
-                    v-if="!isMuted"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                    <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                    <line x1="12" y1="19" x2="12" y2="23" />
-                    <line x1="8" y1="23" x2="16" y2="23" />
-                  </svg>
-                  <svg
-                    v-else
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-                    <path d="M17 11a7 7 0 0 1-1.35 4.1" />
-                    <path d="M9.16 14.84A7 7 0 0 1 5 11v-1" />
-                    <line x1="12" y1="19" x2="12" y2="23" />
-                    <line x1="8" y1="23" x2="16" y2="23" />
-                  </svg>
-                </button>
-              </Transition>
-            </div>
-
-            <!-- Right Side: Exit Action -->
-            <div class="flex items-center gap-2.5">
-              <!-- Exit AR Button -->
-              <button
-                @click="handleExit"
-                class="flex items-center gap-1.5 px-4 h-11 rounded-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/35 text-red-100 text-[13px] font-semibold tracking-wide backdrop-blur-md transition-all duration-300 active:scale-95 hover:text-white"
-                :title="$t('arExit')"
-              >
-                <!-- Log Out/Exit Icon -->
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                <span>{{ $t('arExit') }}</span>
-              </button>
-            </div>
           </div>
+        </Transition>
+
+        <!-- BOTTOM CORNERS: iPhone Lock Screen layout -->
+        <div v-if="arStore.nonnaSpawned" class="ar-lockscreen-bottom pointer-events-auto">
+          <!-- Bottom-Left: Keyboard/Voice toggle -->
+          <button
+            @click="toggleChatMode"
+            class="ar-corner-btn"
+            :class="isChatMode ? 'ar-corner-btn-active' : ''"
+            :title="isChatMode ? $t('arSwitchVoice') : $t('arCantSpeak')"
+          >
+            <svg
+              v-if="!isChatMode"
+              width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+              <line x1="6" y1="8" x2="6" y2="8" />
+              <line x1="10" y1="8" x2="10" y2="8" />
+              <line x1="14" y1="8" x2="14" y2="8" />
+              <line x1="18" y1="8" x2="18" y2="8" />
+              <line x1="6" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="18" y2="12" />
+              <line x1="7" y1="16" x2="17" y2="16" />
+              <line x1="10" y1="12" x2="14" y2="12" />
+            </svg>
+            <svg
+              v-else
+              width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="8" y1="22" x2="16" y2="22" />
+            </svg>
+          </button>
+
+          <!-- Bottom-Right: Mic Mute toggle (voice mode only) -->
+          <Transition name="fade-slide">
+            <button
+              v-if="!isChatMode"
+              @click="toggleMute"
+              class="ar-corner-btn"
+              :class="isMuted ? 'ar-corner-btn-danger' : 'ar-corner-btn-listening'"
+              :title="isMuted ? $t('arResumeListening') : $t('arStopListening')"
+            >
+              <svg
+                v-if="!isMuted"
+                width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+              >
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+              <svg
+                v-else
+                width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+              >
+                <line x1="1" y1="1" x2="23" y2="23" />
+                <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+                <path d="M17 11a7 7 0 0 1-1.35 4.1" />
+                <path d="M9.16 14.84A7 7 0 0 1 5 11v-1" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+            </button>
+          </Transition>
         </div>
       </div>
 
@@ -484,6 +452,43 @@
           </div>
         </div>
       </Transition>
+
+      <!-- Proximity Warning Overlay -->
+      <Transition name="fade-slide">
+        <div
+          v-if="showProximityWarning"
+          class="absolute top-[calc(env(safe-area-inset-top,0px)+110px)] left-1/2 -translate-x-1/2 z-[100] pointer-events-auto"
+        >
+          <div class="bg-slate-900/95 backdrop-blur-3xl border border-white/20 text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-[0_16px_40px_rgba(0,0,0,0.5)]" style="max-width: 90vw; width: max-content;">
+            
+            <!-- Pulsing Warning Icon -->
+            <div class="relative flex h-8 w-8 shrink-0 items-center justify-center">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-40"></span>
+              <div class="relative flex items-center justify-center h-8 w-8 bg-amber-500/20 rounded-full border border-amber-400/50">
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Text -->
+            <span class="font-semibold text-[14.5px] leading-snug text-white/95">
+              {{ $t('arGetCloser') }}
+            </span>
+
+            <!-- Close Button -->
+            <button
+              @click="dismissProximityWarning"
+              class="ml-1 shrink-0 w-7 h-7 bg-white/10 hover:bg-white/25 border border-white/10 rounded-full flex items-center justify-center text-white/90 active:scale-90 transition-all"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -508,7 +513,8 @@ const {
   isMuted,
   toggleMute,
   unlockAudio,
-  stopAll
+  stopAll,
+  resetNonnaState
 } = useAiNonna()
 
 const debugPois = [
@@ -528,21 +534,49 @@ const debugPois = [
 const showDebugPanel = ref(false)
 const manualText = ref('')
 
+const showProximityWarning = ref(false)
+const warningDismissed = ref(false)
+let proximityWarningTimer: ReturnType<typeof setTimeout> | null = null
+
+const dismissProximityWarning = () => {
+  showProximityWarning.value = false
+  warningDismissed.value = true
+}
+
 // ====================================================================================
-// HOOK PER FEATURE FUTURA: attivazione chat alla prossimità del modello
-// Quando arStore.isNearModel diventa true (segnale USER_NEAR_MODEL dall'iframe),
-// qui si potrà avviare automaticamente startContinuousListening.
+// HOOK PROSSIMITÀ: attiva chat se vicino, mostra avviso se lontano
 // ====================================================================================
-watch(
-  () => arStore.isNearModel,
-  (isNear) => {
-    if (isNear && arStore.selectedPoi) {
-      // TODO: attivare la chat automaticamente quando l'utente si avvicina al modello
-      // await startContinuousListening(locale.value)
+const handleProximityCheck = () => {
+  if (arStore.isNearModel) {
+    if (proximityWarningTimer) {
+      clearTimeout(proximityWarningTimer)
+      proximityWarningTimer = null
+    }
+    showProximityWarning.value = false
+    warningDismissed.value = false
+
+    if (arStore.selectedPoi) {
       console.log('User is near the model — chat can be activated here')
     }
+  } else if (arStore.nonnaSpawned && !warningDismissed.value) {
+    if (proximityWarningTimer) clearTimeout(proximityWarningTimer)
+    proximityWarningTimer = setTimeout(() => {
+      if (!arStore.isNearModel && arStore.nonnaSpawned && !warningDismissed.value) {
+        showProximityWarning.value = true
+      }
+    }, 5000)
+  } else {
+    // Se non è spawnata, pulisci e nascondi tutto
+    showProximityWarning.value = false
+    if (proximityWarningTimer) {
+      clearTimeout(proximityWarningTimer)
+      proximityWarningTimer = null
+    }
   }
-)
+}
+
+watch(() => arStore.isNearModel, handleProximityCheck)
+watch(() => arStore.nonnaSpawned, handleProximityCheck)
 
 const agentStatus = computed<
   'idle' | 'listening' | 'processing' | 'speaking' | 'error'
@@ -588,12 +622,21 @@ const handleSendText = async () => {
 }
 
 const handleExit = () => {
-  stopAll()
+  resetNonnaState()
   arStore.resetSession()
 }
 
 const triggerWater = () => {
   arStore.waterVisible = true
+}
+
+const spawnNonna = () => {
+  arStore.nonnaSpawned = true
+  
+  // Wait for spawn animation before listening
+  setTimeout(() => {
+    startContinuousListening(locale.value)
+  }, 1500)
 }
 
 const testPoi = async (id: string) => {
@@ -741,12 +784,9 @@ const testPoi = async (id: string) => {
     box-shadow: 0 0 15px rgba(6, 182, 212, 0.45);
   }
   50% {
-    transform: scale(1.04);
-    box-shadow: 0 0 25px rgba(6, 182, 212, 0.7);
+    transform: scale(1.02);
+    box-shadow: 0 0 28px rgba(6, 182, 212, 0.7);
   }
-}
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s infinite ease-in-out;
 }
 
 @keyframes listening-pulse {
@@ -755,29 +795,254 @@ const testPoi = async (id: string) => {
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 20px rgba(32, 113, 193, 0.75);
-    transform: scale(1.05);
+    box-shadow: 0 0 22px rgba(32, 113, 193, 0.75);
+    transform: scale(1.06);
   }
 }
-.animate-listening-pulse {
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EXIT BUTTON — Top-right corner
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ar-exit-top-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 16px;
+  z-index: 40;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+.ar-exit-top-btn:active {
+  transform: scale(0.88);
+  background: rgba(220, 38, 38, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FLOATING PILL CTA BUTTONS (Water / Spawn Nonna)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ar-cta-floating {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+}
+
+.ar-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+  animation: pill-glow 2.5s ease-in-out infinite;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+.ar-pill-btn:active {
+  transform: scale(0.95);
+}
+
+.ar-pill-emerald {
+  background: rgba(16, 185, 129, 0.75);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.ar-pill-cyan {
+  background: rgba(6, 182, 212, 0.75);
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+@keyframes pill-glow {
+  0%, 100% {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), 0 0 12px rgba(255, 255, 255, 0.06);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FLOATING CHAT INPUT
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ar-chat-floating {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  left: 12px;
+  right: 12px;
+  z-index: 25;
+}
+
+.ar-chat-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: rgba(20, 20, 20, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  padding: 8px 8px 8px 24px;
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  transition: all 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.ar-chat-input-row:focus-within {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(96, 165, 250, 0.25) inset;
+}
+
+.ar-chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 16px;
+  line-height: 24px;
+  caret-color: #3b82f6;
+}
+
+.ar-chat-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ar-chat-send-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+.ar-chat-send-btn:disabled {
+  opacity: 0.4;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: default;
+}
+
+.ar-chat-send-btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CORNER BUTTONS — iPhone Lock Screen Layout
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ar-lockscreen-bottom {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  left: 24px;
+  right: 24px;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.ar-corner-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+}
+.ar-corner-btn:active {
+  transform: scale(0.88);
+}
+
+/* Active state (e.g., chat mode on) */
+.ar-corner-btn-active {
+  background: rgba(32, 113, 193, 0.65);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: white;
+  box-shadow: 0 0 18px rgba(32, 113, 193, 0.4), 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Listening state (mic active, pulsing) */
+.ar-corner-btn-listening {
+  background: rgba(32, 113, 193, 0.75);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: white;
   animation: listening-pulse 1.8s infinite ease-in-out;
 }
 
-/* --- Dialogue Bubble Premium Additions --- */
+/* Danger/muted state */
+.ar-corner-btn-danger {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(252, 165, 165, 0.3);
+  color: rgba(252, 165, 165, 0.95);
+}
+
+/* ── Dialogue Bubble Premium Additions ── */
 
 /* Custom scrollbar for glass dialogue card */
+.custom-dialogue-scroll {
+  /* Elegant fade at the bottom to hint at more content */
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
 .custom-dialogue-scroll::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 .custom-dialogue-scroll::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(32, 113, 193, 0.08);
+  border-radius: 10px;
+  margin-bottom: 12px; /* keep scrollbar out of the extreme fade zone */
 }
 .custom-dialogue-scroll::-webkit-scrollbar-thumb {
-  background: rgba(32, 113, 193, 0.2);
+  background: rgba(32, 113, 193, 0.45);
   border-radius: 10px;
 }
 .custom-dialogue-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(32, 113, 193, 0.35);
+  background: rgba(32, 113, 193, 0.65);
 }
 
 /* Sound equalizer visualizer bar animations */

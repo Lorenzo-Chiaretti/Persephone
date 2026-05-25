@@ -23,6 +23,8 @@
   "arRetry": "Riprova",
   "arPlaceHint": "Tocca lo schermo per posizionare il modello",
   "arBringWaterBack": "Riporta l'Acqua!",
+  "arTalkToNonna": "Parla con la Sciura di Milano",
+  "arGetCloser": "Avvicinati di più per poter parlare con la Sciura",
 
   "projSubtitle": "Il progetto",
   "projTitle": "Chi siamo",
@@ -129,8 +131,16 @@
   "gameRule4Badge": "Entro 30m ✓",
 
   "poiSelectTitle": "Sei lontano dai Navigli",
-  "poiSelectDesc": "Non sei vicino a nessun punto di interesse. Puoi simulare l'esperienza selezionando manualmente uno dei luoghi disponibili.",
-  "poiSelectIndoor": "Modalità interno",
-  "poiSelectIndoorDesc": "Attiva se sei in un ambiente chiuso: il modello verrà ridimensionato per adattarsi allo spazio.",
-  "poiSelectConfirm": "Inizia l'esperienza AR"
+  "poiSelectDesc": "Questa esperienza è progettata per essere vissuta sul posto. Scegli una località per provarla in modalità demo da remoto.",
+  "poiSelectSectionLabel": "SELEZIONA UN PUNTO DI INTERESSE",
+  "poiSelectLocationQuery": "Dove ti trovi?",
+  "poiSelectOutdoors": "All'aperto (Esterno)",
+  "poiSelectIndoors": "Al chiuso (Interno)",
+  "poiSelectIndoorsDesc": "Il modello 3D sarà ridotto per adattarsi all'ambiente interno.",
+  "poiSelectConfirm": "Avvia esperienza",
+  "poiSelectHint": "Scegli un luogo per iniziare",
+  "poiViaSenato": "Via Senato",
+  "poiLaghettoSanMarco": "Laghetto di San Marco",
+  "poiLaghettoStefano": "Laghetto di Santo Stefano",
+  "close": "Chiudi"
 }
