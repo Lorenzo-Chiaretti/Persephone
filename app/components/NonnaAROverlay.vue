@@ -123,10 +123,18 @@
           <Transition name="fade-slide">
             <div
               v-if="isBubbleVisible"
-              class="w-full max-w-[420px] flex items-start gap-3.5 bg-gradient-to-br from-white/95 to-slate-50/92 backdrop-blur-xl rounded-[24px] p-4 shadow-[0_20px_40px_rgba(32,113,193,0.14)] border border-blue-200/50 max-h-[38vh] pointer-events-auto transition-all duration-300"
+              class="w-full max-w-[360px] flex items-start gap-3.5 bg-black/60 border border-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-2xl relative overflow-hidden pointer-events-auto transition-all duration-300"
             >
+              <!-- Glowing background accents -->
+              <div
+                class="absolute -top-10 -left-10 w-24 h-24 bg-blue-500/15 rounded-full blur-2xl animate-pulse pointer-events-none"
+              />
+              <div
+                class="absolute -bottom-10 -right-10 w-24 h-24 bg-emerald-500/15 rounded-full blur-2xl animate-pulse pointer-events-none"
+              />
+
               <!-- Elegant Grandma Avatar -->
-              <div class="relative shrink-0">
+              <div class="relative shrink-0 z-10">
                 <div
                   class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_4px_12px_rgba(32,113,193,0.25)] border border-white/20"
                 >
@@ -144,7 +152,7 @@
                     }"
                   ></span>
                   <span
-                    class="relative inline-flex rounded-full h-3.5 w-3.5 border-2 border-white"
+                    class="relative inline-flex rounded-full h-3.5 w-3.5 border-2 border-black/85"
                     :class="{
                       'bg-blue-500': agentStatus === 'listening',
                       'bg-amber-500': agentStatus === 'processing',
@@ -157,10 +165,10 @@
               </div>
 
               <!-- Message Text and Details -->
-              <div class="flex-1 min-w-0 flex flex-col gap-1">
+              <div class="flex-1 min-w-0 flex flex-col gap-1 z-10">
                 <!-- Title row with equalizer -->
                 <div class="flex items-center gap-2">
-                  <span class="text-[12px] font-extrabold tracking-wider uppercase text-blue-600/90">
+                  <span class="text-[12px] font-extrabold tracking-wider uppercase text-emerald-400">
                     Sciura di Milano
                   </span>
                   <!-- Animated sound equalizer bars during speech -->
@@ -168,18 +176,18 @@
                     v-if="agentStatus === 'speaking'"
                     class="flex items-end gap-[2px] h-3 shrink-0"
                   >
-                    <span class="w-[2px] bg-emerald-500 rounded-full animate-bar-wave-1"></span>
-                    <span class="w-[2px] bg-emerald-500 rounded-full animate-bar-wave-2"></span>
-                    <span class="w-[2px] bg-emerald-500 rounded-full animate-bar-wave-3"></span>
-                    <span class="w-[2px] bg-emerald-500 rounded-full animate-bar-wave-4"></span>
+                    <span class="w-[2px] bg-emerald-400 rounded-full animate-bar-wave-1"></span>
+                    <span class="w-[2px] bg-emerald-400 rounded-full animate-bar-wave-2"></span>
+                    <span class="w-[2px] bg-emerald-400 rounded-full animate-bar-wave-3"></span>
+                    <span class="w-[2px] bg-emerald-400 rounded-full animate-bar-wave-4"></span>
                   </div>
                 </div>
 
                 <!-- Text Area (scrollable for longer text) -->
-                <div class="text-[14.5px] leading-relaxed text-gray-800 break-words max-h-[25vh] overflow-y-auto pr-2 pb-6 custom-dialogue-scroll font-medium mt-1 relative">
+                <div class="text-[14.5px] leading-relaxed text-white/95 break-words max-h-[25vh] overflow-y-auto pr-2 pb-6 custom-dialogue-scroll font-medium mt-1 relative z-10">
                   <!-- Case 1: Listening State -->
                   <template v-if="!isChatMode && agentStatus === 'listening'">
-                    <span class="text-blue-500/95 italic font-semibold">
+                    <span class="text-cyan-400 italic font-semibold">
                       {{ $t('arListeningBubble') }}
                     </span>
                   </template>
@@ -187,14 +195,14 @@
                   <!-- Case 2: Thinking State -->
                   <template v-else-if="agentStatus === 'processing'">
                     <div class="flex flex-col gap-1.5">
-                      <span class="text-amber-600/90 italic font-semibold">
+                      <span class="text-amber-400 italic font-semibold">
                         {{ $t('arProcessingBubble') }}
                       </span>
                       <!-- Dynamic jumping skeleton dots -->
                       <div class="flex items-center gap-1.5 py-1">
-                        <span class="w-2 h-2 bg-amber-500/50 rounded-full animate-bounce-dot-1"></span>
-                        <span class="w-2 h-2 bg-amber-500/75 rounded-full animate-bounce-dot-2"></span>
-                        <span class="w-2 h-2 bg-amber-500 rounded-full animate-bounce-dot-3"></span>
+                        <span class="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce-dot-1"></span>
+                        <span class="w-2 h-2 bg-amber-400/75 rounded-full animate-bounce-dot-2"></span>
+                        <span class="w-2 h-2 bg-amber-400 rounded-full animate-bounce-dot-3"></span>
                       </div>
                     </div>
                   </template>
@@ -219,7 +227,7 @@
             v-if="arStore.waterVisible && !arStore.nonnaSpawned"
             class="ar-cta-floating pointer-events-auto"
           >
-            <button @click="spawnNonna" class="ar-pill-btn ar-pill-emerald">
+            <button @click="spawnNonna" class="ar-pill-btn ar-pill-blue">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
@@ -234,7 +242,7 @@
             v-if="arStore.modelPlaced && !arStore.waterVisible && arStore.showFallbackButton"
             class="ar-cta-floating pointer-events-auto"
           >
-            <button @click="triggerWater" class="ar-pill-btn ar-pill-cyan">
+            <button @click="triggerWater" class="ar-pill-btn ar-pill-blue">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
               </svg>
@@ -816,19 +824,20 @@ const testPoi = async (id: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(239, 68, 68, 0.9);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  background: rgba(239, 68, 68, 0.25);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: rgba(254, 202, 202, 0.9);
   cursor: pointer;
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
   -webkit-tap-highlight-color: transparent;
   transition: all 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15), 0 0 10px rgba(239, 68, 68, 0.1);
 }
 .ar-exit-top-btn:active {
   transform: scale(0.88);
-  background: rgba(220, 38, 38, 1);
+  background: rgba(239, 68, 68, 0.45);
+  color: white;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -868,14 +877,26 @@ const testPoi = async (id: string) => {
   transform: scale(0.95);
 }
 
-.ar-pill-emerald {
-  background: rgba(16, 185, 129, 0.75);
-  border-color: rgba(52, 211, 153, 0.35);
+.ar-pill-blue {
+  background: rgba(37, 99, 235, 0.85);
+  border-color: rgba(96, 165, 250, 0.6);
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4), 0 0 12px rgba(37, 99, 235, 0.2);
+}
+.ar-pill-blue:active {
+  background: rgba(29, 78, 216, 0.95);
+  color: white;
 }
 
 .ar-pill-cyan {
-  background: rgba(6, 182, 212, 0.75);
-  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(6, 182, 212, 0.25);
+  border-color: rgba(34, 211, 238, 0.4);
+  color: rgba(207, 250, 254, 0.95);
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.2), 0 0 12px rgba(6, 182, 212, 0.1);
+}
+.ar-pill-cyan:active {
+  background: rgba(6, 182, 212, 0.45);
+  color: white;
 }
 
 @keyframes pill-glow {
@@ -1008,9 +1029,10 @@ const testPoi = async (id: string) => {
 
 /* Listening state (mic active, pulsing) */
 .ar-corner-btn-listening {
-  background: rgba(32, 113, 193, 0.75);
-  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(32, 113, 193, 0.3);
+  border-color: rgba(96, 165, 250, 0.5);
   color: white;
+  box-shadow: 0 0 20px rgba(32, 113, 193, 0.4);
   animation: listening-pulse 1.8s infinite ease-in-out;
 }
 
