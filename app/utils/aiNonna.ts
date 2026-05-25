@@ -12,7 +12,10 @@ const isNearNonna = ref(false)
 const shouldContinueListening = ref(false)
 const isMuted = ref(false)
 const isConnecting = ref(false)
-const isThinking = ref(false) 
+const isThinking = ref(false)
+
+// Cache dei blob audio per evitare chiamate ripetute a ElevenLabs per le stesse frasi
+const ttsBlobCache = new Map<string, Blob>()
 
 const currentLang = ref<string>('it')
 const currentPoiLabel = ref<string>('')
@@ -24,6 +27,17 @@ let mediaRecorder: MediaRecorder | null = null
 let audioCtx: AudioContext | null = null
 // Tracciamento del canale sorgente audio attivo per consentire interruzione immediata
 let currentAudioSource: AudioBufferSourceNode | null = null
+let currentAudioElement: HTMLAudioElement | null = null
+let globalAudioElement: HTMLAudioElement | null = null
+
+const getAudioElement = (): HTMLAudioElement => {
+  if (!globalAudioElement && typeof window !== 'undefined') {
+    globalAudioElement = new Audio()
+    globalAudioElement.preservesPitch = true
+  }
+  return globalAudioElement!
+}
+
 // Controllo intervallo periodico di prossimità ("ogni tot")
 let proximityInterval: ReturnType<typeof setInterval> | null = null
 
@@ -54,6 +68,16 @@ export const globalStopNonnaAll = () => {
       // Già fermato o mai avviato
     }
     currentAudioSource = null
+  }
+
+  if (currentAudioElement) {
+    try {
+      currentAudioElement.pause()
+      currentAudioElement.currentTime = 0
+    } catch (e) {
+      // Già fermato o mai avviato
+    }
+    currentAudioElement = null
   }
 
   isListening.value = false
@@ -107,6 +131,17 @@ export const useAiNonna = () => {
         console.log('🔊 AudioContext sbloccato con successo per iOS.')
       }).catch((err) => {
         console.error('Impossibile sbloccare l\'AudioContext:', err)
+      })
+    }
+
+    // Sblocca anche l'elemento audio HTML5 per iOS/Safari
+    const audio = getAudioElement()
+    if (audio) {
+      audio.play().then(() => {
+        audio.pause()
+        console.log('🔊 HTMLAudioElement sbloccato con successo per iOS.')
+      }).catch((err) => {
+        console.warn('Impossibile sbloccare HTMLAudioElement:', err)
       })
     }
   }
@@ -174,6 +209,12 @@ export const useAiNonna = () => {
   // ─── Voce (ElevenLabs) ─────────────────────────────────────────────────────
 
   const speak = async (text: string): Promise<boolean> => {
+    // Se il testo è vuoto o contiene solo spazi, non facciamo alcuna chiamata a ElevenLabs
+    if (!text || !text.trim()) {
+      console.log('👵 Nonna: Testo vuoto o non valido per la riproduzione audio.')
+      return false
+    }
+
     // Se siamo in modalità chat (tastiera), non sprecare token e mostra solo il testo
     if (isChatMode.value) {
       chatHistory.value.push({ role: 'assistant', content: text })
@@ -189,14 +230,26 @@ export const useAiNonna = () => {
     isSpeaking.value = true
 
     try {
-      const audioBlob = await $fetch<Blob>('/api/tts', {
-        method: 'POST',
-        body: { text }
-      })
+      let audioBlob: Blob
+      const cacheKey = text.trim().toLowerCase()
 
-      const arrayBuffer = await audioBlob.arrayBuffer()
-      const ctx = getAudioContext()
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+      if (ttsBlobCache.has(cacheKey)) {
+        console.log('👵 Nonna: Audio recuperato dalla cache per:', text)
+        audioBlob = ttsBlobCache.get(cacheKey)!
+      } else {
+        console.log('👵 Nonna: Audio non in cache. Chiamata a ElevenLabs in corso per:', text)
+        audioBlob = await $fetch<Blob>('/api/tts', {
+          method: 'POST',
+          body: { text }
+        })
+        ttsBlobCache.set(cacheKey, audioBlob)
+      }
+
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = getAudioElement()
+      audio.src = audioUrl
+      audio.playbackRate = 1.25
+      audio.preservesPitch = true
 
       // Mostriamo il testo nel fumetto SOLO ora che l'audio è pronto per partire
       chatHistory.value.push({ role: 'assistant', content: text })
@@ -204,28 +257,41 @@ export const useAiNonna = () => {
       // Se nel frattempo l'utente si è allontanato, non riprodurre nulla
       if (!arStore.isNearModel) {
         isSpeaking.value = false
+        URL.revokeObjectURL(audioUrl)
         return false
       }
 
-      await new Promise<void>((resolve, reject) => {
-        const source = ctx.createBufferSource()
-        source.buffer = audioBuffer
-        source.connect(ctx.destination)
-        currentAudioSource = source
+      currentAudioElement = audio
 
-        source.onended = () => {
-          if (currentAudioSource === source) {
-            currentAudioSource = null
+      await new Promise<void>((resolve, reject) => {
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl)
+          if (currentAudioElement === audio) {
+            currentAudioElement = null
           }
           resolve()
         }
 
+        audio.onerror = (e) => {
+          URL.revokeObjectURL(audioUrl)
+          if (currentAudioElement === audio) {
+            currentAudioElement = null
+          }
+          reject(e)
+        }
+
         try {
-          source.playbackRate.value = 1.2
-          source.start(0)
+          audio.play().catch((e) => {
+            URL.revokeObjectURL(audioUrl)
+            if (currentAudioElement === audio) {
+              currentAudioElement = null
+            }
+            reject(e)
+          })
         } catch (e) {
-          if (currentAudioSource === source) {
-            currentAudioSource = null
+          URL.revokeObjectURL(audioUrl)
+          if (currentAudioElement === audio) {
+            currentAudioElement = null
           }
           reject(e)
         }
@@ -270,8 +336,15 @@ export const useAiNonna = () => {
 
       const answer = response.choices?.[0]?.message?.content
       await speak(answer) // attende che l'audio sia FINITO prima di continuare
-    } catch (e) {
-      console.error('Errore memoria Nonna:', e)
+    } catch (e: any) {
+      const statusCode = e.status || e.statusCode || 'Sconosciuto'
+      const statusText = e.statusMessage || e.message || ''
+      console.log(`👵❌ [ERRORE GROQ / CHAT]: Chiamata fallita con codice ${statusCode}. Dettaglio:`, statusText)
+      console.error('Dettaglio errore completo:', e)
+      const errorMsg = currentLang.value === 'en'
+        ? "Forgive me, my dear, my old memory had a lapse... Could you repeat your question, please?"
+        : "Scusa tesoro, la mia vecchia memoria ha avuto un vuoto... Potresti ripetermi la domanda, per favore?"
+      chatHistory.value.push({ role: 'assistant', content: errorMsg })
     }
   }
 
@@ -346,17 +419,39 @@ export const useAiNonna = () => {
 
       socket.onmessage = async (message) => {
         const data = JSON.parse(message.data)
-        
+
         // FILTRO ASSOLUTO: Se non è un "Risultato", ignoralo!
         // Questo blocca in automatico i Metadata, gli SpeechStarted e gli UtteranceEnd
         if (data.type !== 'Results') return
 
-        // Per sicurezza extra, aggiungiamo anche un punto interrogativo prima di [0]
-        const transcript = data.channel?.alternatives?.[0]?.transcript
+        const alternative = data.channel?.alternatives?.[0]
+        const transcript = alternative?.transcript
+        const confidence = alternative?.confidence || 0
 
-        // FILTRO ANTI-RUMORE: Ignoriamo trascrizioni vuote o troppo corte (es. colpi di tosse, "ah")
-        if (transcript && transcript.trim().length > 2) { 
-          
+        if (transcript && transcript.trim().length > 0) {
+          const cleanWord = transcript.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
+          const isShortWhitelist = ['sì', 'si', 'no', 'ok', 'yes', 'okay'].includes(cleanWord)
+
+          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 75%)
+          // A MENO CHE non si tratti di una parola chiave di consenso/risposta breve (es. "sì", "no", "ok")
+          if (confidence < 0.75 && !isShortWhitelist) {
+            console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Confidenza insufficiente: ${confidence.toFixed(2)})`)
+            return
+          }
+
+          // Se è nella whitelist, permettiamo di passare purché la confidenza sia almeno 0.35 (per evitare rumori estremi)
+          if (isShortWhitelist && confidence < 0.35) {
+            console.log(`👵 [Antirumore] Consenso/Negazione ignorato perché la confidenza è estremamente bassa (<35%): "${transcript}"`)
+            return
+          }
+
+          // Filtro lettere singole ultracorte: se è una singola lettera (es. "a", "e", "o" prodotte da respiri o rumore),
+          // deve avere una confidenza quasi assoluta (>= 0.90) per essere considerata valida.
+          if (transcript.trim().length === 1 && confidence < 0.90) {
+            console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Lettera singola e confidenza sotto 90%)`)
+            return
+          }
+
           if (data.is_final) {
             if (stabilityTimer) clearTimeout(stabilityTimer)
 
@@ -371,12 +466,9 @@ export const useAiNonna = () => {
                 isThinking.value = true // <--- NUOVO
                 await processMessage(transcript)
                 isThinking.value = false // <--- NUOVO
-              }, 1500) 
+              }, 1500)
             }
           }
-        } else if (data.is_final && transcript && transcript.trim().length > 0) {
-           // È stato rilevato un micro-rumore (1 o 2 lettere), lo stampiamo ma NON chiudiamo il microfono
-           console.log('🌬️ Ignorato probabile rumore di fondo:', transcript)
         }
       }
 
