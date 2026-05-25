@@ -4,7 +4,8 @@ export default defineEventHandler(async (event) => {
   const apiKey = process.env.ELEVENLABS_API_KEY
   //JkwfwmvGT71qYVCwRCMo id nonna prima che lo cambiassi
   //voce seconda YBrIkf7z6YBcR3bKJphj
-  const voiceId = 'YBrIkf7z6YBcR3bKJphj'
+  //voce terza marco Z4wnRNjyeMpeZ17tQku2
+  const voiceId = 'Z4wnRNjyeMpeZ17tQku2'
 
   try {
     const response = await $fetch<Blob>(
