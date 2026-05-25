@@ -642,6 +642,7 @@ const spawnNonna = () => {
 const testPoi = async (id: string) => {
   if (!debugPois.find((p) => p.id === id)) return
   arStore.selectedPoi = { id }
+  arStore.nonnaSpawned = true
   isNearNonna.value = true
   showDebugPanel.value = false
   arStore.setLocalized()

@@ -354,6 +354,12 @@ export const useAiNonna = () => {
     // LUCCHETTO: Se stiamo già connettendo, blocca subito qualsiasi altra richiesta
     if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value || isConnecting.value) return
     
+    // Nonna deve essere spawnata per poter ascoltare
+    if (!arStore.nonnaSpawned) {
+      console.log('👵 Nonna non è ancora spawnata. Microfono inattivo.')
+      return
+    }
+    
     isConnecting.value = true // LUCCHETTO CHIUSO! Nessun altro può entrare.
 
     currentLang.value = lang
@@ -432,9 +438,9 @@ export const useAiNonna = () => {
           const cleanWord = transcript.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
           const isShortWhitelist = ['sì', 'si', 'no', 'ok', 'yes', 'okay'].includes(cleanWord)
 
-          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 75%)
+          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 50%)
           // A MENO CHE non si tratti di una parola chiave di consenso/risposta breve (es. "sì", "no", "ok")
-          if (confidence < 0.75 && !isShortWhitelist) {
+          if (confidence < 0.50 && !isShortWhitelist) {
             console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Confidenza insufficiente: ${confidence.toFixed(2)})`)
             return
           }
@@ -494,11 +500,11 @@ export const useAiNonna = () => {
   if (typeof window !== 'undefined' && !proximityInterval) {
     proximityInterval = setInterval(() => {
       if (arStore.isActive) {
-        const isNear = arStore.isNearModel
+        const isNear = arStore.isNearModel && arStore.nonnaSpawned
         if (isNear) {
           // LUCCHETTO: Il Watchdog controlla anche !isConnecting.value prima di lanciare la funzione
           if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value && !isConnecting.value) {
-            console.log('👵 [Interval Proximity] Utente vicino, avvio ascolto.')
+            console.log('👵 [Interval Proximity] Utente vicino e Nonna spawnata, avvio ascolto.')
             startContinuousListening(currentLang.value)
           }
         } else {
