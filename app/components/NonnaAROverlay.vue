@@ -513,7 +513,8 @@ const {
   isMuted,
   toggleMute,
   unlockAudio,
-  stopAll
+  stopAll,
+  resetNonnaState
 } = useAiNonna()
 
 const debugPois = [
@@ -621,7 +622,7 @@ const handleSendText = async () => {
 }
 
 const handleExit = () => {
-  stopAll()
+  resetNonnaState()
   arStore.resetSession()
 }
 

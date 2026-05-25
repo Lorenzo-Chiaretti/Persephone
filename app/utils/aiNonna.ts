@@ -11,6 +11,7 @@ const chatHistory = ref<{ role: string; content: string }[]>([])
 const isNearNonna = ref(false)
 const shouldContinueListening = ref(false)
 const isMuted = ref(false)
+const isConnecting = ref(false)
 
 const currentLang = ref<string>('it')
 const currentPoiLabel = ref<string>('')
@@ -24,6 +25,61 @@ let audioCtx: AudioContext | null = null
 let currentAudioSource: AudioBufferSourceNode | null = null
 // Controllo intervallo periodico di prossimità ("ogni tot")
 let proximityInterval: ReturnType<typeof setInterval> | null = null
+
+export const globalStopNonnaAll = () => {
+  shouldContinueListening.value = false
+  isMuted.value = false
+  
+  if (mediaRecorder) {
+    if (mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+    }
+    mediaRecorder.stream.getTracks().forEach((track) => track.stop())
+    mediaRecorder = null
+  }
+
+  if (socket) {
+    if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+      socket.close()
+    }
+    socket = null
+  }
+
+  // Interrompi immediatamente l'audio in riproduzione della Nonna
+  if (currentAudioSource) {
+    try {
+      currentAudioSource.stop()
+    } catch (e) {
+      // Già fermato o mai avviato
+    }
+    currentAudioSource = null
+  }
+
+  isListening.value = false
+  isSpeaking.value = false
+}
+
+export const resetNonnaState = () => {
+  globalStopNonnaAll()
+  chatHistory.value = []
+  isChatMode.value = false
+  isNearNonna.value = false
+  currentLang.value = 'it'
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      globalStopNonnaAll()
+    }
+  })
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => {
+    globalStopNonnaAll()
+  })
+}
 
 export const useAiNonna = () => {
   const arStore = useArStore()
@@ -89,7 +145,7 @@ export const useAiNonna = () => {
     isChatMode.value = !isChatMode.value
     if (isChatMode.value) {
       // Se passiamo a tastiera, spegniamo subito microfono e socket
-      stopAll()
+      globalStopNonnaAll()
     } else {
       // Se torniamo a voce, resettiamo lo stato di stop forzato e ripartiamo
       shouldContinueListening.value = true
@@ -111,36 +167,7 @@ export const useAiNonna = () => {
   // ─── Pulizia hardware e connessioni ────────────────────────────────────────
 
   const stopAll = () => {
-    shouldContinueListening.value = false
-    isMuted.value = false
-    
-    if (mediaRecorder) {
-      if (mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop()
-      }
-      mediaRecorder.stream.getTracks().forEach((track) => track.stop())
-      mediaRecorder = null
-    }
-
-    if (socket) {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close()
-      }
-      socket = null
-    }
-
-    // Interrompi immediatamente l'audio in riproduzione della Nonna
-    if (currentAudioSource) {
-      try {
-        currentAudioSource.stop()
-      } catch (e) {
-        // Già fermato o mai avviato
-      }
-      currentAudioSource = null
-    }
-
-    isListening.value = false
-    isSpeaking.value = false
+    globalStopNonnaAll()
   }
 
   // ─── Voce (ElevenLabs) ─────────────────────────────────────────────────────
@@ -193,6 +220,7 @@ export const useAiNonna = () => {
         }
 
         try {
+          source.playbackRate.value = 1.2
           source.start(0)
         } catch (e) {
           if (currentAudioSource === source) {
@@ -249,19 +277,21 @@ export const useAiNonna = () => {
   // ─── Ascolto continuo (Deepgram) ───────────────────────────────────────────
 
   const startContinuousListening = async (lang: string = 'it') => {
+    // LUCCHETTO: Se stiamo già connettendo, blocca subito qualsiasi altra richiesta
+    if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value || isConnecting.value) return
+    
+    isConnecting.value = true // LUCCHETTO CHIUSO! Nessun altro può entrare.
+
     currentLang.value = lang
     shouldContinueListening.value = true
 
-    // L'esperienza vocale deve funzionare se e solo se sono vicino alla nonna
     if (!arStore.isNearModel) {
       isListening.value = false
+      isConnecting.value = false // Sblocca
       return
     }
 
-    if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value) return
-
     try {
-      // Imposta la sessione in modalità di registrazione e riproduzione su iOS
       if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
         try {
           (navigator as any).audioSession.type = 'play-and-record'
@@ -274,14 +304,15 @@ export const useAiNonna = () => {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: false // Disattiva il guadagno automatico per ridurre i rumori in sottofondo
+          autoGainControl: false 
         }
       })
+      
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
 
-      // Double check in case proximity changed or user exited AR during token fetch
       if (!arStore.isNearModel || !shouldContinueListening.value || isMuted.value) {
         stream.getTracks().forEach((track) => track.stop())
+        isConnecting.value = false // Sblocca
         return
       }
 
@@ -293,6 +324,7 @@ export const useAiNonna = () => {
       mediaRecorder = new MediaRecorder(stream)
 
       socket.onopen = () => {
+        isConnecting.value = false // LUCCHETTO APERTO: Connessione riuscita!
         isListening.value = true
         console.log('👵 DEEPGRAM COLLEGATO: Sto ascoltando...')
 
@@ -301,6 +333,7 @@ export const useAiNonna = () => {
             socket.send(event.data)
           }
         })
+        
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
             mediaRecorder.start(250); 
           } else {
@@ -335,15 +368,18 @@ export const useAiNonna = () => {
 
       socket.onerror = (err) => {
         console.error('❌ Errore Socket Deepgram:', err)
+        isConnecting.value = false // Sblocca in caso di errore
         stopAll()
       }
 
       socket.onclose = () => {
         console.log('🔇 Connessione Deepgram chiusa')
+        isConnecting.value = false // Sblocca alla chiusura
         isListening.value = false
       }
     } catch (err) {
       console.error('Inizializzazione fallita:', err)
+      isConnecting.value = false // Sblocca se crasha il microfono o la chiamata API
       isListening.value = false
     }
   }
@@ -351,29 +387,27 @@ export const useAiNonna = () => {
   // ─── CONTROLLO PERIODICO DI PROSSIMITÀ (OGNI TOT) ───
   if (typeof window !== 'undefined' && !proximityInterval) {
     proximityInterval = setInterval(() => {
-      // Controlliamo lo store solo se l'esperienza AR è attiva
       if (arStore.isActive) {
         const isNear = arStore.isNearModel
         if (isNear) {
-          // Se siamo vicini e non stiamo facendo nulla, attiviamo l'ascolto
-          if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value) {
+          // LUCCHETTO: Il Watchdog controlla anche !isConnecting.value prima di lanciare la funzione
+          if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value && !isConnecting.value) {
             console.log('👵 [Interval Proximity] Utente vicino, avvio ascolto.')
             startContinuousListening(currentLang.value)
           }
         } else {
-          // Se l'utente si allontana, la Nonna smette di ascoltare/parlare
-          if (isListening.value || isSpeaking.value || shouldContinueListening.value) {
+          if (isListening.value || isSpeaking.value || shouldContinueListening.value || isConnecting.value) {
             console.log('👵 [Interval Proximity] Utente lontano, interrompo tutto.')
             chatHistory.value = []
             stopAll()
+            isConnecting.value = false // Resetta il lucchetto per sicurezza quando ti allontani
           }
         }
       }
-    }, 1000) // Controllo a cadenza di 1 secondo ("ogni tot")
+    }, 1000) 
   }
 
   onUnmounted(() => {
-    // Quando il component principale si smonta, ripuliamo l'intervallo ed eseguiamo stop
     if (proximityInterval) {
       clearInterval(proximityInterval)
       proximityInterval = null
@@ -401,6 +435,7 @@ export const useAiNonna = () => {
     currentPoiLabel,
     currentLang,
     stopAll,
+    resetNonnaState,
     isMuted,
     toggleMute,
     unlockAudio

@@ -363,8 +363,24 @@
   // MOUNTING AND UNMOUNTING
   // ====================================================================================
 
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      stopVoiceListening()
+    } else {
+      if (modelPlaced.value && !waterVisible.value) {
+        startVoiceListening()
+      }
+    }
+  }
+
+  const handlePageHide = () => {
+    stopVoiceListening()
+  }
+
   onMounted(() => {
     window.addEventListener('message', handleIframeMessages)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pagehide', handlePageHide)
   })
 
   onUnmounted(() => {
@@ -375,6 +391,8 @@
     }
     arStore.resetSession()
     window.removeEventListener('message', handleIframeMessages)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    window.removeEventListener('pagehide', handlePageHide)
   })
 </script>
 
