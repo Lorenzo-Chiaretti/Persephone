@@ -131,8 +131,16 @@
   "gameRule4Badge": "Within 30m ✓",
 
   "poiSelectTitle": "You're far from the Navigli",
-  "poiSelectDesc": "You're not near any point of interest. You can simulate the experience by manually selecting one of the available locations.",
-  "poiSelectIndoor": "Indoor mode",
-  "poiSelectIndoorDesc": "Enable if you're indoors: the model will be scaled down to fit the space.",
-  "poiSelectConfirm": "Start the AR experience"
+  "poiSelectDesc": "This experience is designed to be lived on-site. Choose a location to try it in demo mode remotely.",
+  "poiSelectSectionLabel": "SELECT A POINT OF INTEREST",
+  "poiSelectLocationQuery": "Where are you?",
+  "poiSelectOutdoors": "Outdoors",
+  "poiSelectIndoors": "Indoors",
+  "poiSelectIndoorsDesc": "The 3D model will be smaller to fit inside the room.",
+  "poiSelectConfirm": "Start experience",
+  "poiSelectHint": "Choose a location to start",
+  "poiViaSenato": "Via Senato",
+  "poiLaghettoSanMarco": "San Marco Lake",
+  "poiLaghettoStefano": "Santo Stefano Lake",
+  "close": "Close"
 }
