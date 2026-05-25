@@ -33,7 +33,6 @@ export const useAiNonna = () => {
     if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
       try {
         (navigator as any).audioSession.type = 'playback'
-        console.log('📱 AudioSession impostata su playback per bypassare il silenzioso.')
       } catch (err) {
         console.warn('Errore configurazione AudioSession:', err)
       }
@@ -142,7 +141,6 @@ export const useAiNonna = () => {
 
     isListening.value = false
     isSpeaking.value = false
-    console.log('🔇 Tutte le risorse sono state liberate.')
   }
 
   // ─── Voce (ElevenLabs) ─────────────────────────────────────────────────────
@@ -256,7 +254,6 @@ export const useAiNonna = () => {
 
     // L'esperienza vocale deve funzionare se e solo se sono vicino alla nonna
     if (!arStore.isNearModel) {
-      console.log('👵 Nonna: Non posso ascoltare perché non sei vicino al modello.')
       isListening.value = false
       return
     }
@@ -268,7 +265,6 @@ export const useAiNonna = () => {
       if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
         try {
           (navigator as any).audioSession.type = 'play-and-record'
-          console.log('📱 AudioSession impostata su play-and-record per il microfono.')
         } catch (err) {
           console.warn('Errore configurazione AudioSession per microfono:', err)
         }
@@ -282,10 +278,9 @@ export const useAiNonna = () => {
         }
       })
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
-      console.log('🔑 Token ricevuto dal server:', token)
 
-      // Double check in case proximity changed during token fetch
-      if (!arStore.isNearModel) {
+      // Double check in case proximity changed or user exited AR during token fetch
+      if (!arStore.isNearModel || !shouldContinueListening.value || isMuted.value) {
         stream.getTracks().forEach((track) => track.stop())
         return
       }
@@ -306,7 +301,11 @@ export const useAiNonna = () => {
             socket.send(event.data)
           }
         })
-        mediaRecorder?.start(250)
+        if (mediaRecorder && mediaRecorder.state === 'inactive') {
+            mediaRecorder.start(250); 
+          } else {
+            console.warn("WebSocket aperto, ma il microfono è già attivo. Comando di start ignorato.");
+          }
       }
 
       let stabilityTimer: ReturnType<typeof setTimeout> | null = null
@@ -351,7 +350,6 @@ export const useAiNonna = () => {
 
   // ─── CONTROLLO PERIODICO DI PROSSIMITÀ (OGNI TOT) ───
   if (typeof window !== 'undefined' && !proximityInterval) {
-    console.log('👵 Avvio intervallo di prossimità per la Nonna')
     proximityInterval = setInterval(() => {
       // Controlliamo lo store solo se l'esperienza AR è attiva
       if (arStore.isActive) {
@@ -366,12 +364,8 @@ export const useAiNonna = () => {
           // Se l'utente si allontana, la Nonna smette di ascoltare/parlare
           if (isListening.value || isSpeaking.value || shouldContinueListening.value) {
             console.log('👵 [Interval Proximity] Utente lontano, interrompo tutto.')
-            stopAll()
-          }
-          // Svuota anche la chat per far sparire immediatamente eventuali vecchi fumetti rimasti!
-          if (chatHistory.value.length > 0) {
-            console.log('👵 [Interval Proximity] Utente lontano, ripulisco la cronologia dei messaggi.')
             chatHistory.value = []
+            stopAll()
           }
         }
       }

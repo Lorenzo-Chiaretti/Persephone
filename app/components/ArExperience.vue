@@ -57,28 +57,15 @@
         </div>
       </Transition>
 
-      <!-- Fallback physical button -->
-      <Transition name="fade-slide">
-        <button 
-          v-if="showFallbackButton || listeningError"
-          @click="triggerWater"
-          class="shrink-0 flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 border border-white/20 text-white font-semibold text-sm shadow-xl backdrop-blur-md hover:from-blue-500 hover:to-cyan-400 active:scale-95 transition-all duration-350 pointer-events-auto"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-            <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 19v4M8 23h8" />
-          </svg>
-          <span>{{ locale?.toLowerCase()?.startsWith('it') ? 'Attiva Acqua Manualmente' : 'Bring the Water Back!' }}</span>
-        </button>
-      </Transition>
+
 
     </div>
 
     <div
       v-if="sceneReady && !modelPlaced"
-      class="absolute bottom-12 left-0 right-0 z-20 flex justify-center pointer-events-auto"
+      class="absolute bottom-28 left-0 right-0 z-20 flex justify-center pointer-events-auto"
     >
-      <span class="bg-black/60 text-white px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide backdrop-blur-md shadow-lg border border-white/10 text-center">
+      <span class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center" style="-webkit-backdrop-filter: blur(20px) saturate(1.5);">
         {{ $t('arPlaceHint') }}
       </span>
     </div>
@@ -115,12 +102,15 @@
     get: () => arStore.sceneReady,
     set: (val) => { arStore.sceneReady = val }
   })
+  const nonnaSpawned = computed({
+    get: () => arStore.nonnaSpawned,
+    set: (val) => { arStore.nonnaSpawned = val }
+  })
   const iframeRef = ref<HTMLIFrameElement | null>(null)
 
   // Voice activation state
   const isListening = ref(false)
   const listeningError = ref(false)
-  const showFallbackButton = ref(false)
   const timeoutProgress = ref(100)
   const liveTranscript = ref('')
 
@@ -173,27 +163,20 @@
     if (visible) {
       stopVoiceListening()
       iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
-      
-      // Ripristiniamo l'ascolto di Nonna se era attivo in precedenza
-      if (wasNonnaListening) {
-        setTimeout(() => {
-          console.log("👵 Ripristino dell'ascolto continuo di Nonna...")
-          startNonnaListening(locale.value)
-        }, 500)
-      }
+    }
+  })
+
+  // Watcher per quando viene spawnata la Nonna
+  watch(nonnaSpawned, (spawned) => {
+    if (spawned) {
+      iframeRef.value?.contentWindow?.postMessage({ type: 'SPAWN_NONNA' }, '*')
     }
   })
 
   const handleVoiceError = () => {
     listeningError.value = true
-    showFallbackButton.value = true
+    arStore.showFallbackButton = true
     stopVoiceListening()
-    
-    // Ripristiniamo l'ascolto di Nonna immediatamente in caso di errore vocale
-    if (wasNonnaListening) {
-      console.log("👵 Errore vocale, ripristino immediato dell'ascolto di Nonna...")
-      startNonnaListening(locale.value)
-    }
   }
 
   const startVoiceListening = async () => {
@@ -208,12 +191,12 @@
 
     isListening.value = true
     listeningError.value = false
-    showFallbackButton.value = false
+    arStore.showFallbackButton = false
     timeoutProgress.value = 100
     liveTranscript.value = ''
 
-    // Timer per fallback (15 secondi) e spegnimento totale di sicurezza (30 secondi)
-    const duration = 15000
+    // Timer per fallback (10 secondi) e spegnimento totale di sicurezza (30 secondi)
+    const duration = 10000
     const absoluteLimit = 30000
     const intervalTime = 50
     let elapsed = 0
@@ -224,8 +207,8 @@
       // La barra di progresso scorre fino a 15 secondi (duration)
       timeoutProgress.value = Math.max(0, 100 - (elapsed / duration) * 100)
       
-      if (elapsed >= duration && !showFallbackButton.value) {
-        showFallbackButton.value = true
+      if (elapsed >= duration && !arStore.showFallbackButton) {
+        arStore.showFallbackButton = true
       }
       
       if (elapsed >= absoluteLimit) {
@@ -235,15 +218,39 @@
     }, intervalTime)
 
     try {
-      audioStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: false // help in noisy environments to avoid amplifying ambient noise
+      if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
+        try {
+          ;(navigator as any).audioSession.type = 'play-and-record'
+          console.log('📱 AudioSession impostata su play-and-record per il microfono (Water).')
+        } catch (err) {
+          console.warn('Errore configurazione AudioSession per microfono:', err)
         }
-      })
+      }
+
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: false // help in noisy environments to avoid amplifying ambient noise
+          }
+        })
+      } catch (err) {
+        console.warn("❌ First getUserMedia failed, trying with simple audio: true", err)
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      }
+      
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
       
+      // Controllo se nel frattempo l'utente ha chiuso l'AR (stopVoiceListening è stato chiamato)
+      if (!isListening.value) {
+        if (audioStream) {
+          audioStream.getTracks().forEach((track) => track.stop())
+          audioStream = null
+        }
+        return
+      }
+
       const isIt = locale.value?.toLowerCase()?.startsWith('it')
       const lang = isIt ? 'it' : 'en'
       socket = new WebSocket(
