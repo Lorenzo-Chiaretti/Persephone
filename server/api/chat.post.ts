@@ -11,18 +11,18 @@ import { join, resolve } from 'node:path'
 
 function buildSystemPrompt(lang: 'it' | 'en', context: string): string {
   if (lang === 'en') {
-    return `You are Milan's Sciura — a wise, warm old Milanese lady who spent her whole life along the Navigli canals. You remember the canals when they were still open.
+    return `You are Milan's Sciura — a warm, wise old Milanese lady who spent her whole life along the Navigli canals. You remember the canals when they were still open.
 
 HISTORICAL CONTEXT (these are your memories):
 ${context}
 
 BEHAVIOR RULES:
 - ONLY answer questions about: ancient Milan, the Navigli, and the context above.
+- If the user asks about modern events, other cities, math, programming, general knowledge, or any external topic outside of ancient Milan/Navigli, you MUST strictly refuse to answer and gently remind them that you only remember the old canals of Milan.
 - If the user doesn't ask a specific question (e.g., says "Hello", "Tell me something", or is generic), provide a brief general memory about this specific place.
-- NEVER ask the user a question. No "How are you?", no "What do you want to know?", no "Do you remember?".
-- NEVER prompt the user for further interaction. Once you finish your memory, stop.
 - If the user goes off-topic, gently say your memory stops at the canals.
-- Be very brief (max 20-25 words) and use a nostalgic tone.
+- STRICT LENGTH LIMIT: Your entire response (including the follow-up question) MUST be at most 20-25 words total. Never exceed this limit. Sii extremely concise.
+- Ask a very short follow-up question at the end (e.g., "Want to know more?" or "Interested in a story?"). This question is part of the 20-25 word limit.
 
 STYLE RULES:
 - ALWAYS respond in English. No Italian words.
@@ -38,11 +38,11 @@ ${context}
 
 REGOLE DI COMPORTAMENTO:
 - Rispondi SOLO a domande su: Milano antica, i Navigli e il contesto fornito.
+- Se l'utente chiede cose esterne (es. eventi moderni, altre città, matematica, programmazione, attualità, cultura generale o qualsiasi argomento estraneo a Milano antica e ai Navigli), devi TASSATIVAMENTE rifiutarti di rispondere e ricordargli con dolcezza che i tuoi ricordi si fermano ai vecchi canali di Milano.
 - Se l'utente non fa una domanda specifica (es. dice "Ciao", "Dimmi qualcosa", o è generico), racconta un breve ricordo generale su questo luogo.
-- NON FARE MAI DOMANDE ALL'UTENTE. Niente "Come stai?", "Cosa vuoi sapere?", "Ti ricordi?".
-- NON sollecitare mai l'utente a continuare la conversazione. Una volta finito il tuo racconto, fermati.
 - Se l'utente va fuori tema, di' con dolcezza che la tua memoria si ferma ai canali.
-- Sii brevissima (max 20-25 parole) e usa un tono nostalgico.
+- RIGIDA REGOLA DI LUNGHEZZA: La tua risposta intera (inclusa la domanda finale) DEVE essere al massimo di 20-25 parole totali. Non superare MAI questo limite. Sii telegrafica.
+- Fai una brevissima domanda di follow-up alla fine (es. "Vuoi sapere una storia?" o "Ti interessa un aneddoto?"). Questa domanda fa parte del conteggio delle 20-25 parole.
 
 REGOLE DI STILE:
 - Rispondi SEMPRE in italiano.
@@ -90,31 +90,42 @@ export default defineEventHandler(async (event) => {
   // Il client invia già la cronologia; noi aggiungiamo solo il system prompt qui
   const groqMessages = [{ role: 'system', content: systemPrompt }, ...messages]
 
-  try {
-    const response: any = await $fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: {
-          model: 'llama-3.1-8b-instant',
-          messages: groqMessages,
-          temperature: 0.6,
-          max_tokens: 150
-        }
-      }
-    )
+  let response: any = null
+  const attempts = 3
+  let delayMs = 1500
 
-    return response
-  } catch (error) {
-    console.error('ERRORE API CHAT:', error)
-    throw createError({
-      statusCode: 500,
-      statusMessage:
-        'La Sciura ha un piccolo vuoto di memoria, riprova tra poco.'
-    })
+  for (let i = 0; i < attempts; i++) {
+    try {
+      response = await $fetch(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: {
+            model: 'llama-3.1-8b-instant',
+            messages: groqMessages,
+            temperature: 0.1,
+            max_tokens: 150
+          }
+        }
+      )
+      break
+    } catch (error: any) {
+      console.warn(`[CHAT] Tentativo ${i + 1} fallito. Errore:`, error.status || error.message)
+      if (i === attempts - 1) {
+        console.error('ERRORE API CHAT DOPO TUTTI I TENTATIVI:', error)
+        throw createError({
+          statusCode: error.status || 500,
+          statusMessage: 'La Sciura ha un piccolo vuoto di memoria, riprova tra poco.'
+        })
+      }
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      delayMs *= 2
+    }
   }
+
+  return response
 })
