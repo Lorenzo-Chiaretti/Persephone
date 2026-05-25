@@ -265,7 +265,7 @@ window.addEventListener('message', (event) => {
       
       nonnaEl.setAttribute('animation', {
         property: 'scale',
-        to: '0.07 0.07 0.07', 
+        to: '6 6 6', 
         easing: 'easeOutElastic',
         dur: 800,
         delay: 100 
