@@ -17,11 +17,6 @@
         <div
           class="relative z-10 w-full max-w-[480px] bg-white rounded-t-[28px] sm:rounded-[28px] overflow-hidden shadow-[0_24px_50px_rgba(0,0,0,0.15)] border border-slate-100/50"
         >
-          <!-- Drag handle (mobile only) -->
-          <div class="flex justify-center pt-3 pb-1 sm:hidden">
-            <div class="w-12 h-1.5 rounded-full bg-slate-200" />
-          </div>
-
           <!-- Close button -->
           <button
             class="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 cursor-pointer transition-all hover:bg-slate-200 hover:text-slate-700 active:scale-95 focus:outline-none"
