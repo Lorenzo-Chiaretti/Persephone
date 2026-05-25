@@ -12,6 +12,7 @@ const isNearNonna = ref(false)
 const shouldContinueListening = ref(false)
 const isMuted = ref(false)
 const isConnecting = ref(false)
+const isThinking = ref(false) 
 
 const currentLang = ref<string>('it')
 const currentPoiLabel = ref<string>('')
@@ -317,7 +318,7 @@ export const useAiNonna = () => {
       }
 
       socket = new WebSocket(
-        `wss://api.deepgram.com/v1/listen?model=nova-2&language=${lang}&smart_format=true&endpointing=300&filler_words=true`,
+        `wss://api.deepgram.com/v1/listen?model=nova-2&language=${lang}&smart_format=true&endpointing=800&filler_words=true&vad_events=true`,
         ['token', token]
       )
 
@@ -345,24 +346,37 @@ export const useAiNonna = () => {
 
       socket.onmessage = async (message) => {
         const data = JSON.parse(message.data)
-        if (data.type === 'Metadata') return
+        
+        // FILTRO ASSOLUTO: Se non è un "Risultato", ignoralo!
+        // Questo blocca in automatico i Metadata, gli SpeechStarted e gli UtteranceEnd
+        if (data.type !== 'Results') return
 
-        const transcript = data.channel?.alternatives[0]?.transcript
+        // Per sicurezza extra, aggiungiamo anche un punto interrogativo prima di [0]
+        const transcript = data.channel?.alternatives?.[0]?.transcript
 
-        if (transcript && transcript.trim().length > 0) {
+        // FILTRO ANTI-RUMORE: Ignoriamo trascrizioni vuote o troppo corte (es. colpi di tosse, "ah")
+        if (transcript && transcript.trim().length > 2) { 
+          
           if (data.is_final) {
             if (stabilityTimer) clearTimeout(stabilityTimer)
 
             if (data.speech_final) {
               stopAll()
+              isThinking.value = true // <--- NUOVO: La nonna inizia a pensare
               await processMessage(transcript)
+              isThinking.value = false // <--- NUOVO: Ha finito di pensare (ora parlerà)
             } else {
               stabilityTimer = setTimeout(async () => {
                 stopAll()
+                isThinking.value = true // <--- NUOVO
                 await processMessage(transcript)
-              }, 800)
+                isThinking.value = false // <--- NUOVO
+              }, 1500) 
             }
           }
+        } else if (data.is_final && transcript && transcript.trim().length > 0) {
+           // È stato rilevato un micro-rumore (1 o 2 lettere), lo stampiamo ma NON chiudiamo il microfono
+           console.log('🌬️ Ignorato probabile rumore di fondo:', transcript)
         }
       }
 
