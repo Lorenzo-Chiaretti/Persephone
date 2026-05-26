@@ -4,7 +4,15 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      meta: [
+        { name: 'apple-mobile-web-app-title', content: 'Persephonē' }
+      ],
       link: [
+        { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png?v=v2', sizes: '96x96' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=v2' },
+        { rel: 'shortcut icon', href: '/favicon.ico?v=v2' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png?v=v2' },
+        { rel: 'manifest', href: '/site.webmanifest?v=v2' },
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap'
