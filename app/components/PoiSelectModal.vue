@@ -33,40 +33,40 @@
             </svg>
           </button>
 
-          <div class="px-6 pt-5 pb-7">
+          <div class="px-5 pt-4 pb-5">
             <!-- Header: location info banner -->
-            <div class="flex items-start gap-4 p-5 rounded-2xl bg-amber-50/70 border border-amber-100/70 mb-6">
-              <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center mt-0.5 text-amber-600">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50/70 border border-amber-100/70 mb-4">
+              <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center mt-0.5 text-amber-600">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
               </div>
               <div class="flex-1 min-w-0 pr-2">
-                <h2 class="font-['Playfair_Display'] text-[21px] font-bold text-amber-950 leading-tight">
+                <h2 class="font-['Playfair_Display'] text-[17px] font-bold text-amber-950 leading-tight">
                   {{ $t('poiSelectTitle') }}
                 </h2>
-                <p class="text-[12.5px] text-amber-900/75 leading-relaxed mt-1.5 font-['Inter']">
+                <p class="text-[11.5px] text-amber-900/75 leading-relaxed mt-1 font-['Inter']">
                   {{ $t('poiSelectDesc') }}
                 </p>
               </div>
             </div>
 
             <!-- Divider -->
-            <div class="h-px bg-slate-100 mb-5" />
+            <div class="h-px bg-slate-100 mb-3" />
 
             <!-- Section label -->
-            <p class="text-[10px] font-bold text-[#2071c1] tracking-[0.14em] uppercase mb-3 font-['Inter']">
+            <p class="text-[10px] font-bold text-[#2071c1] tracking-[0.14em] uppercase mb-2 font-['Inter']">
               {{ $t('poiSelectSectionLabel') }}
             </p>
 
             <!-- POI buttons -->
-            <div class="flex flex-col gap-2.5 mb-6">
+            <div class="flex flex-col gap-2 mb-4">
               <button
                 v-for="(poi, index) in pois"
                 :key="poi.id"
-                class="poi-btn flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer text-left transition-all duration-300 border-2 w-full focus:outline-none"
+                class="poi-btn flex items-center justify-between rounded-xl px-4 py-2.5 cursor-pointer text-left transition-all duration-300 border-2 w-full focus:outline-none"
                 :class="
                   selectedPoiId === poi.id
                     ? 'bg-blue-50/50 border-[#2071c1] text-[#2071c1] font-semibold shadow-sm'
@@ -75,10 +75,10 @@
                 :style="{ animationDelay: `${index * 50}ms` }"
                 @click="selectedPoiId = poi.id"
               >
-                <div class="flex items-center gap-3.5">
+                <div class="flex items-center gap-3">
                   <!-- Pin icon badge -->
                   <div
-                    class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+                    class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
                     :class="
                       selectedPoiId === poi.id
                         ? 'bg-[#2071c1] text-white shadow-md shadow-[#2071c1]/20'
@@ -86,8 +86,8 @@
                     "
                   >
                     <svg
-                      width="14"
-                      height="14"
+                      width="12"
+                      height="12"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -101,7 +101,7 @@
                   </div>
 
                   <span
-                    class="text-[14px] leading-tight font-medium font-['Inter'] transition-colors duration-200"
+                    class="text-[13px] leading-tight font-medium font-['Inter'] transition-colors duration-200"
                     :class="selectedPoiId === poi.id ? 'text-[#1a5b9c] font-semibold' : 'text-slate-800'"
                   >
                     {{ poi.label }}
@@ -113,9 +113,9 @@
                   <Transition name="scale-in" mode="out-in">
                     <div
                       v-if="selectedPoiId === poi.id"
-                      class="w-5 h-5 rounded-full bg-[#2071c1] flex items-center justify-center shadow-sm"
+                      class="w-4 h-4 rounded-full bg-[#2071c1] flex items-center justify-center shadow-sm"
                     >
-                      <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                      <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
                         <path
                           d="M2.5 6l2.5 2.5 4.5-4.5"
                           stroke="white"
@@ -125,22 +125,22 @@
                         />
                       </svg>
                     </div>
-                    <div v-else class="w-5 h-5 rounded-full border border-slate-200 bg-white" />
+                    <div v-else class="w-4 h-4 rounded-full border border-slate-200 bg-white" />
                   </Transition>
                 </div>
               </button>
             </div>
 
             <!-- Indoor / Outdoor Segmented Selector -->
-            <div class="mt-6 mb-6">
-              <p class="text-[10px] font-bold text-[#2071c1] tracking-[0.14em] uppercase mb-3 font-['Inter']">
+            <div class="mt-4 mb-4">
+              <p class="text-[10px] font-bold text-[#2071c1] tracking-[0.14em] uppercase mb-2 font-['Inter']">
                 {{ $t('poiSelectLocationQuery') }}
               </p>
 
-              <div class="bg-slate-100/80 border border-slate-200/40 p-1 rounded-2xl flex w-full">
+              <div class="bg-slate-100/80 border border-slate-200/40 p-0.5 rounded-xl flex w-full">
                 <button
                   type="button"
-                  class="flex-1 py-3 text-center rounded-xl font-['Inter'] text-[13px] font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
+                  class="flex-1 py-2 text-center rounded-lg font-['Inter'] text-[12px] font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
                   :class="
                     !isIndoor
                       ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
@@ -148,7 +148,7 @@
                   "
                   @click="isIndoor = false"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="4"/>
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
                   </svg>
@@ -157,7 +157,7 @@
 
                 <button
                   type="button"
-                  class="flex-1 py-3 text-center rounded-xl font-['Inter'] text-[13px] font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
+                  class="flex-1 py-2 text-center rounded-lg font-['Inter'] text-[12px] font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
                   :class="
                     isIndoor
                       ? 'bg-white text-slate-800 shadow-sm border border-slate-200/30'
@@ -165,7 +165,7 @@
                   "
                   @click="isIndoor = true"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                     <polyline points="9 22 9 12 15 12 15 22"/>
                   </svg>
@@ -177,16 +177,16 @@
               <Transition name="slide-fade">
                 <div
                   v-if="isIndoor"
-                  class="bg-blue-50/40 border border-blue-100/50 text-[#1a5b9c] rounded-2xl p-4 flex gap-3 mt-3 shadow-sm shadow-blue-50/10"
+                  class="bg-blue-50/40 border border-blue-100/50 text-[#1a5b9c] rounded-xl p-3 flex gap-3 mt-2 shadow-sm shadow-blue-50/10"
                 >
-                  <div class="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100/50 flex items-center justify-center text-[#2071c1] mt-0.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <div class="flex-shrink-0 w-5.5 h-5.5 rounded-lg bg-blue-100/50 flex items-center justify-center text-[#2071c1] mt-0.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="12" y1="16" x2="12" y2="12"/>
                       <line x1="12" y1="8" x2="12.01" y2="8"/>
                     </svg>
                   </div>
-                  <p class="text-[11.5px] leading-relaxed font-['Inter'] text-[#1a5b9c]/90">
+                  <p class="text-[11px] leading-relaxed font-['Inter'] text-[#1a5b9c]/90">
                     {{ $t('poiSelectIndoorsDesc') }}
                   </p>
                 </div>
@@ -195,7 +195,7 @@
 
             <!-- Confirm button -->
             <button
-              class="w-full rounded-2xl border-none p-4 text-[14px] font-bold font-['Inter'] transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none"
+              class="w-full rounded-xl border-none py-3 px-4 text-[13.5px] font-bold font-['Inter'] transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none"
               :class="
                 selectedPoiId
                   ? 'bg-[#2071c1] text-white hover:bg-[#1a5b9c] active:scale-[0.98] cursor-pointer shadow-lg shadow-[#2071c1]/20 hover:shadow-[#2071c1]/35'
@@ -210,16 +210,6 @@
                 <polyline points="12 5 19 12 12 19"/>
               </svg>
             </button>
-
-            <!-- Hint -->
-            <Transition name="fade">
-              <p
-                v-if="!selectedPoiId"
-                class="text-center text-[11px] text-slate-400/80 font-medium font-['Inter'] mt-3"
-              >
-                {{ $t('poiSelectHint') }}
-              </p>
-            </Transition>
           </div>
         </div>
       </Transition>
