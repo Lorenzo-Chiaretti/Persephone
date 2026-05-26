@@ -102,6 +102,40 @@
     return map[key] ?? null
   }
   
+  let audioCtx: AudioContext | null = null
+
+  function getOrCreateAudioCtx(): AudioContext {
+    if (!audioCtx)
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (audioCtx.state === 'suspended') audioCtx.resume()
+    return audioCtx
+  }
+
+  function playEasterEggSound() {
+    try {
+      const ctx = getOrCreateAudioCtx()
+      // A magical, starry arpeggio: C5, E5, G5, B5, C6 (major 7th)
+      const freqs = [523.25, 659.25, 783.99, 987.77, 1046.50]
+      freqs.forEach((freq, i) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        
+        osc.frequency.value = freq
+        osc.type = 'sine'
+        
+        const t0 = ctx.currentTime + i * 0.07 // Fast, sparkling delay
+        gain.gain.setValueAtTime(0.08, t0)
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4)
+        
+        osc.start(t0)
+        osc.stop(t0 + 0.4)
+      })
+    } catch (_) {}
+  }
+
   function closeEgg() {
     easterEggVisible.value = false
     if (easterTimeout) { clearTimeout(easterTimeout); easterTimeout = null }
@@ -114,6 +148,7 @@
     easterEggTitle.value = t(egg.titleKey)
     easterEggText.value = t(egg.textKey)
     easterEggVisible.value = true
+    playEasterEggSound()
   }
   
   function onContentClick(e: MouseEvent) {
@@ -133,6 +168,7 @@
   onUnmounted(() => {
     document.removeEventListener('click', onContentClick)
     if (easterTimeout) clearTimeout(easterTimeout)
+    audioCtx?.close()
   })
   </script>
   

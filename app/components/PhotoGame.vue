@@ -1439,6 +1439,11 @@ function toggleAudio() {
   else if (phase.value === 'game' && gpsReady.value) startTicking()
 }
 
+watch([() => phase.value, gpsReady], ([p, ready]) => {
+  if (p === 'game' && ready) startTicking()
+  else stopTicking()
+})
+
 // ─── Game logic ───────────────────────────────────────────────────────────────
 
 async function checkLocation() {
