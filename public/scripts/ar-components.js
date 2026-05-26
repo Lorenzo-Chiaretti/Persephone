@@ -65,14 +65,6 @@ AFRAME.registerComponent('tap-place', {
         easing: 'easeOutElastic',
         dur: 800,
       })
-      
-      nonnaEl.setAttribute('animation', {
-        property: 'scale',
-        to: NONNA_SCALE, 
-        easing: 'easeOutElastic',
-        dur: 800,
-        delay: 1000 
-      })
 
       window.parent.postMessage({ type: 'MODEL_PLACED' }, '*')
     })
@@ -280,7 +272,7 @@ window.addEventListener('message', (event) => {
       
       nonnaEl.setAttribute('animation', {
         property: 'scale',
-        to: '0.07 0.07 0.07', 
+        to: '6 6 6', 
         easing: 'easeOutElastic',
         dur: 800,
         delay: 100 

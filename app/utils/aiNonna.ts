@@ -316,13 +316,19 @@ export const useAiNonna = () => {
   // ─── Risposta AI (Groq via server) ─────────────────────────────────────────
 
   const processMessage = async (text: string, isSilent: boolean = false) => {
-    const messagesToSend = [...chatHistory.value.slice(-10)]
-    
     if (!isSilent) {
       chatHistory.value.push({ role: 'user', content: text })
     }
-    
-    messagesToSend.push({ role: 'user', content: text })
+
+    let rawMessages = chatHistory.value.slice(-10)
+    if (isSilent) {
+      rawMessages = [...rawMessages, { role: 'user', content: text }].slice(-10)
+    }
+
+    const messagesToSend = rawMessages.map(m => ({
+      role: m.role,
+      content: m.content
+    }))
 
     try {
       const response = await $fetch<any>('/api/chat', {
@@ -352,7 +358,13 @@ export const useAiNonna = () => {
 
   const startContinuousListening = async (lang: string = 'it') => {
     // LUCCHETTO: Se stiamo già connettendo, blocca subito qualsiasi altra richiesta
-    if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value || isConnecting.value) return
+    if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value || isConnecting.value || isThinking.value) return
+    
+    // Nonna deve essere spawnata per poter ascoltare
+    if (!arStore.nonnaSpawned) {
+      console.log('👵 Nonna non è ancora spawnata. Microfono inattivo.')
+      return
+    }
     
     isConnecting.value = true // LUCCHETTO CHIUSO! Nessun altro può entrare.
 
@@ -430,18 +442,18 @@ export const useAiNonna = () => {
 
         if (transcript && transcript.trim().length > 0) {
           const cleanWord = transcript.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
-          const isShortWhitelist = ['sì', 'si', 'no', 'ok', 'yes', 'okay'].includes(cleanWord)
+          const isShortWhitelist = ['sì', 'si', 'no', 'ok', 'yes', 'okay', 'certo', 'sure', 'yeah', 'yep', 'nope', 'nop', 'va bene'].includes(cleanWord)
 
-          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 75%)
+          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 50%)
           // A MENO CHE non si tratti di una parola chiave di consenso/risposta breve (es. "sì", "no", "ok")
-          if (confidence < 0.75 && !isShortWhitelist) {
+          if (confidence < 0.50 && !isShortWhitelist) {
             console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Confidenza insufficiente: ${confidence.toFixed(2)})`)
             return
           }
 
-          // Se è nella whitelist, permettiamo di passare purché la confidenza sia almeno 0.35 (per evitare rumori estremi)
-          if (isShortWhitelist && confidence < 0.35) {
-            console.log(`👵 [Antirumore] Consenso/Negazione ignorato perché la confidenza è estremamente bassa (<35%): "${transcript}"`)
+          // Se è nella whitelist, permettiamo di passare purché la confidenza sia almeno 0.25 (per evitare rumori estremi)
+          if (isShortWhitelist && confidence < 0.25) {
+            console.log(`👵 [Antirumore] Consenso/Negazione ignorato perché la confidenza è estremamente bassa (<25%): "${transcript}"`)
             return
           }
 
@@ -494,17 +506,16 @@ export const useAiNonna = () => {
   if (typeof window !== 'undefined' && !proximityInterval) {
     proximityInterval = setInterval(() => {
       if (arStore.isActive) {
-        const isNear = arStore.isNearModel
+        const isNear = arStore.isNearModel && arStore.nonnaSpawned
         if (isNear) {
-          // LUCCHETTO: Il Watchdog controlla anche !isConnecting.value prima di lanciare la funzione
-          if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value && !isConnecting.value) {
-            console.log('👵 [Interval Proximity] Utente vicino, avvio ascolto.')
+          // LUCCHETTO: Il Watchdog controlla anche !isConnecting.value e !isThinking.value prima di lanciare la funzione
+          if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value && !isConnecting.value && !isThinking.value) {
+            console.log('👵 [Interval Proximity] Utente vicino e Nonna spawnata, avvio ascolto.')
             startContinuousListening(currentLang.value)
           }
         } else {
           if (isListening.value || isSpeaking.value || shouldContinueListening.value || isConnecting.value) {
-            console.log('👵 [Interval Proximity] Utente lontano, interrompo tutto.')
-            chatHistory.value = []
+            console.log('👵 [Interval Proximity] Utente lontano, interrompo microfono e audio.')
             stopAll()
             isConnecting.value = false // Resetta il lucchetto per sicurezza quando ti allontani
           }
@@ -534,6 +545,7 @@ export const useAiNonna = () => {
     processMessage,
     isListening,
     isSpeaking,
+    isThinking,
     isChatMode,
     toggleChatMode,
     chatHistory,
