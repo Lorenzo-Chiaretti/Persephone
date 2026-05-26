@@ -33,7 +33,7 @@ AFRAME.registerComponent('tap-place', {
       y: touchPoint.y, 
       z: touchPoint.z + NAVIGLIO_Z_OFFSET,
     })
-    naviglioEl.setAttribute('rotation', '0 310 0')
+    naviglioEl.setAttribute('rotation', '0 50 0')
     naviglioEl.setAttribute('scale', '0.0001 0.0001 0.0001')
     naviglioEl.setAttribute('visible', 'false')
     naviglioEl.setAttribute('gltf-model', '#poiModel')
