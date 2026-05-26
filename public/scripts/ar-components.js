@@ -3,7 +3,7 @@ let waterVisible = false
 
 const _isIndoor = new URLSearchParams(window.location.search).get('mode') === 'indoor'
 const NAVIGLIO_SCALE = _isIndoor ? '0.25 0.25 0.25' : '2 2 2'
-const NAVIGLIO_Z_OFFSET = _isIndoor ? -5 : -50
+const NAVIGLIO_Z_OFFSET = _isIndoor ? -5 : -5
 const NONNA_SCALE = _isIndoor ? '1 1 1' : '6 6 6'
 
 const _isViaSenato = _poiId === 'via-senato'
