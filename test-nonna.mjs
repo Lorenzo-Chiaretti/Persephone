@@ -2,7 +2,7 @@
 const PORT = 3000 // Cambia in 3001 se il tuo Nuxt gira lì
 
 async function testIntegrazione() {
-  console.log('🚀 Avvio test integrazione Nonna Rosa...')
+  console.log('🚀 Avvio test integrazione Sciura...')
 
   try {
     // STEP 1: Chiamata a Groq tramite la tua API Nuxt
@@ -46,12 +46,12 @@ async function testIntegrazione() {
 
     // Usiamo il modulo fs di Node per salvare il file
     const fs = await import('fs')
-    fs.writeFileSync('risultato_nonna.mp3', buffer)
+    fs.writeFileSync('risultato_sciura.mp3', buffer)
 
     console.log(
-      "✅ SUCCESSOTESORO! Il file 'risultato_nonna.mp3' è stato creato."
+      "✅ SUCCESSOTESORO! Il file 'risultato_sciura.mp3' è stato creato."
     )
-    console.log('Ascoltalo per sentire se la nonna ha seguito le istruzioni.')
+    console.log('Ascoltalo per sentire se la Sciura ha seguito le istruzioni.')
   } catch (error) {
     console.error('❌ TEST FALLITO:', error.message)
   }

@@ -1,6 +1,7 @@
 // aiNonna.ts
 
 import { ref, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useArStore } from '~/stores/arState'
 
 // ─── STATO CONDIVISO (SHARED STATE) PER PREVENIRE CONFLITTI E MULTIPLE ISTANZE ───
@@ -60,7 +61,7 @@ export const globalStopNonnaAll = () => {
     socket = null
   }
 
-  // Interrompi immediatamente l'audio in riproduzione della Nonna
+  // Interrompi immediatamente l'audio in riproduzione della Sciura
   if (currentAudioSource) {
     try {
       currentAudioSource.stop()
@@ -89,7 +90,6 @@ export const resetNonnaState = () => {
   chatHistory.value = []
   isChatMode.value = false
   isNearNonna.value = false
-  currentLang.value = 'it'
 }
 
 if (typeof document !== 'undefined') {
@@ -108,6 +108,29 @@ if (typeof window !== 'undefined') {
 
 export const useAiNonna = () => {
   const arStore = useArStore()
+  const { locale } = useI18n()
+
+  // Sincronizza inizialmente la lingua della Sciura con quella impostata nell'app
+  if (locale && locale.value) {
+    currentLang.value = locale.value
+  }
+
+  // Tieni sincronizzata la lingua se l'utente la cambia a runtime
+  watch(() => locale.value, (newLoc) => {
+    if (!newLoc) return
+    console.log(`👵 [aiNonna] Lingua cambiata in: ${newLoc}`)
+    currentLang.value = newLoc
+    
+    // Se sta già ascoltando, riavvia la sessione con la nuova lingua per ri-configurare Deepgram
+    if (isListening.value && !isSpeaking.value && !isChatMode.value) {
+      globalStopNonnaAll()
+      setTimeout(() => {
+        if (arStore.isNearModel && !isMuted.value) {
+          startContinuousListening(newLoc)
+        }
+      }, 100)
+    }
+  })
 
   const unlockAudio = () => {
     // Configura la sessione audio per ignorare l'interruttore silenzioso di iOS
@@ -211,7 +234,7 @@ export const useAiNonna = () => {
   const speak = async (text: string): Promise<boolean> => {
     // Se il testo è vuoto o contiene solo spazi, non facciamo alcuna chiamata a ElevenLabs
     if (!text || !text.trim()) {
-      console.log('👵 Nonna: Testo vuoto o non valido per la riproduzione audio.')
+      console.log('👵 Sciura: Testo vuoto o non valido per la riproduzione audio.')
       return false
     }
 
@@ -223,7 +246,7 @@ export const useAiNonna = () => {
 
     // Se l'utente si è allontanato nel frattempo, non riprodurre l'audio
     if (!arStore.isNearModel) {
-      console.log('👵 Nonna: Riproduzione audio annullata (lontano dal modello).')
+      console.log('👵 Sciura: Riproduzione audio annullata (lontano dal modello).')
       return false
     }
 
@@ -234,10 +257,10 @@ export const useAiNonna = () => {
       const cacheKey = text.trim().toLowerCase()
 
       if (ttsBlobCache.has(cacheKey)) {
-        console.log('👵 Nonna: Audio recuperato dalla cache per:', text)
+        console.log('👵 Sciura: Audio recuperato dalla cache per:', text)
         audioBlob = ttsBlobCache.get(cacheKey)!
       } else {
-        console.log('👵 Nonna: Audio non in cache. Chiamata a ElevenLabs in corso per:', text)
+        console.log('👵 Sciura: Audio non in cache. Chiamata a ElevenLabs in corso per:', text)
         audioBlob = await $fetch<Blob>('/api/tts', {
           method: 'POST',
           body: { text }
@@ -360,9 +383,9 @@ export const useAiNonna = () => {
     // LUCCHETTO: Se stiamo già connettendo, blocca subito qualsiasi altra richiesta
     if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value || isConnecting.value || isThinking.value) return
     
-    // Nonna deve essere spawnata per poter ascoltare
+    // La Sciura deve essere spawnata per poter ascoltare
     if (!arStore.nonnaSpawned) {
-      console.log('👵 Nonna non è ancora spawnata. Microfono inattivo.')
+      console.log('👵 Sciura non è ancora spawnata. Microfono inattivo.')
       return
     }
     
@@ -444,9 +467,9 @@ export const useAiNonna = () => {
           const cleanWord = transcript.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
           const isShortWhitelist = ['sì', 'si', 'no', 'ok', 'yes', 'okay', 'certo', 'sure', 'yeah', 'yep', 'nope', 'nop', 'va bene'].includes(cleanWord)
 
-          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 50%)
+          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 40%)
           // A MENO CHE non si tratti di una parola chiave di consenso/risposta breve (es. "sì", "no", "ok")
-          if (confidence < 0.50 && !isShortWhitelist) {
+          if (confidence < 0.40 && !isShortWhitelist) {
             console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Confidenza insufficiente: ${confidence.toFixed(2)})`)
             return
           }
@@ -510,7 +533,7 @@ export const useAiNonna = () => {
         if (isNear) {
           // LUCCHETTO: Il Watchdog controlla anche !isConnecting.value e !isThinking.value prima di lanciare la funzione
           if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value && !isConnecting.value && !isThinking.value) {
-            console.log('👵 [Interval Proximity] Utente vicino e Nonna spawnata, avvio ascolto.')
+            console.log('👵 [Interval Proximity] Utente vicino e Sciura spawnata, avvio ascolto.')
             startContinuousListening(currentLang.value)
           }
         } else {
