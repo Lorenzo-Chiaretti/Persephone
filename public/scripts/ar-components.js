@@ -6,6 +6,10 @@ const NAVIGLIO_SCALE = _isIndoor ? '0.5 0.5 0.5' : '2 2 2'
 const NAVIGLIO_Z_OFFSET = _isIndoor ? -10 : -50
 const NONNA_SCALE = _isIndoor ? '0.035 0.035 0.035' : '0.07 0.07 0.07'
 
+const _isViaSenato = _poiId === 'via-senato'
+const WATER_LEVEL = _isViaSenato ? 5 : 0.8
+const WATER_SPEED = _isViaSenato ? 0.002 : 0.0005
+
   // ====================================================================================
   // PLACE NAVIGLIO MODEL
   // ====================================================================================
@@ -180,7 +184,7 @@ AFRAME.registerComponent('naviglio-water', {
 
               // ----------- Filling animation setup -----------
               this.targetY = child.position.y
-              this.currentY = this.targetY - 5
+              this.currentY = this.targetY - WATER_LEVEL
               this.water.position.y = this.currentY
               this.water.visible = false
               // -----------------------------------------------
@@ -217,7 +221,7 @@ AFRAME.registerComponent('naviglio-water', {
 
           // 2. Filling animation
           if (this.isFilling && this.currentY < this.targetY) {
-            this.currentY += timeDelta * 0.002; // Change this value to adjust speed
+            this.currentY += timeDelta * WATER_SPEED; // Change this value to adjust speed
             if (this.currentY >= this.targetY) {
               this.currentY = this.targetY; // Stop water when we reach the target height
             }
