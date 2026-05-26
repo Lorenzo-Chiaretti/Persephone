@@ -1,5 +1,5 @@
 // chat.post.ts
-// ─── UNICA FONTE DEL SYSTEM PROMPT DI NONNA ROSA ────────────────────────────
+// ─── UNICA FONTE DEL SYSTEM PROMPT DELLA SCIURA ────────────────────────────
 // Il client passa solo `messages`, `poiId` e `lang`.
 // Tutta la personalità, le regole di stile e il contesto storico
 // vengono assemblati qui, in un solo posto.
