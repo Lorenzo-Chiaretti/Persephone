@@ -26,15 +26,45 @@ let mediaRecorder: MediaRecorder | null = null
 
 // Singleton AudioContext — va creato/ripreso in risposta a un gesto utente
 let audioCtx: AudioContext | null = null
+let audioSourceNode: MediaElementAudioSourceNode | null = null
+let gainNode: GainNode | null = null
 // Tracciamento del canale sorgente audio attivo per consentire interruzione immediata
 let currentAudioSource: AudioBufferSourceNode | null = null
 let currentAudioElement: HTMLAudioElement | null = null
 let globalAudioElement: HTMLAudioElement | null = null
 
+const getAudioContext = (): AudioContext => {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new AudioContext()
+  }
+  // Su iOS il contesto viene sospeso se non c'è interazione: lo riprendiamo
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume()
+  }
+  return audioCtx
+}
+
 const getAudioElement = (): HTMLAudioElement => {
   if (!globalAudioElement && typeof window !== 'undefined') {
     globalAudioElement = new Audio()
     globalAudioElement.preservesPitch = true
+
+    try {
+      const ctx = getAudioContext()
+      audioSourceNode = ctx.createMediaElementSource(globalAudioElement)
+      gainNode = ctx.createGain()
+      gainNode.gain.value = 2.5 // Volume boost to 250%!
+      audioSourceNode.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      console.log(
+        '👵 [aiNonna] Volume amplificato di 2.5x tramite Web Audio API!'
+      )
+    } catch (e) {
+      console.warn(
+        "👵 [aiNonna] Impossibile collegare l'amplificatore audio (Web Audio API):",
+        e
+      )
+    }
   }
   return globalAudioElement!
 }
@@ -45,7 +75,7 @@ let proximityInterval: ReturnType<typeof setInterval> | null = null
 export const globalStopNonnaAll = () => {
   shouldContinueListening.value = false
   isMuted.value = false
-  
+
   if (mediaRecorder) {
     if (mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop()
@@ -55,7 +85,10 @@ export const globalStopNonnaAll = () => {
   }
 
   if (socket) {
-    if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+    if (
+      socket.readyState === WebSocket.OPEN ||
+      socket.readyState === WebSocket.CONNECTING
+    ) {
       socket.close()
     }
     socket = null
@@ -116,27 +149,30 @@ export const useAiNonna = () => {
   }
 
   // Tieni sincronizzata la lingua se l'utente la cambia a runtime
-  watch(() => locale.value, (newLoc) => {
-    if (!newLoc) return
-    console.log(`👵 [aiNonna] Lingua cambiata in: ${newLoc}`)
-    currentLang.value = newLoc
-    
-    // Se sta già ascoltando, riavvia la sessione con la nuova lingua per ri-configurare Deepgram
-    if (isListening.value && !isSpeaking.value && !isChatMode.value) {
-      globalStopNonnaAll()
-      setTimeout(() => {
-        if (arStore.isNearModel && !isMuted.value) {
-          startContinuousListening(newLoc)
-        }
-      }, 100)
+  watch(
+    () => locale.value,
+    (newLoc) => {
+      if (!newLoc) return
+      console.log(`👵 [aiNonna] Lingua cambiata in: ${newLoc}`)
+      currentLang.value = newLoc
+
+      // Se sta già ascoltando, riavvia la sessione con la nuova lingua per ri-configurare Deepgram
+      if (isListening.value && !isSpeaking.value && !isChatMode.value) {
+        globalStopNonnaAll()
+        setTimeout(() => {
+          if (arStore.isNearModel && !isMuted.value) {
+            startContinuousListening(newLoc)
+          }
+        }, 100)
+      }
     }
-  })
+  )
 
   const unlockAudio = () => {
     // Configura la sessione audio per ignorare l'interruttore silenzioso di iOS
     if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
       try {
-        (navigator as any).audioSession.type = 'playback'
+        ;(navigator as any).audioSession.type = 'playback'
       } catch (err) {
         console.warn('Errore configurazione AudioSession:', err)
       }
@@ -144,28 +180,34 @@ export const useAiNonna = () => {
 
     const ctx = getAudioContext()
     if (ctx.state === 'suspended') {
-      ctx.resume().then(() => {
-        // Riproduciamo un piccolissimo campione di silenzio per sbloccare l'audio hardware su iOS
-        const buffer = ctx.createBuffer(1, 1, 22050)
-        const source = ctx.createBufferSource()
-        source.buffer = buffer
-        source.connect(ctx.destination)
-        source.start(0)
-        console.log('🔊 AudioContext sbloccato con successo per iOS.')
-      }).catch((err) => {
-        console.error('Impossibile sbloccare l\'AudioContext:', err)
-      })
+      ctx
+        .resume()
+        .then(() => {
+          // Riproduciamo un piccolissimo campione di silenzio per sbloccare l'audio hardware su iOS
+          const buffer = ctx.createBuffer(1, 1, 22050)
+          const source = ctx.createBufferSource()
+          source.buffer = buffer
+          source.connect(ctx.destination)
+          source.start(0)
+          console.log('🔊 AudioContext sbloccato con successo per iOS.')
+        })
+        .catch((err) => {
+          console.error("Impossibile sbloccare l'AudioContext:", err)
+        })
     }
 
     // Sblocca anche l'elemento audio HTML5 per iOS/Safari
     const audio = getAudioElement()
     if (audio) {
-      audio.play().then(() => {
-        audio.pause()
-        console.log('🔊 HTMLAudioElement sbloccato con successo per iOS.')
-      }).catch((err) => {
-        console.warn('Impossibile sbloccare HTMLAudioElement:', err)
-      })
+      audio
+        .play()
+        .then(() => {
+          audio.pause()
+          console.log('🔊 HTMLAudioElement sbloccato con successo per iOS.')
+        })
+        .catch((err) => {
+          console.warn('Impossibile sbloccare HTMLAudioElement:', err)
+        })
     }
   }
 
@@ -212,16 +254,7 @@ export const useAiNonna = () => {
     }
   }
 
-  const getAudioContext = (): AudioContext => {
-    if (!audioCtx || audioCtx.state === 'closed') {
-      audioCtx = new AudioContext()
-    }
-    // Su iOS il contesto viene sospeso se non c'è interazione: lo riprendiamo
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume()
-    }
-    return audioCtx
-  }
+  // getAudioContext spostato a livello di modulo per l'uso in getAudioElement
 
   // ─── Pulizia hardware e connessioni ────────────────────────────────────────
 
@@ -234,7 +267,9 @@ export const useAiNonna = () => {
   const speak = async (text: string): Promise<boolean> => {
     // Se il testo è vuoto o contiene solo spazi, non facciamo alcuna chiamata a ElevenLabs
     if (!text || !text.trim()) {
-      console.log('👵 Sciura: Testo vuoto o non valido per la riproduzione audio.')
+      console.log(
+        '👵 Sciura: Testo vuoto o non valido per la riproduzione audio.'
+      )
       return false
     }
 
@@ -246,7 +281,9 @@ export const useAiNonna = () => {
 
     // Se l'utente si è allontanato nel frattempo, non riprodurre l'audio
     if (!arStore.isNearModel) {
-      console.log('👵 Sciura: Riproduzione audio annullata (lontano dal modello).')
+      console.log(
+        '👵 Sciura: Riproduzione audio annullata (lontano dal modello).'
+      )
       return false
     }
 
@@ -260,7 +297,10 @@ export const useAiNonna = () => {
         console.log('👵 Sciura: Audio recuperato dalla cache per:', text)
         audioBlob = ttsBlobCache.get(cacheKey)!
       } else {
-        console.log('👵 Sciura: Audio non in cache. Chiamata a ElevenLabs in corso per:', text)
+        console.log(
+          '👵 Sciura: Audio non in cache. Chiamata a ElevenLabs in corso per:',
+          text
+        )
         audioBlob = await $fetch<Blob>('/api/tts', {
           method: 'POST',
           body: { text }
@@ -324,13 +364,18 @@ export const useAiNonna = () => {
     } catch (e) {
       console.error('Errore TTS / riproduzione audio:', e)
       // Se l'audio fallisce, mostriamo comunque il testo per non bloccare la chat
-      if (!chatHistory.value.some(m => m.content === text)) {
+      if (!chatHistory.value.some((m) => m.content === text)) {
         chatHistory.value.push({ role: 'assistant', content: text })
       }
       return false
     } finally {
       isSpeaking.value = false
-      if (!isChatMode.value && shouldContinueListening.value && !isMuted.value && arStore.isNearModel) {
+      if (
+        !isChatMode.value &&
+        shouldContinueListening.value &&
+        !isMuted.value &&
+        arStore.isNearModel
+      ) {
         setTimeout(() => startContinuousListening(currentLang.value), 300)
       }
     }
@@ -348,7 +393,7 @@ export const useAiNonna = () => {
       rawMessages = [...rawMessages, { role: 'user', content: text }].slice(-10)
     }
 
-    const messagesToSend = rawMessages.map(m => ({
+    const messagesToSend = rawMessages.map((m) => ({
       role: m.role,
       content: m.content
     }))
@@ -368,11 +413,15 @@ export const useAiNonna = () => {
     } catch (e: any) {
       const statusCode = e.status || e.statusCode || 'Sconosciuto'
       const statusText = e.statusMessage || e.message || ''
-      console.log(`👵❌ [ERRORE GROQ / CHAT]: Chiamata fallita con codice ${statusCode}. Dettaglio:`, statusText)
+      console.log(
+        `👵❌ [ERRORE GROQ / CHAT]: Chiamata fallita con codice ${statusCode}. Dettaglio:`,
+        statusText
+      )
       console.error('Dettaglio errore completo:', e)
-      const errorMsg = currentLang.value === 'en'
-        ? "Forgive me, my dear, my old memory had a lapse... Could you repeat your question, please?"
-        : "Scusa tesoro, la mia vecchia memoria ha avuto un vuoto... Potresti ripetermi la domanda, per favore?"
+      const errorMsg =
+        currentLang.value === 'en'
+          ? 'Forgive me, my dear, my old memory had a lapse... Could you repeat your question, please?'
+          : 'Scusa tesoro, la mia vecchia memoria ha avuto un vuoto... Potresti ripetermi la domanda, per favore?'
       chatHistory.value.push({ role: 'assistant', content: errorMsg })
     }
   }
@@ -381,14 +430,22 @@ export const useAiNonna = () => {
 
   const startContinuousListening = async (lang: string = 'it') => {
     // LUCCHETTO: Se stiamo già connettendo, blocca subito qualsiasi altra richiesta
-    if (isSpeaking.value || isChatMode.value || isListening.value || isMuted.value || isConnecting.value || isThinking.value) return
-    
+    if (
+      isSpeaking.value ||
+      isChatMode.value ||
+      isListening.value ||
+      isMuted.value ||
+      isConnecting.value ||
+      isThinking.value
+    )
+      return
+
     // La Sciura deve essere spawnata per poter ascoltare
     if (!arStore.nonnaSpawned) {
       console.log('👵 Sciura non è ancora spawnata. Microfono inattivo.')
       return
     }
-    
+
     isConnecting.value = true // LUCCHETTO CHIUSO! Nessun altro può entrare.
 
     currentLang.value = lang
@@ -403,7 +460,7 @@ export const useAiNonna = () => {
     try {
       if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
         try {
-          (navigator as any).audioSession.type = 'play-and-record'
+          ;(navigator as any).audioSession.type = 'play-and-record'
         } catch (err) {
           console.warn('Errore configurazione AudioSession per microfono:', err)
         }
@@ -413,13 +470,17 @@ export const useAiNonna = () => {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: false 
+          autoGainControl: true
         }
       })
-      
+
       const { token } = await $fetch<{ token: string }>('/api/dg-token')
 
-      if (!arStore.isNearModel || !shouldContinueListening.value || isMuted.value) {
+      if (
+        !arStore.isNearModel ||
+        !shouldContinueListening.value ||
+        isMuted.value
+      ) {
         stream.getTracks().forEach((track) => track.stop())
         isConnecting.value = false // Sblocca
         return
@@ -442,12 +503,14 @@ export const useAiNonna = () => {
             socket.send(event.data)
           }
         })
-        
+
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
-            mediaRecorder.start(250); 
-          } else {
-            console.warn("WebSocket aperto, ma il microfono è già attivo. Comando di start ignorato.");
-          }
+          mediaRecorder.start(250)
+        } else {
+          console.warn(
+            'WebSocket aperto, ma il microfono è già attivo. Comando di start ignorato.'
+          )
+        }
       }
 
       let stabilityTimer: ReturnType<typeof setTimeout> | null = null
@@ -464,26 +527,49 @@ export const useAiNonna = () => {
         const confidence = alternative?.confidence || 0
 
         if (transcript && transcript.trim().length > 0) {
-          const cleanWord = transcript.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
-          const isShortWhitelist = ['sì', 'si', 'no', 'ok', 'yes', 'okay', 'certo', 'sure', 'yeah', 'yep', 'nope', 'nop', 'va bene'].includes(cleanWord)
+          const cleanWord = transcript
+            .trim()
+            .toLowerCase()
+            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, '')
+          const isShortWhitelist = [
+            'sì',
+            'si',
+            'no',
+            'ok',
+            'yes',
+            'okay',
+            'certo',
+            'sure',
+            'yeah',
+            'yep',
+            'nope',
+            'nop',
+            'va bene'
+          ].includes(cleanWord)
 
-          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 40%)
+          // Filtro antirumore: ignora trascrizioni a bassa confidenza (sotto il 25%)
           // A MENO CHE non si tratti di una parola chiave di consenso/risposta breve (es. "sì", "no", "ok")
-          if (confidence < 0.40 && !isShortWhitelist) {
-            console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Confidenza insufficiente: ${confidence.toFixed(2)})`)
+          if (confidence < 0.25 && !isShortWhitelist) {
+            console.log(
+              `👵 [Antirumore] Ignorato: "${transcript}" (Confidenza insufficiente: ${confidence.toFixed(2)})`
+            )
             return
           }
 
           // Se è nella whitelist, permettiamo di passare purché la confidenza sia almeno 0.25 (per evitare rumori estremi)
           if (isShortWhitelist && confidence < 0.25) {
-            console.log(`👵 [Antirumore] Consenso/Negazione ignorato perché la confidenza è estremamente bassa (<25%): "${transcript}"`)
+            console.log(
+              `👵 [Antirumore] Consenso/Negazione ignorato perché la confidenza è estremamente bassa (<25%): "${transcript}"`
+            )
             return
           }
 
           // Filtro lettere singole ultracorte: se è una singola lettera (es. "a", "e", "o" prodotte da respiri o rumore),
           // deve avere una confidenza quasi assoluta (>= 0.90) per essere considerata valida.
-          if (transcript.trim().length === 1 && confidence < 0.90) {
-            console.log(`👵 [Antirumore] Ignorato: "${transcript}" (Lettera singola e confidenza sotto 90%)`)
+          if (transcript.trim().length === 1 && confidence < 0.9) {
+            console.log(
+              `👵 [Antirumore] Ignorato: "${transcript}" (Lettera singola e confidenza sotto 90%)`
+            )
             return
           }
 
@@ -532,19 +618,35 @@ export const useAiNonna = () => {
         const isNear = arStore.isNearModel && arStore.nonnaSpawned
         if (isNear) {
           // LUCCHETTO: Il Watchdog controlla anche !isConnecting.value e !isThinking.value prima di lanciare la funzione
-          if (!isListening.value && !isSpeaking.value && !isChatMode.value && !isMuted.value && !isConnecting.value && !isThinking.value) {
-            console.log('👵 [Interval Proximity] Utente vicino e Sciura spawnata, avvio ascolto.')
+          if (
+            !isListening.value &&
+            !isSpeaking.value &&
+            !isChatMode.value &&
+            !isMuted.value &&
+            !isConnecting.value &&
+            !isThinking.value
+          ) {
+            console.log(
+              '👵 [Interval Proximity] Utente vicino e Sciura spawnata, avvio ascolto.'
+            )
             startContinuousListening(currentLang.value)
           }
         } else {
-          if (isListening.value || isSpeaking.value || shouldContinueListening.value || isConnecting.value) {
-            console.log('👵 [Interval Proximity] Utente lontano, interrompo microfono e audio.')
+          if (
+            isListening.value ||
+            isSpeaking.value ||
+            shouldContinueListening.value ||
+            isConnecting.value
+          ) {
+            console.log(
+              '👵 [Interval Proximity] Utente lontano, interrompo microfono e audio.'
+            )
             stopAll()
             isConnecting.value = false // Resetta il lucchetto per sicurezza quando ti allontani
           }
         }
       }
-    }, 1000) 
+    }, 1000)
   }
 
   onUnmounted(() => {
