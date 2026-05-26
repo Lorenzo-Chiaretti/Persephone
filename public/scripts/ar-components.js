@@ -2,9 +2,9 @@ let modelPlaced = false
 let waterVisible = false
 
 const _isIndoor = new URLSearchParams(window.location.search).get('mode') === 'indoor'
-const NAVIGLIO_SCALE = _isIndoor ? '0.5 0.5 0.5' : '2 2 2'
-const NAVIGLIO_Z_OFFSET = _isIndoor ? -10 : -50
-const NONNA_SCALE = _isIndoor ? '0.035 0.035 0.035' : '0.07 0.07 0.07'
+const NAVIGLIO_SCALE = _isIndoor ? '0.25 0.25 0.25' : '2 2 2'
+const NAVIGLIO_Z_OFFSET = _isIndoor ? -5 : -50
+const NONNA_SCALE = _isIndoor ? '1 1 1' : '6 6 6'
 
 const _isViaSenato = _poiId === 'via-senato'
 const WATER_LEVEL = _isViaSenato ? 5 : 0.8
@@ -272,7 +272,7 @@ window.addEventListener('message', (event) => {
       
       nonnaEl.setAttribute('animation', {
         property: 'scale',
-        to: '6 6 6', 
+        to: NONNA_SCALE, 
         easing: 'easeOutElastic',
         dur: 800,
         delay: 100 
