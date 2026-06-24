@@ -1,5 +1,6 @@
 let modelPlaced = false
 let waterVisible = false
+let modelLocked = false
 
 const _isIndoor = new URLSearchParams(window.location.search).get('mode') === 'indoor'
 const NAVIGLIO_SCALE = _isIndoor ? '0.25 0.25 0.25' : '2 2 2'
@@ -19,14 +20,30 @@ AFRAME.registerComponent('tap-place', {
   const ground = document.getElementById('ground')
 
   ground.addEventListener('click', (event) => {
-    if (window.modelPlaced) return
-    window.modelPlaced = true
+    // If model is locked (water visible), ignore taps
+    if (window.modelLocked) return
 
     const touchPoint = event.detail.intersection.point
 
     // ==========================================
-    // 1. SPAWN DEL NAVIGLIO
+    // RIPOSIZIONAMENTO: se il modello esiste già,
+    // spostalo nel nuovo punto senza ricrearlo
     // ==========================================
+    if (window.modelPlaced && window.naviglioEl) {
+      window.naviglioEl.setAttribute('position', {
+        x: touchPoint.x,
+        y: touchPoint.y,
+        z: touchPoint.z + NAVIGLIO_Z_OFFSET,
+      })
+      window.lastTouchPoint = touchPoint
+      return
+    }
+
+    // ==========================================
+    // 1. PRIMO PIAZZAMENTO DEL NAVIGLIO
+    // ==========================================
+    window.modelPlaced = true
+
     const naviglioEl = document.createElement('a-entity')
     naviglioEl.setAttribute('position', {
       x: touchPoint.x,
@@ -41,6 +58,9 @@ AFRAME.registerComponent('tap-place', {
     naviglioEl.setAttribute('naviglio-water', '')
 
     this.el.sceneEl.appendChild(naviglioEl)
+
+    // Salvo reference globale per riposizionamento e spawn nonna
+    window.naviglioEl = naviglioEl
 
     naviglioEl.addEventListener('model-loaded', () => {
       const mesh = naviglioEl.getObject3D('mesh')
@@ -242,6 +262,11 @@ window.addEventListener('message', (event) => {
       naviglioEntity.emit('toggle-water');
     }
     
+  } else if (event.data && event.data.type === 'LOCK_MODEL') {
+
+    console.log("Iframe (from VUE): locking model position")
+    window.modelLocked = true
+
   } else if (event.data && event.data.type === 'SPAWN_NONNA') {
     
     console.log("Iframe (from VUE): spawning nonna")

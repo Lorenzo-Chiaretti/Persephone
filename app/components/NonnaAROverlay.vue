@@ -250,6 +250,36 @@
             </button>
           </div>
         </Transition>
+        
+        <!-- HINT: "Riposiziona" — visible when model is placed and water is not yet visible -->
+        <Transition name="fade-slide">
+          <div
+            v-if="arStore.modelPlaced && !arStore.waterVisible"
+            class="ar-hint-floating pointer-events-none"
+          >
+            <span
+              class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center"
+              style="-webkit-backdrop-filter: blur(20px) saturate(1.5)"
+            >
+              {{ $t('arReplaceHint') }}
+            </span>
+          </div>
+        </Transition>
+
+        <!-- HINT: primo piazzamento — visibile quando la scena è pronta ma il modello non ancora piazzato -->
+        <Transition name="fade-slide">
+          <div
+            v-if="arStore.sceneReady && !arStore.modelPlaced"
+            class="ar-hint-floating pointer-events-none"
+          >
+            <span
+              class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center"
+              style="-webkit-backdrop-filter: blur(20px) saturate(1.5)"
+            >
+              {{ $t('arPlaceHint') }}
+            </span>
+          </div>
+        </Transition>
 
         <!-- Chat Input — floating above bottom buttons -->
         <Transition name="fade-slide">
@@ -906,6 +936,17 @@ const testPoi = async (id: string) => {
   50% {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1);
   }
+}
+
+/* ── Placement / reposition hint pill ── */
+.ar-hint-floating {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 164px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

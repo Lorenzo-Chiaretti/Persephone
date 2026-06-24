@@ -103,18 +103,6 @@
       </Transition>
     </div>
 
-    <div
-      v-if="sceneReady && !modelPlaced"
-      class="absolute bottom-28 left-0 right-0 z-20 flex justify-center pointer-events-auto"
-    >
-      <span
-        class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center"
-        style="-webkit-backdrop-filter: blur(20px) saturate(1.5)"
-      >
-        {{ $t('arPlaceHint') }}
-      </span>
-    </div>
-
     <!-- A-Frame Scene -->
     <iframe
       ref="iframeRef"
@@ -228,6 +216,8 @@ const triggerWater = () => {
 watch(waterVisible, (visible) => {
   if (visible) {
     stopVoiceListening()
+    arStore.modelLocked = true
+    iframeRef.value?.contentWindow?.postMessage({ type: 'LOCK_MODEL' }, '*')
     iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
   }
 })

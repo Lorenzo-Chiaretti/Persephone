@@ -14,6 +14,7 @@ export const useArStore = defineStore('ar', () => {
   // State for model placement and interactions
   const modelPlaced = ref(false)
   const waterVisible = ref(false)
+  const modelLocked = ref(false)
   const sceneReady = ref(false)
   const showFallbackButton = ref(false)
   const nonnaSpawned = ref(false)
@@ -54,6 +55,7 @@ export const useArStore = defineStore('ar', () => {
     isNearModel.value = false
     modelPlaced.value = false
     waterVisible.value = false
+    modelLocked.value = false
     sceneReady.value = false
     showFallbackButton.value = false
     nonnaSpawned.value = false
@@ -80,6 +82,7 @@ export const useArStore = defineStore('ar', () => {
     isScanning,
     modelPlaced,
     waterVisible,
+    modelLocked,
     sceneReady,
     showFallbackButton,
     nonnaSpawned,
