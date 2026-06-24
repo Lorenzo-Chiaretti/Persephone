@@ -698,10 +698,12 @@ const handleExit = () => {
 }
 
 const triggerWater = () => {
+  unlockAudio()
   arStore.waterVisible = true
 }
 
 const spawnNonna = () => {
+  unlockAudio()
   arStore.nonnaSpawned = true
   
   // Wait for spawn animation before listening

@@ -48,23 +48,6 @@ const getAudioElement = (): HTMLAudioElement => {
   if (!globalAudioElement && typeof window !== 'undefined') {
     globalAudioElement = new Audio()
     globalAudioElement.preservesPitch = true
-
-    try {
-      const ctx = getAudioContext()
-      audioSourceNode = ctx.createMediaElementSource(globalAudioElement)
-      gainNode = ctx.createGain()
-      gainNode.gain.value = 2.5 // Volume boost to 250%!
-      audioSourceNode.connect(gainNode)
-      gainNode.connect(ctx.destination)
-      console.log(
-        '👵 [aiNonna] Volume amplificato di 2.5x tramite Web Audio API!'
-      )
-    } catch (e) {
-      console.warn(
-        "👵 [aiNonna] Impossibile collegare l'amplificatore audio (Web Audio API):",
-        e
-      )
-    }
   }
   return globalAudioElement!
 }
@@ -198,7 +181,7 @@ export const useAiNonna = () => {
 
     // Sblocca anche l'elemento audio HTML5 per iOS/Safari
     const audio = getAudioElement()
-    if (audio) {
+    if (audio && audio.paused && !isSpeaking.value) {
       audio
         .play()
         .then(() => {
@@ -264,26 +247,19 @@ export const useAiNonna = () => {
 
   // ─── Voce (ElevenLabs) ─────────────────────────────────────────────────────
 
-  const speak = async (text: string): Promise<boolean> => {
-    // Se il testo è vuoto o contiene solo spazi, non facciamo alcuna chiamata a ElevenLabs
+const speak = async (text: string): Promise<boolean> => {
     if (!text || !text.trim()) {
-      console.log(
-        '👵 Sciura: Testo vuoto o non valido per la riproduzione audio.'
-      )
+      console.log('👵 Sciura: Testo vuoto o non valido per la riproduzione audio.')
       return false
     }
 
-    // Se siamo in modalità chat (tastiera), non sprecare token e mostra solo il testo
     if (isChatMode.value) {
       chatHistory.value.push({ role: 'assistant', content: text })
       return true
     }
 
-    // Se l'utente si è allontanato nel frattempo, non riprodurre l'audio
     if (!arStore.isNearModel) {
-      console.log(
-        '👵 Sciura: Riproduzione audio annullata (lontano dal modello).'
-      )
+      console.log('👵 Sciura: Riproduzione audio annullata (lontano dal modello).')
       return false
     }
 
@@ -297,10 +273,7 @@ export const useAiNonna = () => {
         console.log('👵 Sciura: Audio recuperato dalla cache per:', text)
         audioBlob = ttsBlobCache.get(cacheKey)!
       } else {
-        console.log(
-          '👵 Sciura: Audio non in cache. Chiamata a ElevenLabs in corso per:',
-          text
-        )
+        console.log('👵 Sciura: Audio non in cache. Chiamata a ElevenLabs in corso per:', text)
         audioBlob = await $fetch<Blob>('/api/tts', {
           method: 'POST',
           body: { text }
@@ -308,62 +281,54 @@ export const useAiNonna = () => {
         ttsBlobCache.set(cacheKey, audioBlob)
       }
 
-      const audioUrl = URL.createObjectURL(audioBlob)
-      const audio = getAudioElement()
-      audio.src = audioUrl
-      audio.playbackRate = 1.25
-      audio.preservesPitch = true
+      // ─── RIPRODUZIONE VIA WEB AUDIO API PURA ───
+      const ctx = getAudioContext()
+      
+      // Assicuriamoci che il contesto sia sveglio
+      if (ctx.state === 'suspended') {
+        await ctx.resume().catch(e => console.warn("Impossibile riprendere AudioContext:", e))
+      }
 
-      // Mostriamo il testo nel fumetto SOLO ora che l'audio è pronto per partire
+      // Convertiamo il Blob in ArrayBuffer e lo decodifichiamo
+      const arrayBuffer = await audioBlob.arrayBuffer()
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+
+      // Creiamo i nodi per riproduzione, velocità e volume
+      const source = ctx.createBufferSource()
+      source.buffer = audioBuffer
+      source.playbackRate.value = 1.12 // Velocità 1.25x
+
+      const localGainNode = ctx.createGain()
+      localGainNode.gain.value = 2.5 // Boost volume a 250%
+
+      // Colleghiamo i nodi: Sorgente -> Volume -> Casse
+      source.connect(localGainNode)
+      localGainNode.connect(ctx.destination)
+
+      currentAudioSource = source // Salviamo la reference per poterlo stoppare (globalStopNonnaAll)
+
+      // Mostriamo il testo nel fumetto
       chatHistory.value.push({ role: 'assistant', content: text })
 
-      // Se nel frattempo l'utente si è allontanato, non riprodurre nulla
       if (!arStore.isNearModel) {
         isSpeaking.value = false
-        URL.revokeObjectURL(audioUrl)
         return false
       }
 
-      currentAudioElement = audio
-
-      await new Promise<void>((resolve, reject) => {
-        audio.onended = () => {
-          URL.revokeObjectURL(audioUrl)
-          if (currentAudioElement === audio) {
-            currentAudioElement = null
+      // Facciamo partire l'audio e aspettiamo che finisca
+      await new Promise<void>((resolve) => {
+        source.onended = () => {
+          if (currentAudioSource === source) {
+            currentAudioSource = null
           }
           resolve()
         }
-
-        audio.onerror = (e) => {
-          URL.revokeObjectURL(audioUrl)
-          if (currentAudioElement === audio) {
-            currentAudioElement = null
-          }
-          reject(e)
-        }
-
-        try {
-          audio.play().catch((e) => {
-            URL.revokeObjectURL(audioUrl)
-            if (currentAudioElement === audio) {
-              currentAudioElement = null
-            }
-            reject(e)
-          })
-        } catch (e) {
-          URL.revokeObjectURL(audioUrl)
-          if (currentAudioElement === audio) {
-            currentAudioElement = null
-          }
-          reject(e)
-        }
+        source.start(0)
       })
 
       return true
     } catch (e) {
       console.error('Errore TTS / riproduzione audio:', e)
-      // Se l'audio fallisce, mostriamo comunque il testo per non bloccare la chat
       if (!chatHistory.value.some((m) => m.content === text)) {
         chatHistory.value.push({ role: 'assistant', content: text })
       }
