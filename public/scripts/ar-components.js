@@ -307,12 +307,31 @@ window.addEventListener('message', (event) => {
 });
 
 AFRAME.registerComponent('notify-ready', {
-      init: function () {
-        this.el.sceneEl.addEventListener('loaded', () => {
-          window.parent.postMessage({ type: 'AR_READY' }, '*')
-        })
-      }
-    });
+  init: function () {
+    const COACHING_DURATION_MS = 6000  // durata coaching overlay
+    const HINT_DELAY_MS = 500          // piccolo buffer dopo la scomparsa prima di mostrare l'hint
+
+    const overlay = document.getElementById('coaching-overlay')
+
+    this.el.sceneEl.addEventListener('loaded', () => {
+      window.parent.postMessage({ type: 'AR_READY' }, '*')
+
+      // Dopo COACHING_DURATION_MS nascondi la overlay con fade
+      setTimeout(() => {
+        if (overlay) {
+          overlay.classList.add('hidden')
+          setTimeout(() => overlay.remove(), 700)
+        }
+
+        // Dopo un ulteriore piccolo buffer, sblocca l'hint di piazzamento in Vue
+        setTimeout(() => {
+          window.parent.postMessage({ type: 'COACHING_DONE' }, '*')
+        }, HINT_DELAY_MS)
+
+      }, COACHING_DURATION_MS)
+    })
+  }
+});
 
 AFRAME.registerComponent('light-check', {
   init() {

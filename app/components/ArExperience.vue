@@ -409,6 +409,13 @@ const handleIframeMessages = (event: MessageEvent) => {
   switch (event.data.type) {
     case 'AR_READY':
       console.log('Vue (from iframe): Iframe AR caricato e pronto!')
+      // sceneReady is NOT set here — we wait for COACHING_DONE so the
+      // placement hint only appears after SLAM has locked and the coaching
+      // overlay has been dismissed.
+      break
+
+    case 'COACHING_DONE':
+      console.log('Vue (from iframe): Coaching overlay terminata, SLAM stabile.')
       sceneReady.value = true
       arStore.setLocalized()
       break
@@ -432,8 +439,12 @@ const handleIframeMessages = (event: MessageEvent) => {
       arStore.lowLightWarning = true
       break
     
-      case 'LOW_LIGHT_RESOLVED':
+    case 'LOW_LIGHT_RESOLVED':
       arStore.lowLightWarning = false
+      break
+    
+    case 'STATUS_TEST':
+      console.log('Status ricevuto dall\'iframe:', event.data.status)
       break
   }
 }
