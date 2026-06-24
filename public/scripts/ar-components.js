@@ -312,4 +312,54 @@ AFRAME.registerComponent('notify-ready', {
           window.parent.postMessage({ type: 'AR_READY' }, '*')
         })
       }
+    });
+
+AFRAME.registerComponent('light-check', {
+  init() {
+    // Threshold e durata minima per evitare falsi positivi
+    const DARK_THRESHOLD = 50       // media pixel 0–255; sotto = troppo buio
+    const DARK_FRAMES_NEEDED = 30   // ~3 secondi a 30fps prima di avvisare
+    const CHECK_INTERVAL = 3        // controlla 1 frame ogni N
+
+    let darkFrameCount = 0
+    let frameCount = 0
+    let warningActive = false
+
+    window.XR8.addCameraPipelineModule(
+      window.XR8.CameraPixelArray.pipelineModule({ luminance: true, width: 80, height: 60 })
+    )
+
+    window.XR8.addCameraPipelineModule({
+      name: 'light-monitor',
+      onProcessCpu: ({ processGpuResult }) => {
+        // Non controllare se il modello è già piazzato
+        if (window.modelPlaced) return
+
+        frameCount++
+        if (frameCount % CHECK_INTERVAL !== 0) return
+
+        const { camerapixelarray } = processGpuResult
+        if (!camerapixelarray?.pixels) return
+
+        const { pixels } = camerapixelarray
+        let sum = 0
+        for (let i = 0; i < pixels.length; i++) sum += pixels[i]
+        const avg = sum / pixels.length
+
+        if (avg < DARK_THRESHOLD) {
+          darkFrameCount++
+          if (darkFrameCount >= DARK_FRAMES_NEEDED && !warningActive) {
+            warningActive = true
+            window.parent.postMessage({ type: 'LOW_LIGHT_WARNING' }, '*')
+          }
+        } else {
+          darkFrameCount = 0
+          if (warningActive) {
+            warningActive = false
+            window.parent.postMessage({ type: 'LOW_LIGHT_RESOLVED' }, '*')
+          }
+        }
+      }
     })
+  }
+});

@@ -427,6 +427,14 @@ const handleIframeMessages = (event: MessageEvent) => {
       console.log('Vue (from iframe): User is far from the model!')
       arStore.isNearModel = false
       break
+
+    case 'LOW_LIGHT_WARNING':
+      arStore.lowLightWarning = true
+      break
+    
+      case 'LOW_LIGHT_RESOLVED':
+      arStore.lowLightWarning = false
+      break
   }
 }
 

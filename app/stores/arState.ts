@@ -18,6 +18,7 @@ export const useArStore = defineStore('ar', () => {
   const sceneReady = ref(false)
   const showFallbackButton = ref(false)
   const nonnaSpawned = ref(false)
+  const lowLightWarning = ref(false)
 
   const isIdle = computed(() => status.value === 'IDLE')
   const isLoading = computed(() => status.value === 'LOADING')
@@ -59,6 +60,8 @@ export const useArStore = defineStore('ar', () => {
     sceneReady.value = false
     showFallbackButton.value = false
     nonnaSpawned.value = false
+    lowLightWarning.value = false
+
     if (session.value) {
       try {
         session.value.end()
@@ -86,6 +89,7 @@ export const useArStore = defineStore('ar', () => {
     sceneReady,
     showFallbackButton,
     nonnaSpawned,
+    lowLightWarning,
     startLoading,
     setCameraReady,
     setLocalized,
