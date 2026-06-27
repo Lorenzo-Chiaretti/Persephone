@@ -151,6 +151,37 @@
       :poi="store.selectedPoi"
       @close="gameOpen = false"
     />
+
+    <Transition name="fade">
+      <div
+        v-if="showMapAlert"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#424242]/45"
+        @click.self="showMapAlert = false"
+      >
+        <div class="w-full max-w-sm rounded-[20px] bg-white p-6 shadow-xl">
+          <h3 class="mb-2 font-['Playfair_Display'] text-[20px] font-bold text-[#424242]">
+            {{ $t('mapAlertTitle') }}
+          </h3>
+          <p class="mb-6 font-['Inter'] text-[14px] leading-relaxed text-[#424242]/80">
+            {{ $t('mapAlertDesc') }}
+          </p>
+          <div class="flex justify-end gap-3">
+            <button
+              class="rounded-[10px] bg-[#f0f0f0] px-5 py-2.5 font-['Inter'] text-[14px] font-medium text-[#424242] transition-colors hover:bg-[#e0e0e0] cursor-pointer"
+              @click="showMapAlert = false"
+            >
+              {{ $t('mapAlertCancel') }}
+            </button>
+            <button
+              class="rounded-[10px] bg-[#2071c1] px-5 py-2.5 font-['Inter'] text-[14px] font-medium text-white transition-colors hover:bg-[#1a5b9c] cursor-pointer"
+              @click="confirmNavigate"
+            >
+              {{ $t('mapAlertOk') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </template>
 </template>
 
@@ -165,6 +196,7 @@ const store = useAppStore()
 const showModern = ref(false)
 const compareOpen = ref(false)
 const gameOpen = ref(false)
+const showMapAlert = ref(false)
 
 const poiTitle = computed(() => {
   if (!store.selectedPoi) return ''
@@ -195,21 +227,28 @@ function close() {
   showModern.value = false
   compareOpen.value = false
   gameOpen.value = false
+  showMapAlert.value = false
 }
 
 function navigate() {
   if (!store.selectedPoi) return
+  showMapAlert.value = true
+}
+
+function confirmNavigate() {
+  if (!store.selectedPoi) return
   const { lat, lng } = store.selectedPoi
   const url = `https://www.google.com/maps?q=${lat},${lng}`
-  if (!window.open(url, '_blank'))
-    alert(
-      `Could not open Maps automatically.\nDestination: ${poiTitle.value} (${lat}, ${lng})`
-    )
+  
+  showMapAlert.value = false
+  
+  window.open(url, '_blank')
 }
 
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') {
-    if (gameOpen.value) gameOpen.value = false
+    if (showMapAlert.value) showMapAlert.value = false
+    else if (gameOpen.value) gameOpen.value = false
     else if (compareOpen.value) compareOpen.value = false
     else close()
   }

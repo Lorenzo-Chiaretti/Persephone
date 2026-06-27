@@ -142,5 +142,11 @@
   "poiViaSenato": "Via Senato",
   "poiLaghettoSanMarco": "San Marco Lake",
   "poiLaghettoStefano": "Santo Stefano Lake",
-  "close": "Close"
+  "close": "Close",
+  "mapAlertTitle": "Opening External App",
+  "mapAlertDesc": "You are about to be redirected to an external maps application. Do you want to continue?",
+  "mapAlertCancel": "Cancel",
+  "mapAlertOk": "Ok",
+  "arStopTalking": "Stop",
+  "gpsWarning": "Warning: GPS disabled. The interactive experience will be limited."
 }

@@ -119,6 +119,19 @@
           class="w-full px-4 flex flex-col items-center gap-3 pt-[calc(env(safe-area-inset-top,0px)+56px)] pointer-events-none"
         >
 
+          <!-- USER FEEDBACK BUBBLE -->
+          <Transition name="fade-slide">
+            <div
+              v-if="userFeedbackText && !isChatMode"
+              class="w-full max-w-[360px] self-end flex justify-end"
+            >
+              <div class="bg-blue-600/90 border border-blue-400/30 backdrop-blur-xl rounded-2xl rounded-tr-sm p-3.5 shadow-lg pointer-events-auto">
+                <p class="text-[14.5px] font-medium text-white leading-relaxed whitespace-pre-line">
+                  {{ userFeedbackText }}
+                </p>
+              </div>
+            </div>
+          </Transition>
 
           <Transition name="fade-slide">
             <div
@@ -239,7 +252,7 @@
         <!-- CTA: "Bring the Water Back!" — centered pill -->
         <Transition name="fade-slide">
           <div
-            v-if="arStore.modelPlaced && !arStore.waterVisible && arStore.showFallbackButton"
+            v-if="arStore.modelPlaced && !arStore.waterVisible && arStore.showFallbackButton && agentStatus !== 'speaking'"
             class="ar-cta-floating pointer-events-auto"
           >
             <button @click="triggerWater" class="ar-pill-btn ar-pill-blue">
@@ -247,6 +260,21 @@
                 <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
               </svg>
               <span>{{ $t('arBringWaterBack') }}</span>
+            </button>
+          </div>
+        </Transition>
+
+        <!-- STOP SPEAKING BUTTON -->
+        <Transition name="fade-slide">
+          <div
+            v-if="agentStatus === 'speaking'"
+            class="ar-cta-floating pointer-events-auto"
+          >
+            <button @click="interruptSpeech" class="ar-pill-btn bg-red-500/90 hover:bg-red-500 text-white border-red-400/50">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+              </svg>
+              <span>{{ $t('arStopTalking') || 'Stop' }}</span>
             </button>
           </div>
         </Transition>
@@ -522,7 +550,9 @@ const {
   toggleMute,
   unlockAudio,
   stopAll,
-  resetNonnaState
+  interruptSpeech,
+  resetNonnaState,
+  interimTranscript
 } = useAiNonna()
 
 const debugPois = [
@@ -609,6 +639,14 @@ const agentStatusClass = computed(() => {
 const lastNonnaResponse = computed(() => {
   const assistantMsgs = chatHistory.value.filter((m) => m.role === 'assistant')
   return assistantMsgs.length > 0 ? assistantMsgs[assistantMsgs.length - 1]?.content : ''
+})
+const userFeedbackText = computed(() => {
+  if (interimTranscript.value) return interimTranscript.value
+  if (agentStatus.value === 'processing' || agentStatus.value === 'speaking') {
+    const userMsgs = chatHistory.value.filter((m) => m.role === 'user')
+    return userMsgs.length > 0 ? userMsgs[userMsgs.length - 1]?.content : ''
+  }
+  return ''
 })
 
 const isBubbleVisible = computed(() => {
