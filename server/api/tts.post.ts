@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   //JkwfwmvGT71qYVCwRCMo id nonna prima che lo cambiassi
   //voce seconda YBrIkf7z6YBcR3bKJphj
   //voce terza marco Z4wnRNjyeMpeZ17tQku2
-  const voiceId = 'YBrIkf7z6YBcR3bKJphj'
+  const voiceId = 'JkwfwmvGT71qYVCwRCMo'
 
   try {
     const response = await $fetch<Blob>(
