@@ -248,12 +248,23 @@ export const useAiNonna = () => {
   }
 
   const interruptSpeech = () => {
-    if (isSpeaking.value && currentAudioElement) {
-      try {
-        currentAudioElement.pause()
-        currentAudioElement.currentTime = 0
-        currentAudioElement.dispatchEvent(new Event('ended'))
-      } catch (e) {}
+    if (isSpeaking.value) {
+      if (currentAudioSource) {
+        try {
+          currentAudioSource.stop()
+        } catch (e) {}
+      }
+      if (currentAudioElement) {
+        try {
+          currentAudioElement.pause()
+          currentAudioElement.currentTime = 0
+        } catch (e) {}
+        if (currentAudioElement.onended) {
+          currentAudioElement.onended(new Event('ended') as any)
+        } else {
+          currentAudioElement.dispatchEvent(new Event('ended'))
+        }
+      }
     }
   }
 
