@@ -263,6 +263,36 @@
             </button>
           </div>
         </Transition>
+        
+        <!-- HINT: "Riposiziona" — visible when model is placed and water is not yet visible -->
+        <Transition name="fade-slide">
+          <div
+            v-if="arStore.modelPlaced && !arStore.waterVisible"
+            class="ar-hint-floating pointer-events-none"
+          >
+            <span
+              class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center"
+              style="-webkit-backdrop-filter: blur(20px) saturate(1.5)"
+            >
+              {{ $t('arReplaceHint') }}
+            </span>
+          </div>
+        </Transition>
+
+        <!-- HINT: primo piazzamento — visibile quando la scena è pronta ma il modello non ancora piazzato -->
+        <Transition name="fade-slide">
+          <div
+            v-if="arStore.sceneReady && !arStore.modelPlaced"
+            class="ar-hint-floating pointer-events-none"
+          >
+            <span
+              class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center"
+              style="-webkit-backdrop-filter: blur(20px) saturate(1.5)"
+            >
+              {{ $t('arPlaceHint') }}
+            </span>
+          </div>
+        </Transition>
 
         <!-- STOP SPEAKING BUTTON -->
         <Transition name="fade-slide">
@@ -489,6 +519,39 @@
         </div>
       </Transition>
 
+            <!-- Low Light Warning -->
+      <Transition name="fade-slide">
+        <div
+          v-if="arStore.lowLightWarning && !arStore.modelPlaced"
+          class="absolute top-[calc(env(safe-area-inset-top,0px)+68px)] left-1/2 -translate-x-1/2 z-[100] pointer-events-auto"
+        >
+          <div
+            class="bg-slate-900/95 backdrop-blur-3xl border border-amber-400/25 text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+            style="max-width: 90vw; width: max-content;"
+          >
+            <!-- Pulsing moon icon -->
+            <div class="relative flex h-8 w-8 shrink-0 items-center justify-center">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-30"></span>
+              <div class="relative flex items-center justify-center h-8 w-8 bg-amber-500/20 rounded-full border border-amber-400/50">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Text -->
+            <div class="flex flex-col gap-0.5">
+              <span class="font-semibold text-[13px] uppercase tracking-wider text-amber-400">
+                {{ locale?.toLowerCase()?.startsWith('it') ? 'Scarsa illuminazione' : 'Low light' }}
+              </span>
+              <span class="text-[13.5px] leading-snug text-white/90">
+                {{ locale?.toLowerCase()?.startsWith('it') ? 'Avvicinati a una fonte di luce' : 'Move to a brighter area' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Proximity Warning Overlay -->
       <Transition name="fade-slide">
         <div
@@ -673,10 +736,12 @@ const handleExit = () => {
 }
 
 const triggerWater = () => {
+  unlockAudio()
   arStore.waterVisible = true
 }
 
 const spawnNonna = () => {
+  unlockAudio()
   arStore.nonnaSpawned = true
   
   // Wait for spawn animation before listening
@@ -944,6 +1009,17 @@ const testPoi = async (id: string) => {
   50% {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1);
   }
+}
+
+/* ── Placement / reposition hint pill ── */
+.ar-hint-floating {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 164px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

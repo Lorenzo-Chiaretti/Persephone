@@ -25,6 +25,9 @@
   "arBringWaterBack": "Risveglia i Navigli!",
   "arTalkToNonna": "Parla con la Sciura di Milano",
   "arGetCloser": "Avvicinati di più per poter parlare con la Sciura",
+  "arReplaceHint": "Tocca lo schermo per riposizionare il modello",
+  "lowLightTitle": "Scarsa illuminazione",
+  "lowLightDesc": "Avvicinati a una fonte di luce",
 
   "projSubtitle": "Il progetto",
   "projTitle": "Chi siamo",

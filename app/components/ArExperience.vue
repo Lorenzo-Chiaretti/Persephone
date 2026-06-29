@@ -103,18 +103,6 @@
       </Transition>
     </div>
 
-    <div
-      v-if="sceneReady && !modelPlaced"
-      class="absolute bottom-28 left-0 right-0 z-20 flex justify-center pointer-events-auto"
-    >
-      <span
-        class="bg-black/50 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide backdrop-blur-xl shadow-lg border border-white/15 text-center"
-        style="-webkit-backdrop-filter: blur(20px) saturate(1.5)"
-      >
-        {{ $t('arPlaceHint') }}
-      </span>
-    </div>
-
     <!-- A-Frame Scene -->
     <iframe
       ref="iframeRef"
@@ -228,6 +216,8 @@ const triggerWater = () => {
 watch(waterVisible, (visible) => {
   if (visible) {
     stopVoiceListening()
+    arStore.modelLocked = true
+    iframeRef.value?.contentWindow?.postMessage({ type: 'LOCK_MODEL' }, '*')
     iframeRef.value?.contentWindow?.postMessage({ type: 'TRIGGER_WATER' }, '*')
   }
 })
@@ -419,6 +409,13 @@ const handleIframeMessages = (event: MessageEvent) => {
   switch (event.data.type) {
     case 'AR_READY':
       console.log('Vue (from iframe): Iframe AR caricato e pronto!')
+      // sceneReady is NOT set here — we wait for COACHING_DONE so the
+      // placement hint only appears after SLAM has locked and the coaching
+      // overlay has been dismissed.
+      break
+
+    case 'COACHING_DONE':
+      console.log('Vue (from iframe): Coaching overlay terminata, SLAM stabile.')
       sceneReady.value = true
       arStore.setLocalized()
       break
@@ -436,6 +433,18 @@ const handleIframeMessages = (event: MessageEvent) => {
     case 'USER_FAR_FROM_MODEL':
       console.log('Vue (from iframe): User is far from the model!')
       arStore.isNearModel = false
+      break
+
+    case 'LOW_LIGHT_WARNING':
+      arStore.lowLightWarning = true
+      break
+    
+    case 'LOW_LIGHT_RESOLVED':
+      arStore.lowLightWarning = false
+      break
+    
+    case 'STATUS_TEST':
+      console.log('Status ricevuto dall\'iframe:', event.data.status)
       break
   }
 }

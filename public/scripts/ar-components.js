@@ -1,5 +1,6 @@
 let modelPlaced = false
 let waterVisible = false
+let modelLocked = false
 
 const _isIndoor = new URLSearchParams(window.location.search).get('mode') === 'indoor'
 const NAVIGLIO_SCALE = _isIndoor ? '0.25 0.25 0.25' : '2 2 2'
@@ -19,14 +20,30 @@ AFRAME.registerComponent('tap-place', {
   const ground = document.getElementById('ground')
 
   ground.addEventListener('click', (event) => {
-    if (window.modelPlaced) return
-    window.modelPlaced = true
+    // If model is locked (water visible), ignore taps
+    if (window.modelLocked) return
 
     const touchPoint = event.detail.intersection.point
 
     // ==========================================
-    // 1. SPAWN DEL NAVIGLIO
+    // RIPOSIZIONAMENTO: se il modello esiste già,
+    // spostalo nel nuovo punto senza ricrearlo
     // ==========================================
+    if (window.modelPlaced && window.naviglioEl) {
+      window.naviglioEl.setAttribute('position', {
+        x: touchPoint.x,
+        y: touchPoint.y,
+        z: touchPoint.z + NAVIGLIO_Z_OFFSET,
+      })
+      window.lastTouchPoint = touchPoint
+      return
+    }
+
+    // ==========================================
+    // 1. PRIMO PIAZZAMENTO DEL NAVIGLIO
+    // ==========================================
+    window.modelPlaced = true
+
     const naviglioEl = document.createElement('a-entity')
     naviglioEl.setAttribute('position', {
       x: touchPoint.x,
@@ -41,6 +58,9 @@ AFRAME.registerComponent('tap-place', {
     naviglioEl.setAttribute('naviglio-water', '')
 
     this.el.sceneEl.appendChild(naviglioEl)
+
+    // Salvo reference globale per riposizionamento e spawn nonna
+    window.naviglioEl = naviglioEl
 
     naviglioEl.addEventListener('model-loaded', () => {
       const mesh = naviglioEl.getObject3D('mesh')
@@ -242,6 +262,11 @@ window.addEventListener('message', (event) => {
       naviglioEntity.emit('toggle-water');
     }
     
+  } else if (event.data && event.data.type === 'LOCK_MODEL') {
+
+    console.log("Iframe (from VUE): locking model position")
+    window.modelLocked = true
+
   } else if (event.data && event.data.type === 'SPAWN_NONNA') {
     
     console.log("Iframe (from VUE): spawning nonna")
@@ -282,9 +307,78 @@ window.addEventListener('message', (event) => {
 });
 
 AFRAME.registerComponent('notify-ready', {
-      init: function () {
-        this.el.sceneEl.addEventListener('loaded', () => {
-          window.parent.postMessage({ type: 'AR_READY' }, '*')
-        })
+  init: function () {
+    const COACHING_DURATION_MS = 6000  // durata coaching overlay
+    const HINT_DELAY_MS = 500          // piccolo buffer dopo la scomparsa prima di mostrare l'hint
+
+    const overlay = document.getElementById('coaching-overlay')
+
+    this.el.sceneEl.addEventListener('loaded', () => {
+      window.parent.postMessage({ type: 'AR_READY' }, '*')
+
+      // Dopo COACHING_DURATION_MS nascondi la overlay con fade
+      setTimeout(() => {
+        if (overlay) {
+          overlay.classList.add('hidden')
+          setTimeout(() => overlay.remove(), 700)
+        }
+
+        // Dopo un ulteriore piccolo buffer, sblocca l'hint di piazzamento in Vue
+        setTimeout(() => {
+          window.parent.postMessage({ type: 'COACHING_DONE' }, '*')
+        }, HINT_DELAY_MS)
+
+      }, COACHING_DURATION_MS)
+    })
+  }
+});
+
+AFRAME.registerComponent('light-check', {
+  init() {
+    // Threshold e durata minima per evitare falsi positivi
+    const DARK_THRESHOLD = 50       // media pixel 0–255; sotto = troppo buio
+    const DARK_FRAMES_NEEDED = 30   // ~3 secondi a 30fps prima di avvisare
+    const CHECK_INTERVAL = 3        // controlla 1 frame ogni N
+
+    let darkFrameCount = 0
+    let frameCount = 0
+    let warningActive = false
+
+    window.XR8.addCameraPipelineModule(
+      window.XR8.CameraPixelArray.pipelineModule({ luminance: true, width: 80, height: 60 })
+    )
+
+    window.XR8.addCameraPipelineModule({
+      name: 'light-monitor',
+      onProcessCpu: ({ processGpuResult }) => {
+        // Non controllare se il modello è già piazzato
+        if (window.modelPlaced) return
+
+        frameCount++
+        if (frameCount % CHECK_INTERVAL !== 0) return
+
+        const { camerapixelarray } = processGpuResult
+        if (!camerapixelarray?.pixels) return
+
+        const { pixels } = camerapixelarray
+        let sum = 0
+        for (let i = 0; i < pixels.length; i++) sum += pixels[i]
+        const avg = sum / pixels.length
+
+        if (avg < DARK_THRESHOLD) {
+          darkFrameCount++
+          if (darkFrameCount >= DARK_FRAMES_NEEDED && !warningActive) {
+            warningActive = true
+            window.parent.postMessage({ type: 'LOW_LIGHT_WARNING' }, '*')
+          }
+        } else {
+          darkFrameCount = 0
+          if (warningActive) {
+            warningActive = false
+            window.parent.postMessage({ type: 'LOW_LIGHT_RESOLVED' }, '*')
+          }
+        }
       }
     })
+  }
+});
