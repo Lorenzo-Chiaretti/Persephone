@@ -20,6 +20,7 @@ const { locale, setLocale } = useI18n()
 const { currentPoi, locationError, startTracking, stopTracking } = useLocationTracker()
 
 const errorMessage = ref('')
+const dismissedGpsWarning = ref(false)
 const arCanvasBridge = ref<any>(null)
 const showOnboarding = ref(false)
 const showPoiSelect = ref(false)
@@ -234,18 +235,43 @@ onMounted(() => {
     <!-- ── Errori ── -->
     <div
       v-if="errorMessage"
-      class="absolute top-20 left-4 right-4 z-[100] bg-white p-3 rounded-lg shadow-lg border-l-4 border-red-500"
+      class="absolute top-20 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg border border-red-100 pointer-events-auto flex items-center gap-3"
     >
-      <p class="text-red-600 text-sm font-bold">{{ errorMessage }}</p>
+      <div class="flex-shrink-0 w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p class="text-[#424242] text-[13px] font-['Inter'] font-semibold leading-snug flex-1">{{ errorMessage }}</p>
     </div>
 
     <div
-      v-if="locationError"
-      class="absolute top-36 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-lg border-l-4 border-yellow-500 pointer-events-auto"
+      v-if="locationError && !dismissedGpsWarning"
+      class="absolute top-36 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg border border-amber-100 pointer-events-auto flex justify-between items-center gap-3"
     >
-      <p class="text-yellow-700 text-sm font-bold">
-        Attenzione: GPS disattivato. L'esperienza interattiva sarà limitata.
-      </p>
+      <div class="flex items-center gap-3 flex-1">
+        <div class="flex-shrink-0 w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <p class="text-[#424242] text-[13px] font-['Inter'] font-semibold leading-snug">
+          {{ $t('gpsWarning') }}
+        </p>
+      </div>
+      <button
+        @click="dismissedGpsWarning = true"
+        class="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 cursor-pointer transition-all hover:bg-slate-200 hover:text-slate-700 active:scale-95"
+        :aria-label="$t('close')"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M1.5 1.5l9 9M10.5 1.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
 
     <!-- ── Overlays ── -->

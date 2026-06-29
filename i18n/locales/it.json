@@ -145,5 +145,11 @@
   "poiViaSenato": "Via Senato",
   "poiLaghettoSanMarco": "Laghetto di San Marco",
   "poiLaghettoStefano": "Laghetto di Santo Stefano",
-  "close": "Chiudi"
+  "close": "Chiudi",
+  "mapAlertTitle": "Apertura App Esterna",
+  "mapAlertDesc": "Stai per essere reindirizzato a un'app di mappe esterna. Vuoi continuare?",
+  "mapAlertCancel": "Annulla",
+  "mapAlertOk": "Ok",
+  "arStopTalking": "Ferma voce",
+  "gpsWarning": "Attenzione: GPS disattivato. L'esperienza interattiva sarà limitata."
 }

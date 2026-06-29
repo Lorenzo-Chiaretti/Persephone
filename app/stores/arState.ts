@@ -6,7 +6,7 @@ export type ArStatus = 'IDLE' | 'LOADING' | 'SCANNING' | 'ACTIVE' | 'ERROR'
 export const useArStore = defineStore('ar', () => {
   const status = ref<ArStatus>('IDLE')
   const errorMessage = ref<string | null>(null)
-  const session = shallowRef<XRSession | null>(null)
+  const session = shallowRef<any | null>(null)
 
   const selectedPoi = ref<{ id: string; isIndoor?: boolean } | null>(null)
   const isNearModel = ref(false)
@@ -31,7 +31,7 @@ export const useArStore = defineStore('ar', () => {
     errorMessage.value = null
   }
 
-  function setCameraReady(xrSession: XRSession) {
+  function setCameraReady(xrSession: any) {
     status.value = 'SCANNING'
     session.value = xrSession
   }

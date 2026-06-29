@@ -14,6 +14,7 @@ const shouldContinueListening = ref(false)
 const isMuted = ref(false)
 const isConnecting = ref(false)
 const isThinking = ref(false)
+const interimTranscript = ref('')
 
 // Cache dei blob audio per evitare chiamate ripetute a ElevenLabs per le stesse frasi
 const ttsBlobCache = new Map<string, Blob>()
@@ -106,6 +107,7 @@ export const resetNonnaState = () => {
   chatHistory.value = []
   isChatMode.value = false
   isNearNonna.value = false
+  interimTranscript.value = ''
 }
 
 if (typeof document !== 'undefined') {
@@ -243,6 +245,16 @@ export const useAiNonna = () => {
 
   const stopAll = () => {
     globalStopNonnaAll()
+  }
+
+  const interruptSpeech = () => {
+    if (isSpeaking.value && currentAudioElement) {
+      try {
+        currentAudioElement.pause()
+        currentAudioElement.currentTime = 0
+        currentAudioElement.dispatchEvent(new Event('ended'))
+      } catch (e) {}
+    }
   }
 
   // ─── Voce (ElevenLabs) ─────────────────────────────────────────────────────
@@ -538,6 +550,9 @@ const speak = async (text: string): Promise<boolean> => {
             return
           }
 
+          // Aggiorna sempre il feedback testuale
+          interimTranscript.value = transcript
+
           if (data.is_final) {
             if (stabilityTimer) clearTimeout(stabilityTimer)
 
@@ -545,12 +560,14 @@ const speak = async (text: string): Promise<boolean> => {
               stopAll()
               isThinking.value = true // <--- NUOVO: La nonna inizia a pensare
               await processMessage(transcript)
+              interimTranscript.value = ''
               isThinking.value = false // <--- NUOVO: Ha finito di pensare (ora parlerà)
             } else {
               stabilityTimer = setTimeout(async () => {
                 stopAll()
                 isThinking.value = true // <--- NUOVO
                 await processMessage(transcript)
+                interimTranscript.value = ''
                 isThinking.value = false // <--- NUOVO
               }, 1500)
             }
@@ -643,9 +660,11 @@ const speak = async (text: string): Promise<boolean> => {
     currentPoiLabel,
     currentLang,
     stopAll,
+    interruptSpeech,
     resetNonnaState,
     isMuted,
     toggleMute,
-    unlockAudio
+    unlockAudio,
+    interimTranscript
   }
 }
